@@ -1,0 +1,15 @@
+/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py:100: TracerWarning: Converting a tensor to a Python number might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
+  W_quant.clamp_(-alpha.item(), beta.item() + eps.item())
+[export_nemo_quant] Using device: cpu
+[export_nemo_quant] Loading checkpoint from: training/person_ssd_pytorch/ssd_mbv2_raw.pth
+[export_nemo_quant] Missing keys: []
+[export_nemo_quant] Unexpected keys: []
+[export_nemo_quant] Applying NEMO PACT fake quantization...
+[export_nemo_quant] Trying nemo.transform.quantize_qd...
+[export_nemo_quant] quantize_qd not available in this NEMO version; staying at PACT (FQ) level.
+[export_nemo_quant] Trying nemo.transform.quantize_id...
+[export_nemo_quant] quantize_id not available; exporting current deploy model instead.
+[export_nemo_quant] Exporting NEMO-quantized model to ONNX:
+  -> export/ssd_mbv2_quant.onnx
+  input_shape=(1, 3, 320, 320)
+[export_nemo_quant] Done. ONNX saved at: export/ssd_mbv2_quant.onnx
