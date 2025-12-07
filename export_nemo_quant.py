@@ -60,7 +60,7 @@ def main():
     parser.add_argument(
         "--width-mult",
         type=float,
-        default=0.5,
+        default=0.25,
         help="Width multiplier for MobileNetV2 (must match training)",
     )
     parser.add_argument(

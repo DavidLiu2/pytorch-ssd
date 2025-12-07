@@ -110,7 +110,7 @@ def main():
     )
 
     # model
-    model = create_ssd_mobilenet_v2(num_classes=2, width_mult=0.5, image_size=(320, 320))
+    model = create_ssd_mobilenet_v2(num_classes=2, width_mult=0.25, image_size=(320, 320))
     model.to(device)
 
     params = [p for p in model.parameters() if p.requires_grad]

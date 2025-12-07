@@ -81,7 +81,7 @@ class MobileNetV2Backbone(nn.Module):
 
 
 def create_ssd_mobilenet_v2(num_classes: int = 2,
-                            width_mult: float = 0.5,
+                            width_mult: float = 0.25,
                             image_size: Tuple[int, int] = (320, 320)) -> SSD:
     """
     num_classes: includes background (for COCO-style detection, person-only → 2)

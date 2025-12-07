@@ -28,7 +28,7 @@ def main():
     # 1) Build wrapper
     model = SSDMobileNetV2Raw(
         num_classes=2,
-        width_mult=0.5,
+        width_mult=0.25,
         image_size=(320, 320),
     ).to(device)
 
