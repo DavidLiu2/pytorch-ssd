@@ -60,19 +60,19 @@ def main():
     parser.add_argument(
         "--width-mult",
         type=float,
-        default=0.25,
+        default=0.1,
         help="Width multiplier for MobileNetV2 (must match training)",
     )
     parser.add_argument(
         "--height",
         type=int,
-        default=320,
+        default=160,
         help="Input height (must match training)",
     )
     parser.add_argument(
         "--width",
         type=int,
-        default=320,
+        default=160,
         help="Input width (must match training)",
     )
     parser.add_argument(

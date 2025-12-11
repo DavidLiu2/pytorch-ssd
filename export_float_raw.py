@@ -12,7 +12,7 @@ def main():
     ap.add_argument(
         "--ckpt",
         type=str,
-        default="training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth",
+        default="training/person_ssd_pytorch/ssd_mbv2_epoch_001.pth",
         help="Path to the checkpoint you liked from training",
     )
     ap.add_argument(
@@ -28,8 +28,8 @@ def main():
     # 1) Build wrapper
     model = SSDMobileNetV2Raw(
         num_classes=2,
-        width_mult=0.25,
-        image_size=(320, 320),
+        width_mult=0.1,
+        image_size=(160, 160),
     ).to(device)
 
     # 2) Load training checkpoint into the internal SSD
@@ -40,7 +40,7 @@ def main():
 
     # 3) Quick sanity check
     model.eval()
-    x = torch.randn(1, 3, 320, 320, device=device)
+    x = torch.randn(1, 3, 160, 160, device=device)
     with torch.no_grad():
         locs, cls_logits = model(x)
     print("locs shape:", locs.shape)           # [1, N_boxes, 4]

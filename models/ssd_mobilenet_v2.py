@@ -19,9 +19,9 @@ class MobileNetV2Backbone(nn.Module):
       - run a dummy input once in __init__ to infer out_channels
     """
 
-    def __init__(self, width_mult: float = 0.5,
+    def __init__(self, width_mult: float = 0.1,
                  out_idxs: List[int] = None,
-                 image_size: Tuple[int, int] = (320, 320)):
+                 image_size: Tuple[int, int] = (160, 160)):
         super().__init__()
 
         if out_idxs is None:
@@ -40,6 +40,18 @@ class MobileNetV2Backbone(nn.Module):
         except TypeError:
             # Fallback for older torchvision (e.g. in nemoenv)
             base = mobilenet_v2(pretrained=False, width_mult=width_mult)
+        
+        # Shrink last conv (torchvision does NOT scale this when width_mult < 1.0)
+        last_c = int(1280 * width_mult)
+
+        conv = base.features[-1][0]
+        bn   = base.features[-1][1]
+
+        in_c = conv.in_channels
+
+        base.features[-1][0] = nn.Conv2d(in_c, last_c, kernel_size=1, stride=1, padding=0, bias=False)
+        base.features[-1][1] = nn.BatchNorm2d(last_c)
+
 
         self.features = base.features
 
@@ -81,8 +93,8 @@ class MobileNetV2Backbone(nn.Module):
 
 
 def create_ssd_mobilenet_v2(num_classes: int = 2,
-                            width_mult: float = 0.25,
-                            image_size: Tuple[int, int] = (320, 320)) -> SSD:
+                            width_mult: float = 0.1,
+                            image_size: Tuple[int, int] = (160, 160)) -> SSD:
     """
     num_classes: includes background (for COCO-style detection, person-only → 2)
     """
