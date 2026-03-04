@@ -131,6 +131,7 @@ void Convolution34(
   im2col = l1_buffer + 24664;
   volatile uint8_t *pwt_buffer;
   pwt_buffer = im2col + 312;
+  uint16_t out_mult = out_mult_in;
   uint16_t out_shift = out_shift_in;
 
   ////////////////////////////

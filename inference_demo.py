@@ -10,12 +10,12 @@ import torchvision.transforms.functional as F
 from models.ssd_mobilenet_v2 import create_ssd_mobilenet_v2
 
 
-def load_model(ckpt_path: Path, num_classes=2, width_mult=0.5):
+def load_model(ckpt_path: Path, num_classes=2, width_mult=0.1):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = create_ssd_mobilenet_v2(
         num_classes=num_classes,
         width_mult=width_mult,
-        image_size=(320, 320),
+        image_size=(160, 160),
     )
     state = torch.load(ckpt_path, map_location=device)
     model.load_state_dict(state)

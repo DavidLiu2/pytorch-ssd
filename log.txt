@@ -1,73 +1,34 @@
-=== [1/7] Training SSD-MobileNetV2 ===
-=== [2/7] Building raw wrapper checkpoint for NEMO ===
-export_float_raw.py:36: FutureWarning: You are using `torch.load` with `weights_only=False` (the current default value), which uses the default pickle module implicitly. It is possible to construct malicious pickle data which will execute arbitrary code during unpickling (See https://github.com/pytorch/pytorch/blob/main/SECURITY.md#untrusted-models for more details). In a future release, the default value for `weights_only` will be flipped to `True`. This limits the functions that could be executed during unpickling. Arbitrary objects will no longer be allowed to be loaded via this mode unless they are explicitly allowlisted by the user via `torch.serialization.add_safe_globals`. We recommend you start setting `weights_only=True` for any use case where you don't have full control of the loaded file. Please open an issue on GitHub for any issues related to this experimental feature.
-  state = torch.load(args.ckpt, map_location=device)
-Missing keys: []
-Unexpected keys: []
-locs shape: torch.Size([1, 17000, 4])
-cls_logits shape: torch.Size([1, 17000, 2])
-Saved raw-heads model to training/person_ssd_pytorch/ssd_mbv2_raw.pth
-=== [3/7] Exporting NEMO-quantized ONNX (using nemoenv) ===
+=== [1/3] Training SSD-MobileNetV2 ===
+=== [2/3] Exporting NEMO-quantized ONNX (using nemoenv) ===
 activated nemoenv: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/../nemoenv
+nemo python: Python 3.8.10
+nemo pip: pip 20.0.2 from /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/pip (python 3.8)
 /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py:100: TracerWarning: Converting a tensor to a Python number might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
   W_quant.clamp_(-alpha.item(), beta.item() + eps.item())
+/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py:83: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  return pact_quantize_asymm_inference(W, torch.as_tensor(eps), torch.as_tensor(clip), torch.as_tensor(clip))
 [export_nemo_quant] Using device: cpu
-[export_nemo_quant] Loading checkpoint from: training/person_ssd_pytorch/ssd_mbv2_raw.pth
-[export_nemo_quant] Missing keys: []
-[export_nemo_quant] Unexpected keys: []
-[export_nemo_quant] Applying NEMO PACT fake quantization...
-[export_nemo_quant] Trying nemo.transform.quantize_qd...
-[export_nemo_quant] quantize_qd not available in this NEMO version; staying at PACT (FQ) level.
-[export_nemo_quant] Trying nemo.transform.quantize_id...
-[export_nemo_quant] quantize_id not available; exporting current deploy model instead.
-[export_nemo_quant] Exporting NEMO-quantized model to ONNX:
-  -> export/ssd_mbv2_quant.onnx
-  input_shape=(1, 3, 160, 160)
-[export_nemo_quant] Done. ONNX saved at: export/ssd_mbv2_quant.onnx
-activated original venv: /mnt/c/Users/yxl21/Documents/School/DroneRS/doryenv
-=== [4/7] Simplifying ONNX with onnx-simplifier ===
-Simplifying...
-Finish! Here is the difference:
-┏━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
-┃                    ┃ Original Model ┃ Simplified Model ┃
-┡━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
-│ Add                │ 11             │ 11               │
-│ BatchNormalization │ 52             │ 52               │
-│ Clip               │ 95             │ 35               │
-│ Concat             │ 2              │ 2                │
-│ Constant           │ 397            │ 457              │
-│ Conv               │ 60             │ 60               │
-│ Div                │ 35             │ 35               │
-│ Floor              │ 35             │ 35               │
-│ Min                │ 35             │ 35               │
-│ Mul                │ 35             │ 35               │
-│ Reshape            │ 16             │ 16               │
-│ Transpose          │ 8              │ 8                │
-│ Model Size         │ 520.8KiB       │ 962.7KiB         │
-└────────────────────┴────────────────┴──────────────────┘
-=== [5/7] Fusing Conv + BatchNorm in ONNX graph ===
-Fused 52 Conv+BN pairs
-Saved fused model to export/ssd_mbv2_fused.onnx
-=== [6a] Stripping Transpose nodes ===
-Found 8 Transpose nodes to strip/bypass
-Removed 8 Transpose nodes
-Saved stripped model to export/ssd_mbv2_notranspose.onnx
-=== [6b] Stripping Min nodes ===
-Found 35 Min nodes to strip/bypass
-Removed 35 Min nodes
-Saved stripped model to export/ssd_mbv2_nomin.onnx
-=== [6c] Stripping FakeQuant nodes ===
-Found 35 fake-quant patterns to strip
-Removed 140 nodes belonging to fake-quant chains
-Saved stripped model to export/ssd_mbv2_dory.onnx
-DORY-ready ONNX: export/ssd_mbv2_dory.onnx
-=== [7/7] Running DORY network_generate ===
+[export_nemo_quant] Loading checkpoint from: training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth
+[export_nemo_quant] Checkpoint mapping: add_ssd_prefix (missing=0, unexpected=0)
+[export_nemo_quant] Building FakeQuantized (FQ) model via quantize_pact...
+[export_nemo_quant] Setting precision to 8 bits...
+[export_nemo_quant] Calibrating activations with statistics_act() ...
+[export_nemo_quant] Entering QuantizedDeployable (QD) via qd_stage(eps_in=0.00392156862745098) ...
+[nemo-graph] Warning: ssd.backbone.features.0.1 is not a module name
+[export_nemo_quant] WARNING: qd_stage failed (AttributeError: 'NoneType' object has no attribute 'item').
+[export_nemo_quant] Falling back to FQ export.
+[export_nemo_quant] Exporting FQ model to ONNX:
+  -> export/ssd_mbv2_nemo_id.onnx
+  input_shape=(1,3,160,160)
+[export_nemo_quant] Final exported stage: FQ (requested: ID)
+[export_nemo_quant] Done.
+=== [3/3] Simplifying ONNX with onnx-simplifier ===
+Skipping onnxsim because final stage is FQ (tutorial flow expects QD/ID before simplification).
+activated original venv: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/../doryenv
 =============================================
- DONE: SSD-MBV2 quantized & cleaned for GAP8 
+ DONE: NEMO export + ONNX simplification only 
 =============================================
-]633;D;0]633;P;Cwd=/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd]633;A(doryenv) ]633;A]0;david@SingingStar: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[01;32mdavid@SingingStar[00m:[01;34m/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[00m$ ]633;B]633;B^C
-]633;E;;957a65f1-57c1-4155-9645-5bcd6402a591]633;C]633;D]633;P;Cwd=/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd]633;A(doryenv) ]633;A]0;david@SingingStar: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[01;32mdavid@SingingStar[00m:[01;34m/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[00m$ ]633;B]633;B^C
-]633;E;;957a65f1-57c1-4155-9645-5bcd6402a591]633;C]633;D]633;P;Cwd=/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd]633;A(doryenv) ]633;A]0;david@SingingStar: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[01;32mdavid@SingingStar[00m:[01;34m/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[00m$ ]633;B]633;B^C
-]633;E;;957a65f1-57c1-4155-9645-5bcd6402a591]633;C]633;D]633;P;Cwd=/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd]633;A(doryenv) ]633;A]0;david@SingingStar: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[01;32mdavid@SingingStar[00m:[01;34m/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[00m$ ]633;B]633;B^C
-]633;E;;957a65f1-57c1-4155-9645-5bcd6402a591]633;C]633;D]633;P;Cwd=/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd]633;A(doryenv) ]633;A]0;david@SingingStar: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[01;32mdavid@SingingStar[00m:[01;34m/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[00m$ ]633;B]633;B^C
-]633;E;;957a65f1-57c1-4155-9645-5bcd6402a591]633;C]633;D]633;P;Cwd=/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd]633;A(doryenv) ]633;A]0;david@SingingStar: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[01;32mdavid@SingingStar[00m:[01;34m/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd[00m$ ]633;B]633;B
+Python used: /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/bin/python3
+Final quant stage: requested=ID, actual=FQ
+Exported ONNX: export/ssd_mbv2_nemo_id.onnx
+Simplified ONNX: export/ssd_mbv2_nemo_id_sim.onnx

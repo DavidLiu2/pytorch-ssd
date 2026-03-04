@@ -129,6 +129,7 @@ void Convolution25(
   int has_bias = 1;
   volatile uint8_t *im2col;
   im2col = l1_buffer + 20616;
+  uint16_t out_mult = out_mult_in;
   uint16_t out_shift = out_shift_in;
 
   ////////////////////////////

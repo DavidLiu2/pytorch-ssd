@@ -437,6 +437,8 @@ void network_run_cluster(void *args) {
 
 #ifdef VERBOSE
     if (i == 0 || branch_change[i-1] == 0) {
+      printf("DEBUG: i=%d activations_size=%d expected_checksum=%d\n",
+           i, activations_size[i], activations_checksum[i][exec]);
       checksum("L2 input", L2_input, activations_size[i], activations_checksum[i][exec]);
       if (layer_with_weights[i])
         checksum("L2 weights", L2_weights, weights_size[i], weights_checksum[i]);
