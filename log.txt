@@ -3,32 +3,336 @@
 activated nemoenv: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/../nemoenv
 nemo python: Python 3.8.10
 nemo pip: pip 20.0.2 from /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/pip (python 3.8)
-/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py:100: TracerWarning: Converting a tensor to a Python number might cause the trace to be incorrect. We can't record the data flow of Python values, so this value will be treated as a constant in the future. This means that the trace might not generalize to other inputs!
-  W_quant.clamp_(-alpha.item(), beta.item() + eps.item())
-/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py:83: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
-  return pact_quantize_asymm_inference(W, torch.as_tensor(eps), torch.as_tensor(clip), torch.as_tensor(clip))
 [export_nemo_quant] Using device: cpu
 [export_nemo_quant] Loading checkpoint from: training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth
-[export_nemo_quant] Checkpoint mapping: add_ssd_prefix (missing=0, unexpected=0)
+[export_nemo_quant] Checkpoint mapping: as_is+features_to_stages (missing=0, unexpected=0)
+[export_nemo_quant] WARNING: Checkpoint keys required remapping. For stable NEMO graph names, train/export with the same model class structure.
+[export_nemo_quant] Applied _model_to_graph compatibility shim for older torch versions.
 [export_nemo_quant] Building FakeQuantized (FQ) model via quantize_pact...
+[ssd_mobilenet_v2_raw] forward_raw called (call=1, input_shape=(tensor(1), tensor(3), tensor(160), tensor(160)))
+[export_nemo_quant] Applied safe set_eps_in patch (dict-first + graph fallback) for QD/ID.
 [export_nemo_quant] Setting precision to 8 bits...
 [export_nemo_quant] Calibrating activations with statistics_act() ...
+[ssd_mobilenet_v2_raw] forward_raw called (call=2, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=3, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=4, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=5, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=6, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=7, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=8, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=9, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=10, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=11, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=12, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=13, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=14, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=15, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=16, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=17, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=18, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=19, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=20, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=21, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=22, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=23, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=24, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=25, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=26, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=27, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=28, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=29, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=30, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=31, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=32, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=33, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=34, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=35, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=36, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=37, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=38, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=39, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=40, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=41, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=42, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=43, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=44, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=45, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=46, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=47, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=48, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=49, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=50, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=51, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=52, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=53, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=54, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=55, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=56, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=57, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=58, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=59, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=60, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=61, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=62, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=63, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=64, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=65, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=66, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=67, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=68, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=69, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=70, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=71, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=72, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=73, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=74, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=75, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=76, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=77, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=78, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=79, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=80, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=81, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=82, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=83, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=84, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=85, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=86, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=87, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=88, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=89, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=90, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=91, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=92, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=93, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=94, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=95, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=96, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=97, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=98, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=99, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=100, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=101, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=102, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=103, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=104, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=105, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=106, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=107, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=108, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=109, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=110, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=111, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=112, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=113, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=114, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=115, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=116, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=117, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=118, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=119, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=120, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=121, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=122, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=123, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=124, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=125, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=126, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=127, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=128, input_shape=(1, 3, 160, 160))
+[ssd_mobilenet_v2_raw] forward_raw called (call=129, input_shape=(1, 3, 160, 160))
+[export_nemo_quant][debug] before qd_stage: 212 module names contain backbone feature/stage paths
+[export_nemo_quant][debug] module: backbone.stage0
+[export_nemo_quant][debug] module: backbone.stage0.0
+[export_nemo_quant][debug] module: backbone.stage0.0.0
+[export_nemo_quant][debug] module: backbone.stage0.0.1
+[export_nemo_quant][debug] module: backbone.stage0.0.2
+[export_nemo_quant][debug] module: backbone.stage0.1
+[export_nemo_quant][debug] module: backbone.stage0.1.conv
+[export_nemo_quant][debug] module: backbone.stage0.1.conv.0
+[export_nemo_quant][debug] module: backbone.stage0.1.conv.0.0
+[export_nemo_quant][debug] module: backbone.stage0.1.conv.0.1
+[export_nemo_quant][debug] module: backbone.stage0.1.conv.0.2
+[export_nemo_quant][debug] module: backbone.stage0.1.conv.1
+[export_nemo_quant][debug] module list truncated: showing 12/212
+[export_nemo_quant][debug] module exists 'ssd.backbone.features.0.1': False
+[export_nemo_quant][debug] module exists 'backbone.features.0.1': False
+[export_nemo_quant][debug] module exists 'ssd.backbone.stage0.0.1': False
+[export_nemo_quant][debug] module exists 'backbone.stage0.0.1': True
+[export_nemo_quant][debug] before qd_stage: 46 graph scope names contain backbone feature/stage paths
+[export_nemo_quant][debug] graph: backbone.stage0.0.2
+[export_nemo_quant][debug] graph: backbone.stage0.1
+[export_nemo_quant][debug] graph: backbone.stage0.1.conv.0.2
+[export_nemo_quant][debug] graph: backbone.stage0.2.conv.0.2
+[export_nemo_quant][debug] graph: backbone.stage0.2.conv.1.2
+[export_nemo_quant][debug] graph: backbone.stage0.3
+[export_nemo_quant][debug] graph: backbone.stage0.3.conv.0.2
+[export_nemo_quant][debug] graph: backbone.stage0.3.conv.1.2
+[export_nemo_quant][debug] graph: backbone.stage1.0.conv.0.2
+[export_nemo_quant][debug] graph: backbone.stage1.0.conv.1.2
+[export_nemo_quant][debug] graph: backbone.stage1.1
+[export_nemo_quant][debug] graph: backbone.stage1.1.conv.0.2
+[export_nemo_quant][debug] graph list truncated: showing 12/46
+[export_nemo_quant][debug] graph scope exists 'ssd.backbone.features.0.1': False
+[export_nemo_quant][debug] graph scope exists 'backbone.features.0.1': False
+[export_nemo_quant][debug] graph scope exists 'ssd.backbone.stage0.0.1': False
+[export_nemo_quant][debug] graph scope exists 'backbone.stage0.0.1': False
 [export_nemo_quant] Entering QuantizedDeployable (QD) via qd_stage(eps_in=0.00392156862745098) ...
-[nemo-graph] Warning: ssd.backbone.features.0.1 is not a module name
-[export_nemo_quant] WARNING: qd_stage failed (AttributeError: 'NoneType' object has no attribute 'item').
-[export_nemo_quant] Falling back to FQ export.
-[export_nemo_quant] Exporting FQ model to ONNX:
+[nemo-graph] Warning: backbone.stage0.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.1.conv.2 is not a module name
+[nemo-graph] Warning: backbone.stage0.1.conv.2 is not a module name
+[nemo-graph] Warning: backbone.stage0.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.2.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage0.2.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage0.3.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.3.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.3.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.3.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage0.3.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage0.3.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage1.0.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.0.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.0.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.0.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.0.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage1.0.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage1.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.1.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.1.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.1.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage1.1.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage1.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage1.2.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage1.2.conv.3 is not a module name
+/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py:56: UserWarning: __floordiv__ is deprecated, and its behavior will change in a future version of pytorch. It currently rounds toward 0 (like the 'trunc' function NOT 'floor'). This results in incorrect rounding for negative values. To keep the current behavior, use torch.div(a, b, rounding_mode='trunc'), or for actual floor division, use torch.div(a, b, rounding_mode='floor').
+  return torch.as_tensor((t.clone().detach().type(torch.int64) * eps_ratio.clone().detach().type(torch.int64) // D), dtype=torch.float32, device=device)
+/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py:56: TracerWarning: torch.as_tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  return torch.as_tensor((t.clone().detach().type(torch.int64) * eps_ratio.clone().detach().type(torch.int64) // D), dtype=torch.float32, device=device)
+[nemo-graph] Warning: backbone.stage2.0.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.0.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.0.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.0.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.0.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.0.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.1.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.1.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.1.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.1.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.2.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.2.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.3.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.3.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.3.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.3.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.3.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.3.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.4.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.4.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.4.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.4.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.4.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.4.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.5.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.5.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.5.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.5.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.5.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.5.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.6.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.6.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.6.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.6.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage2.6.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage2.6.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.0.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.0.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.0.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.0.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.0.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.0.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.1.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.1.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.1.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.1.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.1.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.2.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.2.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.2.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.2.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.3.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.3.conv.0.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.3.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.3.conv.1.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.3.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.3.conv.3 is not a module name
+[nemo-graph] Warning: backbone.stage3.4.1 is not a module name
+[nemo-graph] Warning: backbone.stage3.4.1 is not a module name
+[export_nemo_quant] safe set_eps_in updated modules: 87
+[export_nemo_quant] WARNING: qd_stage eps-mapping failed (KeyError: 'backbone.stage0.0.1').
+[export_nemo_quant] Applying named_modules() eps fallback and continuing QD conversion.
+[export_nemo_quant] Running QD fallback steps without graph-name eps mapping.
+[export_nemo_quant] Fallback step OK: prune_empty_bn
+[export_nemo_quant] Fallback step WARN: round_weights failed (TypeError: unsupported operand type(s) for /: 'NoneType' and 'int')
+[export_nemo_quant] Fallback step WARN: harden_weights(pre) failed (TypeError: unsupported operand type(s) for *: 'NoneType' and 'Tensor')
+[export_nemo_quant] Fallback step OK: nemo.transform.bn_quantizer
+[export_nemo_quant] Fallback eps assignment complete: eps_in attrs=87, eps_in_list attrs=0
+[export_nemo_quant] eps_in set (first 12): ['backbone.stage0.0.1', 'backbone.stage0.0.2', 'backbone.stage0.1.conv.0.1', 'backbone.stage0.1.conv.0.2', 'backbone.stage0.1.conv.2', 'backbone.stage0.2.conv.0.1', 'backbone.stage0.2.conv.0.2', 'backbone.stage0.2.conv.1.1', 'backbone.stage0.2.conv.1.2', 'backbone.stage0.2.conv.3', 'backbone.stage0.3.conv.0.1', 'backbone.stage0.3.conv.0.2']
+[export_nemo_quant] Fallback deployment flags: deployment=95, set_static_precision=35
+[export_nemo_quant] Fallback step WARN: calibrate_bn failed (KeyError: 'backbone.stage0.0.1')
+[export_nemo_quant] Fallback step WARN: harden_weights(post) failed (TypeError: unsupported operand type(s) for *: 'NoneType' and 'Tensor')
+[export_nemo_quant] QD fallback completed (stage='qd').
+[export_nemo_quant] Entering IntegerDeployable (ID) via id_stage(eps_in=dict) ...
+[export_nemo_quant] BN eps initialized for ID: 52
+[export_nemo_quant] safe set_eps_in updated modules: 87
+[export_nemo_quant] Exporting ID model to ONNX:
   -> export/ssd_mbv2_nemo_id.onnx
   input_shape=(1,3,160,160)
-[export_nemo_quant] Final exported stage: FQ (requested: ID)
+[ssd_mobilenet_v2_raw] forward_raw called (call=130, input_shape=(tensor(1), tensor(3), tensor(160), tensor(160)))
+[export_nemo_quant] Final exported stage: ID (requested: ID)
 [export_nemo_quant] Done.
 === [3/3] Simplifying ONNX with onnx-simplifier ===
-Skipping onnxsim because final stage is FQ (tutorial flow expects QD/ID before simplification).
+Simplifying...
+Finish! Here is the difference:
+┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+┃            ┃ Original Model ┃ Simplified Model ┃
+┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+│ Add        │ 63             │ 63               │
+│ Cast       │ 140            │ 140              │
+│ Clip       │ 35             │ 35               │
+│ Concat     │ 2              │ 2                │
+│ Constant   │ 258            │ 258              │
+│ Conv       │ 60             │ 60               │
+│ Div        │ 35             │ 35               │
+│ Mul        │ 87             │ 87               │
+│ Pad        │ 8              │ 8                │
+│ Reshape    │ 16             │ 16               │
+│ Transpose  │ 8              │ 8                │
+│ Model Size │ 494.4KiB       │ 505.6KiB         │
+└────────────┴────────────────┴──────────────────┘
 activated original venv: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/../doryenv
 =============================================
  DONE: NEMO export + ONNX simplification only 
 =============================================
 Python used: /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/bin/python3
-Final quant stage: requested=ID, actual=FQ
+Final quant stage: requested=ID, actual=ID
 Exported ONNX: export/ssd_mbv2_nemo_id.onnx
 Simplified ONNX: export/ssd_mbv2_nemo_id_sim.onnx

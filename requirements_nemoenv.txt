@@ -8,7 +8,7 @@ torchvision==0.11.3; python_version < "3.9"
 torch>=2.4,<2.7; python_version >= "3.9"
 torchvision>=0.19,<0.22; python_version >= "3.9"
 
-pytorch-nemo==0.0.8
+pytorch-nemo @ git+https://github.com/pulp-platform/nemo.git@5ea3338ae172f96e996bdf75a5dacdf795282929
 onnx==1.17.0; python_version < "3.12"
 onnx>=1.20,<1.21; python_version >= "3.12"
 onnxsim==0.4.36; python_version < "3.12"

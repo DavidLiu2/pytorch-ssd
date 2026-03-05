@@ -1,23 +1,23 @@
 from typing import Tuple
-from collections import OrderedDict
 
 import torch
-import torch.nn as nn
+from torchvision.models.detection.anchor_utils import DefaultBoxGenerator
+from torchvision.models.detection.ssd import SSD
 
-from .ssd_mobilenet_v2 import create_ssd_mobilenet_v2
+from .ssd_mobilenet_v2 import MobileNetV2Backbone
 
 
-class SSDMobileNetV2Raw(nn.Module):
+class SSDMobileNetV2Raw(SSD):
     """
-    Wrapper around torchvision SSD+MobileNetV2 that exposes raw SSD heads:
+    SSD+MobileNetV2 model with dual forward paths:
 
-        forward(x) -> (locs, cls_logits)
+      - `forward(list[Tensor], targets)` behaves like standard torchvision SSD
+      - `forward(Tensor)` returns raw SSD heads for export:
+            (locs, cls_logits)
 
     where:
         locs:       [B, N_boxes, 4]
         cls_logits: [B, N_boxes, num_classes]
-
-    No decode, no NMS, no postprocessing.
     """
 
     def __init__(
@@ -26,35 +26,56 @@ class SSDMobileNetV2Raw(nn.Module):
         width_mult: float = 0.1,
         image_size: Tuple[int, int] = (160, 160),
     ):
-        super().__init__()
-        self.ssd = create_ssd_mobilenet_v2(
-            num_classes=num_classes,
+        backbone = MobileNetV2Backbone(
             width_mult=width_mult,
             image_size=image_size,
         )
-        self.num_classes = num_classes
 
-    def forward(self, x: torch.Tensor):
+        num_feature_maps = len(backbone.out_channels)
+        aspect_ratios = [[1.0, 2.0, 0.5] for _ in range(num_feature_maps)]
+        scales = torch.linspace(0.1, 0.7, steps=num_feature_maps + 1).tolist()
+        anchor_generator = DefaultBoxGenerator(
+            aspect_ratios=aspect_ratios,
+            scales=scales,
+        )
+
+        super().__init__(
+            backbone=backbone,
+            anchor_generator=anchor_generator,
+            size=image_size,
+            num_classes=num_classes,
+        )
+        self._debug_forward_raw = False
+        self._forward_raw_calls = 0
+
+    def enable_forward_raw_debug(self, enabled: bool = True):
+        self._debug_forward_raw = bool(enabled)
+
+    def forward_raw(self, x: torch.Tensor):
         """
-        x: [B, 3, H, W]
+        Raw head forward used by NEMO export.
 
-        Returns:
+        x: [B, 3, H, W]
+        returns:
             locs:       [B, N_boxes, 4]
             cls_logits: [B, N_boxes, num_classes]
         """
+        self._forward_raw_calls += 1
+        if self._debug_forward_raw:
+            print(
+                "[ssd_mobilenet_v2_raw] forward_raw called "
+                f"(call={self._forward_raw_calls}, input_shape={tuple(x.shape)})"
+            )
 
-        # 1) Backbone → feature maps (same as SSD.forward)
-        features = self.ssd.backbone(x)  # can be Tensor or OrderedDict
-
-        if isinstance(features, torch.Tensor):
-            features = OrderedDict([("0", features)])
-
-        features_list = list(features.values())  # list[Tensor]
-
-        # 2) SSD head → raw outputs
-        head_outputs = self.ssd.head(features_list)
-        # In your torchvision, these are already [B, N_boxes, 4] and [B, N_boxes, C]
+        features_list = self.backbone.forward_features(x)
+        head_outputs = self.head(features_list)
         locs = head_outputs["bbox_regression"]
         cls_logits = head_outputs["cls_logits"]
-
         return locs, cls_logits
+
+    def forward(self, x, targets=None):
+        if torch.is_tensor(x):
+            if targets is not None:
+                raise ValueError("Targets must be None when forward() receives a Tensor input.")
+            return self.forward_raw(x)
+        return super().forward(x, targets)

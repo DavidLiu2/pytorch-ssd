@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Tuple, List
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
@@ -14,23 +14,13 @@ class MobileNetV2Backbone(nn.Module):
     for SSD and automatically discovers channel counts.
 
     We:
-      - keep the full `features` as a Sequential
-      - choose a few indices where we read feature maps
+      - split MobileNetV2 features into explicit named stages
+      - run stage calls in a straight line (NEMO-friendly tracing)
       - run a dummy input once in __init__ to infer out_channels
     """
 
-    def __init__(self, width_mult: float = 0.1,
-                 out_idxs: List[int] = None,
-                 image_size: Tuple[int, int] = (160, 160)):
+    def __init__(self, width_mult: float = 0.1, image_size: Tuple[int, int] = (160, 160)):
         super().__init__()
-
-        if out_idxs is None:
-            # Reasonable defaults; increasing stride & depth:
-            # these indices are within MobileNetV2.features list
-            # You can tweak later if you want different resolutions.
-            out_idxs = [3, 6, 13, 18]
-
-        self.out_idxs = sorted(out_idxs)
 
         # Compatible with both new and old torchvision APIs:
         # - New (>=0.13): mobilenet_v2(weights=None, width_mult=...)
@@ -53,10 +43,56 @@ class MobileNetV2Backbone(nn.Module):
         base.features[-1][1] = nn.BatchNorm2d(last_c)
 
 
-        self.features = base.features
+        features = self._ensure_module_visible_stem(base.features)
+
+        # Explicit stage split points:
+        #   stage0: features[0..3]
+        #   stage1: features[4..6]
+        #   stage2: features[7..13]
+        #   stage3: features[14..end]
+        self.stage0 = nn.Sequential(*features[:4])
+        self.stage1 = nn.Sequential(*features[4:7])
+        self.stage2 = nn.Sequential(*features[7:14])
+        self.stage3 = nn.Sequential(*features[14:])
 
         # ---- Discover out_channels with a dummy forward ----
         self.out_channels = self._infer_out_channels(image_size)
+
+    @staticmethod
+    def _ensure_module_visible_stem(features: nn.Sequential) -> nn.Sequential:
+        stem = features[0]
+        stem_children = list(stem.children())
+        if len(stem_children) < 2:
+            return features
+
+        conv = stem_children[0]
+        bn = stem_children[1]
+        if len(stem_children) >= 3 and isinstance(stem_children[2], nn.Module):
+            act = stem_children[2]
+        else:
+            # MobileNetV2 stem activation should be ReLU6.
+            act = nn.ReLU6(inplace=False)
+
+        if isinstance(act, nn.ReLU6):
+            act = nn.ReLU6(inplace=False)
+
+        features[0] = nn.Sequential(conv, bn, act)
+        return features
+
+    def _forward_stages(self, x: torch.Tensor):
+        x = self.stage0(x)
+        fm0 = x
+        x = self.stage1(x)
+        fm1 = x
+        x = self.stage2(x)
+        fm2 = x
+        x = self.stage3(x)
+        fm3 = x
+        return fm0, fm1, fm2, fm3
+
+    def forward_features(self, x: torch.Tensor):
+        fm0, fm1, fm2, fm3 = self._forward_stages(x)
+        return [fm0, fm1, fm2, fm3]
 
     def _infer_out_channels(self, image_size: Tuple[int, int]) -> List[int]:
         """
@@ -67,29 +103,18 @@ class MobileNetV2Backbone(nn.Module):
         with torch.no_grad():
             # dummy on CPU is fine
             x = torch.zeros(1, 3, image_size[0], image_size[1])
-            out_fms = []
-            cur = x
-            for i, layer in enumerate(self.features):
-                cur = layer(cur)
-                if i in self.out_idxs:
-                    out_fms.append(cur)
+            out_fms = self.forward_features(x)
 
         return [fm.shape[1] for fm in out_fms]
 
     def forward(self, x: torch.Tensor) -> OrderedDict:
-        out = OrderedDict()
-        cur = x
-        fm_idx = 0
-        for i, layer in enumerate(self.features):
-            cur = layer(cur)
-            if i in self.out_idxs:
-                out[str(fm_idx)] = cur
-                fm_idx += 1
-
-        # If you want an extra low-res map, you could add a small conv block here
-        # For now we stick to the feature maps from MobileNetV2 itself.
-
-        return out
+        fm0, fm1, fm2, fm3 = self._forward_stages(x)
+        return OrderedDict([
+            ("0", fm0),
+            ("1", fm1),
+            ("2", fm2),
+            ("3", fm3),
+        ])
 
 
 def create_ssd_mobilenet_v2(num_classes: int = 2,

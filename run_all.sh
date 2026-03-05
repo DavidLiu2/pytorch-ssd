@@ -82,6 +82,29 @@ ensure_module_or_sync_requirements() {
   fi
 }
 
+ensure_nemo_requirement_sync() {
+  local req_file="$1"
+  local py_bin="$2"
+
+  if [ ! -f "$req_file" ]; then
+    echo "ERROR: requirements file not found: $req_file"
+    exit 1
+  fi
+
+  local req_line
+  req_line="$(grep -E '^[[:space:]]*pytorch-nemo[[:space:]]*@' "$req_file" | head -n1 || true)"
+  if [ -z "$req_line" ]; then
+    return
+  fi
+
+  local req_url
+  req_url="${req_line#*@ }"
+  if ! "$py_bin" -c "import inspect; import nemo.transf.deploy as d; import sys; sys.exit(0 if 'if eps_in_new is None:' in inspect.getsource(d._set_eps_in_pact) else 1)" >/dev/null 2>&1; then
+    echo "=== pytorch-nemo missing expected deploy fix; syncing ${req_file} ==="
+    "$py_bin" -m pip install --upgrade --force-reinstall --no-deps "$req_url"
+  fi
+}
+
 ########################################
 # ENSURE ENVS EXIST
 ########################################
@@ -135,6 +158,7 @@ echo "nemo pip: $("$NEMO_PY" -m pip --version)"
 # Ensure critical packages exist in nemoenv.
 ensure_module_or_sync_requirements "torch" "$NEMO_REQ" "$NEMO_PY"
 ensure_module_or_sync_requirements "nemo" "$NEMO_REQ" "$NEMO_PY"
+ensure_nemo_requirement_sync "$NEMO_REQ" "$NEMO_PY"
 ensure_module_or_sync_requirements "onnxsim" "$NEMO_REQ" "$NEMO_PY"
 
 NEMO_CMD=(
@@ -147,6 +171,7 @@ NEMO_CMD=(
   --eps-in "${EPS_IN}"
   --calib-batches "${CALIB_BATCHES}"
   --strict-stage
+  --debug-forward-raw
 )
 
 if [ "${STRICT_STAGE}" = "1" ]; then

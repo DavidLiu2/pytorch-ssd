@@ -11,7 +11,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from tqdm import tqdm
 
 from utils.coco_person import COCOPersonDataset, detection_collate_fn
-from models.ssd_mobilenet_v2 import create_ssd_mobilenet_v2
+from models.ssd_mobilenet_v2_raw import SSDMobileNetV2Raw
 from utils.transforms import get_train_transforms, get_val_transforms
 
 
@@ -110,7 +110,7 @@ def main():
     )
 
     # model
-    model = create_ssd_mobilenet_v2(num_classes=2, width_mult=0.1, image_size=(160, 160))
+    model = SSDMobileNetV2Raw(num_classes=2, width_mult=0.1, image_size=(160, 160))
     model.to(device)
 
     params = [p for p in model.parameters() if p.requires_grad]
