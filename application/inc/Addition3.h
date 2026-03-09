@@ -16,12 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef __ADDITION3_H__
 #define __ADDITION3_H__
 
 void  Addition3(
-                   void *args
-                   );
+  void *args
+);
 
 #endif

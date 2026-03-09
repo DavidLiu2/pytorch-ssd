@@ -1,5 +1,5 @@
-=== [1/3] Training SSD-MobileNetV2 ===
-=== [2/3] Exporting NEMO-quantized ONNX (using nemoenv) ===
+=== [1/4] Training SSD-MobileNetV2 ===
+=== [2/4] Exporting NEMO-quantized ONNX (using nemoenv) ===
 activated nemoenv: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/../nemoenv
 nemo python: Python 3.8.10
 nemo pip: pip 20.0.2 from /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/pip (python 3.8)
@@ -309,7 +309,7 @@ nemo pip: pip 20.0.2 from /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/li
 [ssd_mobilenet_v2_raw] forward_raw called (call=130, input_shape=(tensor(1), tensor(3), tensor(160), tensor(160)))
 [export_nemo_quant] Final exported stage: ID (requested: ID)
 [export_nemo_quant] Done.
-=== [3/3] Simplifying ONNX with onnx-simplifier ===
+=== [3/4] Simplifying ONNX with onnx-simplifier ===
 Simplifying...
 Finish! Here is the difference:
 ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
@@ -329,10 +329,196 @@ Finish! Here is the difference:
 │ Model Size │ 494.4KiB       │ 505.6KiB         │
 └────────────┴────────────────┴──────────────────┘
 activated original venv: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/../doryenv
-=============================================
- DONE: NEMO export + ONNX simplification only 
-=============================================
+=== [4/4] Preparing DORY input and running network_generate ===
+activated doryenv: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/../doryenv
+dory python: Python 3.8.10
+dory pip: pip 25.0.1 from /mnt/c/Users/yxl21/Documents/School/DroneRS/doryenv/lib/python3.8/site-packages/pip (python 3.8)
+[run_all] Cleaning ID ONNX for DORY frontend compatibility...
+Found 52 affine Mul->Add pairs to bypass
+Removed 104 nodes from affine Mul->Add pairs
+Saved stripped model to export/ssd_mbv2_noaffine.onnx
+Found 8 Transpose nodes to strip/bypass
+Removed 8 Transpose nodes
+Saved stripped model to export/ssd_mbv2_notranspose.onnx
+Found 0 Min nodes to strip/bypass
+Removed 0 Min nodes
+Saved stripped model to export/ssd_mbv2_nomin.onnx
+Found 0 fake-quant patterns to strip
+Removed 0 nodes belonging to fake-quant chains
+Saved stripped model to export/ssd_mbv2_dory.onnx
+[run_all] DORY config written: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/config_person_ssd_runtime.json
+[run_all] DORY ONNX set to: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/ssd_mbv2_dory.onnx
+[run_all] Generating DORY input/output, golden activations, and weight txt files...
+[0;93m2026-03-05 03:07:00.860993360 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.0.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.861414068 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.6.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.861541759 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.6.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.861690681 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.5.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.861823102 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.2.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.861946275 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.5.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862081592 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.5.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862238489 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.0.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862376038 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.3.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862501137 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.4.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862624339 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.4.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862739807 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.3.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862857921 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.3.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.862970575 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.3.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.863089571 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.3.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.863201813 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.6.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.863361887 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.0.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.863568619 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.5.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.863730716 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.3.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.863917580 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.2.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864084736 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.1.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864207247 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.2.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864316734 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.2.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864428576 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.0.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864544517 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.3.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864675825 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.2.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864829386 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.3.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.864987677 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.0.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865147218 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.0.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865270572 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.0.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865382334 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.6.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865494506 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.3.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865626957 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.0.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865766451 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.0.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865885657 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.0.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.865997349 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.1.conv.2.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866107618 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.0.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866212456 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.2.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866320340 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.3.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866425239 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.1.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866530358 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.2.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866634916 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.2.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866738543 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.0.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.866882886 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.3.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.867012111 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.1.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.867159590 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.1.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.867316427 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.4.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.867511877 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.1.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.867722106 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.2.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.867980105 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.2.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868131922 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.2.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868323715 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868445636 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.1.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868557308 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.2.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868663599 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.1.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868768989 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.2.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868874008 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.6.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.868994005 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.2.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869117920 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.1.conv.2.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869230693 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869342305 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.2.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869454968 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.1.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869574134 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.1.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869686326 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.4.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869796355 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.2.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.869906443 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.3.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870020179 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.2.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870170423 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.4.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870338181 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.0.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870471454 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.6.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870594717 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.0.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870711108 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.1.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870823390 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.1.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.870932537 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.0.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.871042566 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.3.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.871164096 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.4.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.871285806 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.2.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.871429649 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.2.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.871658012 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.0.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.871863149 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.1.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872021530 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.1.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872154843 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.1.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872276764 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.4.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872391141 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.1.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872502722 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.1.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872625364 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.1.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872738248 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.1.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.872850961 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.2.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.873043606 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.3.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.873202526 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.3.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.873327423 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.4.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.873539716 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.1.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.873685521 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.2.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.873804496 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.5.conv.0.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.873914835 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.5.conv.3.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.874027118 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.0.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.874155312 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage0.3.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.874271422 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.2.conv.3.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.874439600 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.2.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.874593011 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.3.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.874767251 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.2.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.874891817 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage1.0.conv.1.1.kappa'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.875013507 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage3.3.conv.0.1.lamda'. It is not used by any node and should be removed from the model.[m
+[0;93m2026-03-05 03:07:00.875123997 [W:onnxruntime:, graph.cc:4198 CleanUnusedInitializersAndNodeArgs] Removing initializer 'backbone.stage2.1.conv.1.1.lamda'. It is not used by any node and should be removed from the model.[m
+[artifact_gen] input.txt prepared: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/input.txt
+[artifact_gen] collecting DORY layer outputs from frontend=NEMO, target=PULP.GAP8
+Creating Original_graph.onnx in logs/Frontend/onnx_files/
+Creating Original_graph.json in logs/Frontend/json_files/
+onnx_to_dory net prefix: 
+
+##################################
+## DORY GENERAL PARSING OF ONNX ##
+## FINAL RAPRESENTATION:DORY IR ##
+##################################
+
+Parsing ONNX Graph to create DORY graph.
+Creating 00_DORY_raw_graph.json in logs/Frontend/json_files/
+Creating 00_DORY_raw_graph.onnx in logs/Frontend/onnx_files/
+
+Embedding constant nodes inside nodes to which the tensors belong.
+Creating 01_DORY_graph_constants_removed.json in logs/Frontend/json_files/
+Creating 01_DORY_graph_constants_removed.onnx in logs/Frontend/onnx_files/
+
+NEMO Frontend: Matching patterns from generated ONNX to DORY.
+
+NEMO Frontend: Updating Add nodes with constants.
+Creating 02_DORY_mapped_graph.json in logs/Frontend/json_files/
+Creating 02_DORY_mapped_graph.onnx in logs/Frontend/onnx_files/
+
+NEMO Frontend: Adding Bit and Types to Nodes.
+Creating 03_DORY_graph_with_node_precision.json in logs/Frontend/json_files/
+Creating 03_DORY_graph_with_node_precision.onnx in logs/Frontend/onnx_files/
+
+DORY generic Frontend. Updating branches pointers.
+Creating 04_DORY_updated_branches.json in logs/Frontend/json_files/
+Creating 04_DORY_updated_branches.onnx in logs/Frontend/onnx_files/
+
+NEMO Frontend: Adding Data Layout.
+Creating 05_DORY_Frontend_final_graph.json in logs/Frontend/json_files/
+Creating 05_DORY_Frontend_final_graph.onnx in logs/Frontend/onnx_files/
+
+DORY checking of the graph: OK
+
+
+Backend: Matching patterns from generated DORY ONNX to HW Nodes.
+
+DORY generic Frontend. Updating branches pointers.
+
+Updating dimensions of vectors inside the graph, if they do not match among nodes
+
+PULP Backend: Adjusting Data Layout to HWC and CoutKCin.
+
+Updating memory occupation and MACs of tensors in layers
+[artifact_gen] DORY layer outputs discovered: 71
+[artifact_gen] runtime outputs requested: 71
+[artifact_gen] onnxruntime inference completed
+[artifact_gen] input.txt: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/input.txt
+[artifact_gen] output.txt: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/output.txt
+[artifact_gen] golden activations: 71 files
+[artifact_gen] weight txt files: 258 files in /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/weights_txt
+[artifact_gen] manifest: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/nemo_dory_artifacts.json
+=======================================================
+ DONE: NEMO export + ONNX simplification + DORY export 
+=======================================================
 Python used: /mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/bin/python3
 Final quant stage: requested=ID, actual=ID
 Exported ONNX: export/ssd_mbv2_nemo_id.onnx
 Simplified ONNX: export/ssd_mbv2_nemo_id_sim.onnx
+DORY ONNX: export/ssd_mbv2_dory.onnx
+DORY config: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/config_person_ssd_runtime.json
+DORY application dir: /mnt/c/Users/yxl21/Documents/School/DroneRS/dory_examples/application
+DORY weight txt dir: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/weights_txt
+DORY artifact manifest: /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/nemo_dory_artifacts.json

@@ -18,93 +18,121 @@
  * limitations under the License.
  */
 #define DEFINE_CONSTANTS
-#include "weights.h"
 #include "net_utils.h"
 #include "pmsis.h"
 #include "network.h"
 #include "directional_allocator.h"
 #include "mem.h"
 #include <string.h>
-#include "Convolution49.h"
-#include "Convolution34.h"
-#include "Convolution53.h"
-#include "Convolution5.h"
-#include "Addition28.h"
-#include "Convolution0.h"
-#include "Convolution11.h"
-#include "Convolution24.h"
-#include "Convolution30.h"
-#include "Convolution37.h"
-#include "Convolution41.h"
-#include "Convolution44.h"
-#include "Convolution45.h"
-#include "Convolution50.h"
-#include "Addition21.h"
-#include "Convolution31.h"
-#include "Addition32.h"
-#include "Convolution42.h"
-#include "Convolution29.h"
-#include "Convolution12.h"
-#include "Convolution16.h"
-#include "Convolution23.h"
-#include "Convolution40.h"
-#include "Convolution69.h"
-#include "Convolution33.h"
-#include "Addition17.h"
-#include "Convolution39.h"
-#include "Convolution26.h"
-#include "Convolution14.h"
-#include "Convolution13.h"
-#include "Convolution48.h"
-#include "Convolution59.h"
-#include "Convolution7.h"
-#include "Convolution55.h"
-#include "Convolution9.h"
-#include "Convolution61.h"
-#include "Convolution38.h"
-#include "Addition36.h"
+#include "ReluConvolution4.h"
 #include "Convolution57.h"
-#include "Convolution63.h"
-#include "Convolution64.h"
-#include "Convolution1.h"
-#include "Convolution6.h"
-#include "Convolution60.h"
-#include "Addition10.h"
-#include "Addition54.h"
-#include "Convolution68.h"
-#include "Convolution18.h"
-#include "Convolution62.h"
-#include "Convolution46.h"
-#include "Convolution19.h"
 #include "Addition58.h"
-#include "Convolution8.h"
-#include "Convolution20.h"
-#include "Convolution67.h"
 #include "Addition47.h"
-#include "Convolution2.h"
-#include "Convolution4.h"
-#include "Addition3.h"
-#include "Convolution15.h"
-#include "Convolution22.h"
-#include "Convolution52.h"
+#include "ReluConvolution56.h"
 #include "Convolution70.h"
-#include "Convolution35.h"
-#include "Convolution56.h"
-#include "Addition43.h"
-#include "Convolution25.h"
-#include "Convolution51.h"
-#include "Convolution66.h"
-#include "Convolution65.h"
+#include "ReluConvolution8.h"
+#include "ReluConvolution49.h"
+#include "ReluConvolution18.h"
 #include "Convolution27.h"
+#include "ReluConvolution30.h"
+#include "ReluConvolution33.h"
+#include "ReluConvolution60.h"
+#include "Addition28.h"
+#include "Addition17.h"
+#include "Convolution31.h"
+#include "ReluConvolution41.h"
+#include "Convolution2.h"
+#include "Convolution13.h"
+#include "Convolution53.h"
+#include "ReluConvolution51.h"
+#include "Convolution24.h"
+#include "Convolution50.h"
+#include "Convolution42.h"
+#include "ReluConvolution45.h"
+#include "ReluConvolution52.h"
+#include "Convolution6.h"
+#include "Convolution16.h"
+#include "Convolution61.h"
+#include "ReluConvolution12.h"
+#include "ReluConvolution48.h"
+#include "ReluConvolution23.h"
+#include "ReluConvolution62.h"
+#include "ReluConvolution7.h"
+#include "Convolution9.h"
+#include "ReluConvolution22.h"
+#include "Addition36.h"
+#include "Convolution64.h"
+#include "Convolution66.h"
+#include "ReluConvolution25.h"
+#include "ReluConvolution1.h"
+#include "Convolution68.h"
+#include "ReluConvolution19.h"
+#include "ReluConvolution55.h"
+#include "Convolution46.h"
+#include "ReluConvolution0.h"
+#include "ReluConvolution14.h"
+#include "Addition10.h"
+#include "ReluConvolution29.h"
+#include "ReluConvolution37.h"
+#include "Addition32.h"
+#include "Addition43.h"
+#include "ReluConvolution11.h"
+#include "Convolution65.h"
+#include "ReluConvolution44.h"
+#include "Convolution20.h"
+#include "Addition54.h"
+#include "ReluConvolution38.h"
+#include "Convolution39.h"
+#include "ReluConvolution59.h"
+#include "Convolution69.h"
+#include "ReluConvolution26.h"
+#include "Convolution63.h"
+#include "ReluConvolution5.h"
+#include "Addition3.h"
+#include "ReluConvolution34.h"
+#include "Convolution67.h"
+#include "Addition21.h"
+#include "ReluConvolution15.h"
+#include "ReluConvolution40.h"
+#include "Convolution35.h"
 
 
 #define VERBOSE 1
 
+#define L3_WEIGHTS_SIZE 4000000
+#define L3_INPUT_SIZE 1500000
+#define L3_OUTPUT_SIZE 1500000
 static void *L3_weights = NULL;
 static void *L3_input = NULL;
 static void *L3_output = NULL;
 int cycle_network_execution;
+/* Moves the weights and the biases from hyperflash to hyperram */
+void network_initialize() {
 
+  L3_weights = ram_malloc(L3_WEIGHTS_SIZE);
+  L3_input = ram_malloc(L3_INPUT_SIZE);
+  L3_output = ram_malloc(L3_OUTPUT_SIZE);
+
+#ifdef VERBOSE
+  printf("\nL3 Buffer alloc initial\t@ %d:\t%s\n", (unsigned int)L3_weights, L3_weights?"Ok":"Failed");
+  printf("\nL3 Buffer alloc initial\t@ %d:\t%s\n", (unsigned int)L3_input, L3_input?"Ok":"Failed");
+  printf("\nL3 Buffer alloc initial\t@ %d:\t%s\n", (unsigned int)L3_output, L3_output?"Ok":"Failed");
+#endif
+
+  void *w_ptr = L3_weights;
+  for (int i = 0; i < 60; i++) {
+    size_t size = load_file_to_ram(w_ptr, L3_weights_files[i]);
+    L3_weights_size[i] = size;
+    w_ptr += size;
+  }
+}
+
+/* Remove RAM memory */
+void network_terminate() {
+  ram_free(L3_weights, L3_WEIGHTS_SIZE);
+  ram_free(L3_input, L3_INPUT_SIZE);
+  ram_free(L3_output, L3_OUTPUT_SIZE);
+}
 
 void execute_layer_fork(void *args) {
   layer_args_t *layer_args = (layer_args_t *)args;
@@ -113,10 +141,10 @@ void execute_layer_fork(void *args) {
   switch (layer_args->layer_id)
   {
     case 0:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution0, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution0, args);
       break;
     case 1:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution1, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution1, args);
       break;
     case 2:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution2, args);
@@ -125,19 +153,19 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition3, args);
       break;
     case 4:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution4, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution4, args);
       break;
     case 5:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution5, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution5, args);
       break;
     case 6:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution6, args);
       break;
     case 7:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution7, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution7, args);
       break;
     case 8:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution8, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution8, args);
       break;
     case 9:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution9, args);
@@ -146,19 +174,19 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition10, args);
       break;
     case 11:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution11, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution11, args);
       break;
     case 12:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution12, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution12, args);
       break;
     case 13:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution13, args);
       break;
     case 14:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution14, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution14, args);
       break;
     case 15:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution15, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution15, args);
       break;
     case 16:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution16, args);
@@ -167,10 +195,10 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition17, args);
       break;
     case 18:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution18, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution18, args);
       break;
     case 19:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution19, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution19, args);
       break;
     case 20:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution20, args);
@@ -179,19 +207,19 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition21, args);
       break;
     case 22:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution22, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution22, args);
       break;
     case 23:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution23, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution23, args);
       break;
     case 24:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution24, args);
       break;
     case 25:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution25, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution25, args);
       break;
     case 26:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution26, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution26, args);
       break;
     case 27:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution27, args);
@@ -200,10 +228,10 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition28, args);
       break;
     case 29:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution29, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution29, args);
       break;
     case 30:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution30, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution30, args);
       break;
     case 31:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution31, args);
@@ -212,10 +240,10 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition32, args);
       break;
     case 33:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution33, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution33, args);
       break;
     case 34:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution34, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution34, args);
       break;
     case 35:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution35, args);
@@ -224,19 +252,19 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition36, args);
       break;
     case 37:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution37, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution37, args);
       break;
     case 38:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution38, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution38, args);
       break;
     case 39:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution39, args);
       break;
     case 40:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution40, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution40, args);
       break;
     case 41:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution41, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution41, args);
       break;
     case 42:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution42, args);
@@ -245,10 +273,10 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition43, args);
       break;
     case 44:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution44, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution44, args);
       break;
     case 45:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution45, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution45, args);
       break;
     case 46:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution46, args);
@@ -257,19 +285,19 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition47, args);
       break;
     case 48:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution48, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution48, args);
       break;
     case 49:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution49, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution49, args);
       break;
     case 50:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution50, args);
       break;
     case 51:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution51, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution51, args);
       break;
     case 52:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution52, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution52, args);
       break;
     case 53:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution53, args);
@@ -278,10 +306,10 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition54, args);
       break;
     case 55:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution55, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution55, args);
       break;
     case 56:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution56, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution56, args);
       break;
     case 57:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution57, args);
@@ -290,16 +318,16 @@ void execute_layer_fork(void *args) {
       pi_cl_team_fork(NUM_CORES, (void *)Addition58, args);
       break;
     case 59:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution59, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution59, args);
       break;
     case 60:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution60, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution60, args);
       break;
     case 61:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution61, args);
       break;
     case 62:
-      pi_cl_team_fork(NUM_CORES, (void *)Convolution62, args);
+      pi_cl_team_fork(NUM_CORES, (void *)ReluConvolution62, args);
       break;
     case 63:
       pi_cl_team_fork(NUM_CORES, (void *)Convolution63, args);
@@ -330,7 +358,7 @@ void execute_layer_fork(void *args) {
   if (pi_core_id() == 0) pmsis_l1_malloc_free(layer_args->L1_buffer, 36700);
 }
 
-struct network_run_token network_run_async(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir, void *L2_input_h)
+struct network_run_token network_run_async(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir)
 {
   struct pi_device cluster_dev = {0};
   struct pi_cluster_conf conf;
@@ -338,13 +366,12 @@ struct network_run_token network_run_async(void *l2_buffer, size_t l2_buffer_siz
   // First open the cluster
   pi_cluster_conf_init(&conf);
   conf.id=0;
-  unsigned int args[5];
+  unsigned int args[4];
   args[0] = (unsigned int) l2_buffer;
   args[1] = (unsigned int) l2_buffer_size;
   args[2] = (unsigned int) l2_final_output;
   args[3] = (unsigned int) exec;
   args[4] = (unsigned int) initial_dir;
-  args[5] = (unsigned int) L2_input_h;
   // open cluster...
   pi_cluster_task(&cluster_task, network_run_cluster, args);
   pi_open_from_conf(&cluster_dev, &conf);
@@ -365,9 +392,9 @@ void network_run_wait(struct network_run_token token)
   print_perf("Final", cycle_network_execution, 21012800);
 }
 
-void network_run(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir, void *L2_input_h)
+void network_run(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir)
 {
-  network_run_wait(network_run_async(l2_buffer, l2_buffer_size, l2_final_output, exec, initial_dir, L2_input_h));
+  network_run_wait(network_run_async(l2_buffer, l2_buffer_size, l2_final_output, exec, initial_dir));
 }
 
 void network_run_cluster(void *args) {
@@ -377,7 +404,6 @@ void network_run_cluster(void *args) {
   void * l2_final_output = (void *) real_args[2];
   int exec = (int) real_args[3];
   int dir = (int) real_args[4];
-  void * L2_input_h = (void *)real_args[5];
 /*
   - initial buffer allocation L2 and L1
   - variable declaration
@@ -393,9 +419,6 @@ void network_run_cluster(void *args) {
 
   int residual_number = 0;
   int bypass_dimension = 0;
-  int left_branch_nodes = 0, right_branch_nodes = 0;
-  int z = 0;
-  int end_left = 0;
   int perf_cyc = 0;
 /* ---------------------------------- */
 /* --------- SECTION 0 END ---------- */
@@ -408,7 +431,6 @@ void network_run_cluster(void *args) {
 /* ---------------------------------- */
 /* -------- SECTION 1 BEGIN --------- */
 /* ---------------------------------- */
-  L2_input = L2_input_h;
   directional_allocator_init(l2_buffer, l2_buffer_size);
 
 /* ---------------------------------- */
@@ -433,14 +455,22 @@ void network_run_cluster(void *args) {
   - read weights
 */
     L2_output = dmalloc(activations_out_size[i], !dir);
-    L2_weights = Weights_name[i];
+    if (L3_input_layers[i] == 1)
+      L2_input = dmalloc(activations_size[i], dir);
+
+    if (layer_with_weights[i] == 1)
+      L2_weights = dmalloc(weights_size[i], dir);
+
+    if (allocate_layer[i] == 1)
+      cl_ram_read(L2_weights, L3_weights_curr, weights_size[i]);
 
 #ifdef VERBOSE
+    if (L3_input_layers[i] == 1)
+      printf("Input in L3\n");
+    else
     if (i == 0 || branch_change[i-1] == 0) {
-      printf("DEBUG: i=%d activations_size=%d expected_checksum=%d\n",
-           i, activations_size[i], activations_checksum[i][exec]);
       checksum("L2 input", L2_input, activations_size[i], activations_checksum[i][exec]);
-      if (layer_with_weights[i])
+      if (allocate_layer[i] == 1)
         checksum("L2 weights", L2_weights, weights_size[i], weights_checksum[i]);
       else
         printf("Weights in L3\n");
@@ -490,57 +520,59 @@ void network_run_cluster(void *args) {
 
 #ifdef VERBOSE
     printf("Layer %s %d ended: \n", Layers_name[i], i);
+    if (L3_output_layers[i]==1) {
+      printf("Output in L3. Expected checksum: %d\n", activations_out_checksum[i][exec]);
+    } else {
       checksum(i + 1 < 71 ? "L2 output" : "final output",
                L2_output, activations_out_size[i], activations_out_checksum[i][exec]);
+    }
     printf("\n");
 #endif
 
     // Free memory
+    if (layer_with_weights[i] == 1)
+      dfree(weights_size[i], dir);
+    dfree(activations_size[i], dir);
     if (branch_input[i] == 1)
       dfree(bypass_dimension, dir);
     L2_input = L2_output;
-    if  (branch_output[i]==1)
-      {
-        bypass_activations = L2_output;
-        bypass_dimension = activations_out_size[i];
-      }
-
-    if (i > 0 && branch_output[i-1] == 0 && branch_change[i-1] == 0)
-      dfree(activations_size[i], dir);
     // Residual connections
     if (i < 70) {
-
-      if  (branch_output[i]==1)
-      {
-        left_branch_nodes = 0;
-        right_branch_nodes = 0;
-        z = i+1;
-        end_left = 0;
-        while (branch_input[z] == 0)
-        {
-          if (end_left == 0)
-            left_branch_nodes+=1;
-          else
-            right_branch_nodes+=1;
-          if (branch_change[z] == 1)
-            end_left = 1;
-          z+=1;
-        }
-        if ((left_branch_nodes % 2 == 1) && (right_branch_nodes == 0))
-          dir = !dir;
-        if ((left_branch_nodes % 2 == 0) && (right_branch_nodes > 0))
-          dir = !dir;
+      if (branch_input[i+1] == 1) {
+        bypass_activations = dmalloc(bypass_dimension, !dir);
+        residual_number--;
+        cl_ram_read(bypass_activations, layers_pointers[residual_number], bypass_dimension);
+        cl_ram_free(layers_pointers[residual_number], bypass_dimension);
       }
 
-      if  (branch_change[i]==1)
-      {
-        L2_input = bypass_activations;
-        bypass_activations = L2_output;
+      // TODO I feel like this should look ahead instead of back
+      if (i > 0 && branch_output[i-1]==1 && L3_input_layers[i]==1) { // TODO don't understand this condition
+        L3_input = cl_ram_malloc(1500000);
+      }
+      if (branch_output[i]==1 && L3_output_layers[i]==1) {
+        cl_ram_free(L3_input + activations_out_size[i], 1500000 - activations_out_size[i]);
+        layers_pointers[residual_number] = L3_input;
+        residual_number++;
         bypass_dimension = activations_out_size[i];
-        if (right_branch_nodes % 2 == 1)
-          dir = !dir;
-      }
+      } else
+    if (branch_output[i]==1 || branch_change[i] == 1) {
+        layers_pointers[residual_number] = cl_ram_malloc(activations_out_size[i]);
+        cl_ram_write(layers_pointers[residual_number], L2_output, activations_out_size[i]);
+        residual_number++;
+        bypass_dimension = activations_out_size[i];
     }
+
+      if (branch_change[i]==1) {
+        dfree(activations_out_size[i], !dir);
+        L2_input = dmalloc(activations_size[i + 1], !dir);
+        cl_ram_read(L2_input, layers_pointers[residual_number - 2], activations_size[i + 1]);
+        cl_ram_free(layers_pointers[residual_number - 2], activations_size[i + 1]);
+      }
+      if (L3_output_layers[i] == 1)
+        dfree(activations_out_size[i], !dir);
+    }
+    if (layer_with_weights[i])
+       L3_weights_curr += L3_weights_size[weight_l_cnt++];
     dir = !dir;
   }
 

@@ -32,6 +32,24 @@ MEAN="${MEAN:-0.5,0.5,0.5}"
 STD="${STD:-0.5,0.5,0.5}"
 
 ########################################
+# DORY CONFIG
+########################################
+
+DORY_ROOT="${DORY_ROOT:-${PROJECT_ROOT}/../dory}"
+DORY_CONFIG_TEMPLATE="${DORY_CONFIG_TEMPLATE:-${PROJECT_ROOT}/../dory_examples/config_files/config_person_ssd.json}"
+DORY_CONFIG_GEN="${DORY_CONFIG_GEN:-export/config_person_ssd_runtime.json}"
+DORY_ONNX="${DORY_ONNX:-export/ssd_mbv2_dory.onnx}"
+DORY_NO_AFFINE_ONNX="${DORY_NO_AFFINE_ONNX:-export/ssd_mbv2_noaffine.onnx}"
+DORY_NO_TRANSPOSE_ONNX="${DORY_NO_TRANSPOSE_ONNX:-export/ssd_mbv2_notranspose.onnx}"
+DORY_NO_MIN_ONNX="${DORY_NO_MIN_ONNX:-export/ssd_mbv2_nomin.onnx}"
+DORY_FRONTEND="${DORY_FRONTEND:-NEMO}"
+DORY_TARGET="${DORY_TARGET:-PULP.GAP8}"
+DORY_APP_DIR="${DORY_APP_DIR:-${PROJECT_ROOT}/../dory_examples/application}"
+DORY_PREFIX="${DORY_PREFIX:-}"
+DORY_WEIGHTS_TXT_DIR="${DORY_WEIGHTS_TXT_DIR:-export/weights_txt}"
+DORY_ARTIFACT_MANIFEST="${DORY_ARTIFACT_MANIFEST:-export/nemo_dory_artifacts.json}"
+
+########################################
 # HELPERS
 ########################################
 
@@ -105,6 +123,12 @@ ensure_nemo_requirement_sync() {
   fi
 }
 
+abspath_with_python() {
+  local py_bin="$1"
+  local path_value="$2"
+  "$py_bin" -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$path_value"
+}
+
 ########################################
 # ENSURE ENVS EXIST
 ########################################
@@ -116,14 +140,14 @@ ensure_venv "$NEMO_ENV_DIR" "$NEMO_REQ"
 # 1. TRAIN (whatever env you started in, usually doryenv)
 ########################################
 
-echo "=== [1/3] Training SSD-MobileNetV2 ==="
+echo "=== [1/4] Training SSD-MobileNetV2 ==="
 # python3 train.py
 
 ########################################
 # 2. NEMO QUANT EXPORT (in nemoenv)
 ########################################
 
-echo "=== [2/3] Exporting NEMO-quantized ONNX (using nemoenv) ==="
+echo "=== [2/4] Exporting NEMO-quantized ONNX (using nemoenv) ==="
 
 ORIG_VENV="${VIRTUAL_ENV:-}"   # remember where we started
 
@@ -202,7 +226,7 @@ if [ -f "${STAGE_REPORT}" ]; then
   FINAL_STAGE="$(tr -d '\r\n' < "${STAGE_REPORT}")"
 fi
 
-echo "=== [3/3] Simplifying ONNX with onnx-simplifier ==="
+echo "=== [3/4] Simplifying ONNX with onnx-simplifier ==="
 if [ "${FINAL_STAGE^^}" = "FQ" ]; then
   echo "Skipping onnxsim because final stage is FQ (tutorial flow expects QD/ID before simplification)."
   cp "${OUT_ONNX}" "${SIM_ONNX}"
@@ -227,10 +251,170 @@ elif [ -d "$DORY_ENV_DIR" ]; then
   echo "activated original venv: $DORY_ENV_DIR"
 fi
 
-echo "============================================="
-echo " DONE: NEMO export + ONNX simplification only "
-echo "============================================="
+########################################
+# 4. DORY + network_generate (in doryenv)
+########################################
+
+echo "=== [4/4] Preparing DORY input and running network_generate ==="
+
+if [ ! -f "${SIM_ONNX}" ]; then
+  echo "ERROR: simplified ONNX not found: ${SIM_ONNX}"
+  exit 1
+fi
+
+if [ "${FINAL_STAGE^^}" != "ID" ]; then
+  echo "ERROR: DORY stage requires ID ONNX, but final exported stage is: ${FINAL_STAGE^^}"
+  echo "Set STAGE=id and re-run (current requested stage: ${STAGE^^})."
+  exit 1
+fi
+
+if [ ! -d "${DORY_ROOT}" ] || [ ! -f "${DORY_ROOT}/network_generate.py" ]; then
+  echo "ERROR: DORY repo not found or missing network_generate.py at: ${DORY_ROOT}"
+  exit 1
+fi
+
+if [ ! -f "${DORY_CONFIG_TEMPLATE}" ]; then
+  echo "ERROR: DORY config template not found: ${DORY_CONFIG_TEMPLATE}"
+  exit 1
+fi
+
+if [ "${VIRTUAL_ENV:-}" != "$DORY_ENV_DIR" ]; then
+  activate_venv "$DORY_ENV_DIR"
+  echo "activated doryenv: $DORY_ENV_DIR"
+fi
+
+DORY_PY="$(python3 -c 'import sys; print(sys.executable)' 2>/dev/null || true)"
+if [ -z "${DORY_PY}" ]; then
+  DORY_PY="$(python -c 'import sys; print(sys.executable)' 2>/dev/null || true)"
+fi
+
+if [ -z "${DORY_PY}" ]; then
+  echo "ERROR: expected doryenv python/pip at:"
+  echo "  $DORY_ENV_DIR/bin/python3 or $DORY_ENV_DIR/Scripts/python.exe"
+  echo "  $DORY_ENV_DIR/bin/pip or $DORY_ENV_DIR/Scripts/pip.exe"
+  exit 1
+fi
+
+echo "dory python: $("$DORY_PY" --version)"
+echo "dory pip: $("$DORY_PY" -m pip --version)"
+
+# Ensure DORY runtime deps exist in doryenv.
+ensure_module_or_sync_requirements "onnx" "$DORY_REQ" "$DORY_PY"
+ensure_module_or_sync_requirements "onnxruntime" "$DORY_REQ" "$DORY_PY"
+
+if [ ! -f "${PROJECT_ROOT}/export/strip_affine_mul_add.py" ]; then
+  echo "ERROR: missing ONNX cleanup script: ${PROJECT_ROOT}/export/strip_affine_mul_add.py"
+  exit 1
+fi
+if [ ! -f "${PROJECT_ROOT}/export/strip_transpose.py" ]; then
+  echo "ERROR: missing ONNX cleanup script: ${PROJECT_ROOT}/export/strip_transpose.py"
+  exit 1
+fi
+if [ ! -f "${PROJECT_ROOT}/export/strip_min.py" ]; then
+  echo "ERROR: missing ONNX cleanup script: ${PROJECT_ROOT}/export/strip_min.py"
+  exit 1
+fi
+if [ ! -f "${PROJECT_ROOT}/export/strip_fake_quant.py" ]; then
+  echo "ERROR: missing ONNX cleanup script: ${PROJECT_ROOT}/export/strip_fake_quant.py"
+  exit 1
+fi
+
+mkdir -p "$(dirname "${DORY_ONNX}")"
+
+echo "[run_all] Cleaning ID ONNX for DORY frontend compatibility..."
+"$DORY_PY" "${PROJECT_ROOT}/export/strip_affine_mul_add.py" "${SIM_ONNX}" "${DORY_NO_AFFINE_ONNX}"
+"$DORY_PY" "${PROJECT_ROOT}/export/strip_transpose.py" "${DORY_NO_AFFINE_ONNX}" "${DORY_NO_TRANSPOSE_ONNX}"
+"$DORY_PY" "${PROJECT_ROOT}/export/strip_min.py" "${DORY_NO_TRANSPOSE_ONNX}" "${DORY_NO_MIN_ONNX}"
+"$DORY_PY" "${PROJECT_ROOT}/export/strip_fake_quant.py" "${DORY_NO_MIN_ONNX}" "${DORY_ONNX}"
+
+DORY_ONNX_ABS="$(abspath_with_python "$DORY_PY" "${DORY_ONNX}")"
+DORY_CONFIG_TEMPLATE_ABS="$(abspath_with_python "$DORY_PY" "${DORY_CONFIG_TEMPLATE}")"
+DORY_CONFIG_GEN_ABS="$(abspath_with_python "$DORY_PY" "${DORY_CONFIG_GEN}")"
+DORY_APP_DIR_ABS="$(abspath_with_python "$DORY_PY" "${DORY_APP_DIR}")"
+DORY_WEIGHTS_TXT_DIR_ABS="$(abspath_with_python "$DORY_PY" "${DORY_WEIGHTS_TXT_DIR}")"
+DORY_ARTIFACT_MANIFEST_ABS="$(abspath_with_python "$DORY_PY" "${DORY_ARTIFACT_MANIFEST}")"
+
+mkdir -p "$(dirname "${DORY_CONFIG_GEN}")"
+mkdir -p "${DORY_APP_DIR}"
+
+DORY_TEMPLATE_PATH="${DORY_CONFIG_TEMPLATE_ABS}" \
+DORY_CONFIG_OUT="${DORY_CONFIG_GEN_ABS}" \
+DORY_ONNX_PATH="${DORY_ONNX_ABS}" \
+"$DORY_PY" - <<'PY'
+import json
+import os
+
+template_path = os.environ["DORY_TEMPLATE_PATH"]
+config_out = os.environ["DORY_CONFIG_OUT"]
+onnx_path = os.environ["DORY_ONNX_PATH"]
+
+with open(template_path, "r", encoding="utf-8") as f:
+    config = json.load(f)
+
+config["onnx_file"] = onnx_path
+
+os.makedirs(os.path.dirname(config_out), exist_ok=True)
+with open(config_out, "w", encoding="utf-8") as f:
+    json.dump(config, f, indent=2)
+    f.write("\n")
+
+print(f"[run_all] DORY config written: {config_out}")
+print(f"[run_all] DORY ONNX set to: {onnx_path}")
+PY
+
+if [ ! -f "${PROJECT_ROOT}/export/generate_dory_io_artifacts.py" ]; then
+  echo "ERROR: missing artifact generation script: ${PROJECT_ROOT}/export/generate_dory_io_artifacts.py"
+  exit 1
+fi
+
+mkdir -p "${DORY_WEIGHTS_TXT_DIR}"
+mkdir -p "$(dirname "${DORY_ARTIFACT_MANIFEST}")"
+
+echo "[run_all] Generating DORY input/output, golden activations, and weight txt files..."
+"$DORY_PY" "${PROJECT_ROOT}/export/generate_dory_io_artifacts.py" \
+  --onnx "${DORY_ONNX_ABS}" \
+  --config "${DORY_CONFIG_GEN_ABS}" \
+  --frontend "${DORY_FRONTEND}" \
+  --target "${DORY_TARGET}" \
+  --prefix "${DORY_PREFIX}" \
+  --weights-dir "${DORY_WEIGHTS_TXT_DIR_ABS}" \
+  --manifest "${DORY_ARTIFACT_MANIFEST_ABS}"
+
+DORY_CMD=(
+  network_generate.py
+  "${DORY_FRONTEND}"
+  "${DORY_TARGET}"
+  "${DORY_CONFIG_GEN_ABS}"
+  --app_dir "${DORY_APP_DIR_ABS}"
+)
+
+if [ -n "${DORY_PREFIX}" ]; then
+  DORY_CMD+=(--prefix "${DORY_PREFIX}")
+fi
+
+(
+  cd "${DORY_ROOT}" || exit 1
+  "$DORY_PY" -u "${DORY_CMD[@]}"
+)
+
+DORY_NETWORK_C="${DORY_APP_DIR_ABS}/src/network.c"
+DORY_NETWORK_H="${DORY_APP_DIR_ABS}/inc/network.h"
+if [ ! -f "${DORY_NETWORK_C}" ] || [ ! -f "${DORY_NETWORK_H}" ]; then
+  echo "ERROR: DORY did not generate expected network files:"
+  echo "  missing: ${DORY_NETWORK_C} and/or ${DORY_NETWORK_H}"
+  echo "Hint: lower \"code reserved space\" in ${DORY_CONFIG_TEMPLATE} (100000 works for current SSD)."
+  exit 1
+fi
+
+echo "======================================================="
+echo " DONE: NEMO export + ONNX simplification + DORY export "
+echo "======================================================="
 echo "Python used: ${NEMO_PY}"
 echo "Final quant stage: requested=${STAGE^^}, actual=${FINAL_STAGE^^}"
 echo "Exported ONNX: ${OUT_ONNX}"
 echo "Simplified ONNX: ${SIM_ONNX}"
+echo "DORY ONNX: ${DORY_ONNX}"
+echo "DORY config: ${DORY_CONFIG_GEN_ABS}"
+echo "DORY application dir: ${DORY_APP_DIR_ABS}"
+echo "DORY weight txt dir: ${DORY_WEIGHTS_TXT_DIR_ABS}"
+echo "DORY artifact manifest: ${DORY_ARTIFACT_MANIFEST_ABS}"

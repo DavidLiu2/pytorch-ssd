@@ -18,7 +18,6 @@
  * limitations under the License. 
  */
 
-
 #include "Convolution65.h"
 #include "pulp.h"
 #include "pmsis.h"
@@ -26,10 +25,6 @@
 #include "dory_dma.h"
 #include "pulp_nn_kernels.h"
 
-
-#ifdef SINGLE_CORE_DMA
-L1_DATA static uint32_t dory_dma_channel = 0;
-#endif
 
 void Convolution65(
   void *args
@@ -53,12 +48,7 @@ void Convolution65(
   /////////////////////
   // DMA declaration //
   /////////////////////
-#ifndef SINGLE_CORE_DMA
   uint32_t dory_dma_channel = dory_dma_allocate();
-#else
-  if (pi_core_id() == 0)
-    dory_dma_channel = dory_dma_allocate();
-#endif
   volatile DMA_copy DMA_copy_k, DMA_copy_lambda;
   volatile DMA_copy DMA_copy_W, DMA_copy_x, DMA_copy_y;
   volatile DMA_copy DMA_copy_bias;
@@ -129,7 +119,6 @@ void Convolution65(
   int has_bias = 1;
   volatile uint8_t *im2col;
   im2col = l1_buffer + 19176;
-  uint16_t out_mult = out_mult_in;
   uint16_t out_shift = out_shift_in;
 
   ////////////////////////////
@@ -218,9 +207,8 @@ void Convolution65(
       out_mult, out_shift,
       x_tile_size_w, x_tile_size_h, x_tile_size_nif,
       y_tile_size_w, y_tile_size_h, y_tile_size_nof,
-      3,3,
-      p_t, p_b,  p_l, p_r, 1, 1,
-      
+      3, 3,
+      p_t, p_b, p_l, p_r, 1, 1,
       0, 0
       );
     pi_cl_team_barrier(0);

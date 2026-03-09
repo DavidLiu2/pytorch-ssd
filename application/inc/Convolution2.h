@@ -16,12 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef __CONVOLUTION2_H__
 #define __CONVOLUTION2_H__
 
 void  Convolution2(
-                   void *args
-                   );
+  void *args
+);
 
 #endif

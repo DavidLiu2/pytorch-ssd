@@ -16,12 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef __ADDITION54_H__
 #define __ADDITION54_H__
 
 void  Addition54(
-                   void *args
-                   );
+  void *args
+);
 
 #endif

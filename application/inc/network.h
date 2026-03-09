@@ -20,7 +20,6 @@
 #ifndef __NETWORK_H__
 #define __NETWORK_H__
 
-#include "weights_definition.h"
 #include <stddef.h>
 #include "pmsis.h"
 
@@ -30,311 +29,322 @@ struct network_run_token {
 };
 
 
+void network_terminate();
+void network_initialize();
 void network_run_cluster(void * args);
-struct network_run_token network_run_async(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir, void *L2_input_h);
+struct network_run_token network_run_async(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir);
 void network_run_wait(struct network_run_token token);
-void network_run(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir, void *L2_input_h);
+void network_run(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir);
 void execute_layer_fork(void *arg);
 
 
 #ifdef DEFINE_CONSTANTS
-static char * Layers_name[71] = {"Convolution0", "Convolution1", "Convolution2", "Addition3", "Convolution4", "Convolution5", "Convolution6", "Convolution7", "Convolution8", "Convolution9", "Addition10", "Convolution11", "Convolution12", "Convolution13", "Convolution14", "Convolution15", "Convolution16", "Addition17", "Convolution18", "Convolution19", "Convolution20", "Addition21", "Convolution22", "Convolution23", "Convolution24", "Convolution25", "Convolution26", "Convolution27", "Addition28", "Convolution29", "Convolution30", "Convolution31", "Addition32", "Convolution33", "Convolution34", "Convolution35", "Addition36", "Convolution37", "Convolution38", "Convolution39", "Convolution40", "Convolution41", "Convolution42", "Addition43", "Convolution44", "Convolution45", "Convolution46", "Addition47", "Convolution48", "Convolution49", "Convolution50", "Convolution51", "Convolution52", "Convolution53", "Addition54", "Convolution55", "Convolution56", "Convolution57", "Addition58", "Convolution59", "Convolution60", "Convolution61", "Convolution62", "Convolution63", "Convolution64", "Convolution65", "Convolution66", "Convolution67", "Convolution68", "Convolution69", "Convolution70"};
-static char *Weights_name[71] = {Weights_Convolution0, Weights_Convolution1, Weights_Convolution2, "None", Weights_Convolution4, Weights_Convolution5, Weights_Convolution6, Weights_Convolution7, Weights_Convolution8, Weights_Convolution9, "None", Weights_Convolution11, Weights_Convolution12, Weights_Convolution13, Weights_Convolution14, Weights_Convolution15, Weights_Convolution16, "None", Weights_Convolution18, Weights_Convolution19, Weights_Convolution20, "None", Weights_Convolution22, Weights_Convolution23, Weights_Convolution24, Weights_Convolution25, Weights_Convolution26, Weights_Convolution27, "None", Weights_Convolution29, Weights_Convolution30, Weights_Convolution31, "None", Weights_Convolution33, Weights_Convolution34, Weights_Convolution35, "None", Weights_Convolution37, Weights_Convolution38, Weights_Convolution39, Weights_Convolution40, Weights_Convolution41, Weights_Convolution42, "None", Weights_Convolution44, Weights_Convolution45, Weights_Convolution46, "None", Weights_Convolution48, Weights_Convolution49, Weights_Convolution50, Weights_Convolution51, Weights_Convolution52, Weights_Convolution53, "None", Weights_Convolution55, Weights_Convolution56, Weights_Convolution57, "None", Weights_Convolution59, Weights_Convolution60, Weights_Convolution61, Weights_Convolution62, Weights_Convolution63, Weights_Convolution64, Weights_Convolution65, Weights_Convolution66, Weights_Convolution67, Weights_Convolution68, Weights_Convolution69, Weights_Convolution70};
+// allocation of buffers with parameters needed by the network execution
+static const char * L3_weights_files[] = {
+  "ReluConvolution0_weights.hex", "ReluConvolution1_weights.hex", "Convolution2_weights.hex", "ReluConvolution4_weights.hex", "ReluConvolution5_weights.hex", "Convolution6_weights.hex", "ReluConvolution7_weights.hex", "ReluConvolution8_weights.hex", "Convolution9_weights.hex", "ReluConvolution11_weights.hex", "ReluConvolution12_weights.hex", "Convolution13_weights.hex", "ReluConvolution14_weights.hex", "ReluConvolution15_weights.hex", "Convolution16_weights.hex", "ReluConvolution18_weights.hex", "ReluConvolution19_weights.hex", "Convolution20_weights.hex", "ReluConvolution22_weights.hex", "ReluConvolution23_weights.hex", "Convolution24_weights.hex", "ReluConvolution25_weights.hex", "ReluConvolution26_weights.hex", "Convolution27_weights.hex", "ReluConvolution29_weights.hex", "ReluConvolution30_weights.hex", "Convolution31_weights.hex", "ReluConvolution33_weights.hex", "ReluConvolution34_weights.hex", "Convolution35_weights.hex", "ReluConvolution37_weights.hex", "ReluConvolution38_weights.hex", "Convolution39_weights.hex", "ReluConvolution40_weights.hex", "ReluConvolution41_weights.hex", "Convolution42_weights.hex", "ReluConvolution44_weights.hex", "ReluConvolution45_weights.hex", "Convolution46_weights.hex", "ReluConvolution48_weights.hex", "ReluConvolution49_weights.hex", "Convolution50_weights.hex", "ReluConvolution51_weights.hex", "ReluConvolution52_weights.hex", "Convolution53_weights.hex", "ReluConvolution55_weights.hex", "ReluConvolution56_weights.hex", "Convolution57_weights.hex", "ReluConvolution59_weights.hex", "ReluConvolution60_weights.hex", "Convolution61_weights.hex", "ReluConvolution62_weights.hex", "Convolution63_weights.hex", "Convolution64_weights.hex", "Convolution65_weights.hex", "Convolution66_weights.hex", "Convolution67_weights.hex", "Convolution68_weights.hex", "Convolution69_weights.hex", "Convolution70_weights.hex"
+};
+static int L3_weights_size[60];
+static int layers_pointers[71];
+static char * Layers_name[71] = {"ReluConvolution0", "ReluConvolution1", "Convolution2", "Addition3", "ReluConvolution4", "ReluConvolution5", "Convolution6", "ReluConvolution7", "ReluConvolution8", "Convolution9", "Addition10", "ReluConvolution11", "ReluConvolution12", "Convolution13", "ReluConvolution14", "ReluConvolution15", "Convolution16", "Addition17", "ReluConvolution18", "ReluConvolution19", "Convolution20", "Addition21", "ReluConvolution22", "ReluConvolution23", "Convolution24", "ReluConvolution25", "ReluConvolution26", "Convolution27", "Addition28", "ReluConvolution29", "ReluConvolution30", "Convolution31", "Addition32", "ReluConvolution33", "ReluConvolution34", "Convolution35", "Addition36", "ReluConvolution37", "ReluConvolution38", "Convolution39", "ReluConvolution40", "ReluConvolution41", "Convolution42", "Addition43", "ReluConvolution44", "ReluConvolution45", "Convolution46", "Addition47", "ReluConvolution48", "ReluConvolution49", "Convolution50", "ReluConvolution51", "ReluConvolution52", "Convolution53", "Addition54", "ReluConvolution55", "ReluConvolution56", "Convolution57", "Addition58", "ReluConvolution59", "ReluConvolution60", "Convolution61", "ReluConvolution62", "Convolution63", "Convolution64", "Convolution65", "Convolution66", "Convolution67", "Convolution68", "Convolution69", "Convolution70"};
+static int L3_input_layers[71] = {1,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static int L3_output_layers[71] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static int allocate_layer[71] = {1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 static int branch_input[71] = {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static int branch_output[71] = {1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 static int branch_change[71] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static int weights_checksum[71] = {0, 256, 2562, 0, 255, 2, 0, 504, 0, 0, 0, 511, 0, 0, 763, 0, 0, 0, 511, 0, 0, 0, 511, 0, 0, 768, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 763, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static int weights_size[71] = {248, 1664, 96, 0, 576, 9984, 416, 576, 9984, 416, 0, 576, 9984, 416, 576, 9984, 416, 0, 576, 9984, 416, 0, 576, 9984, 416, 576, 9984, 416, 0, 576, 9984, 416, 0, 576, 9984, 416, 0, 576, 9984, 832, 1920, 19968, 1600, 0, 1920, 19968, 1600, 0, 1920, 19968, 1600, 1920, 19968, 1600, 0, 1920, 19968, 1600, 0, 1920, 19968, 3200, 4608, 2432, 2432, 4736, 36992, 1216, 1216, 2368, 18496};
+static int weights_checksum[71] = {25095, 9672, 7591, 0, 52828, 49904, 46921, 51979, 56434, 46610, 0, 48574, 53496, 48664, 49960, 52421, 49670, 0, 49785, 55967, 49055, 0, 48298, 57409, 49276, 47279, 59030, 51521, 0, 46430, 59731, 48499, 0, 46109, 62498, 47112, 0, 46361, 57430, 95897, 192588, 112363, 194432, 0, 191242, 113895, 197012, 0, 196588, 118528, 196914, 195222, 115450, 196382, 0, 198881, 113100, 197091, 0, 196625, 115754, 386107, 524431, 295972, 276954, 561948, 4722122, 150592, 149100, 303755, 2304055};
+static int weights_size[71] = {216, 72, 64, 0, 384, 432, 384, 384, 432, 384, 0, 384, 432, 384, 384, 432, 384, 0, 384, 432, 384, 0, 384, 432, 384, 384, 432, 384, 0, 384, 432, 384, 0, 384, 432, 384, 0, 384, 432, 768, 1536, 864, 1536, 0, 1536, 864, 1536, 0, 1536, 864, 1536, 1536, 864, 1536, 0, 1536, 864, 1536, 0, 1536, 864, 3072, 4096, 2432, 2432, 4736, 36992, 1216, 1216, 2368, 18496};
 static int activations_checksum[71][1] = {{
-  9767697  },
+  9776730  },
 {
-  0  },
+  7162791  },
 {
-  0  },
+  3493520  },
 {
-  0  },
+  37321647  },
 {
-  0  },
+  7802710  },
 {
-  0  },
+  41626646  },
 {
-  0  },
+  6886646  },
 {
-  0  },
+  1670650  },
 {
-  0  },
+  9545415  },
 {
-  0  },
+  4203254  },
 {
-  0  },
+  -220570042  },
 {
-  0  },
+  1676864  },
 {
-  0  },
+  8901030  },
 {
-  0  },
+  1535113  },
 {
-  0  },
+  392215  },
 {
-  0  },
+  2446573  },
 {
-  0  },
+  1384674  },
 {
-  0  },
+  28088464  },
 {
-  0  },
+  409255  },
 {
-  0  },
+  2741760  },
 {
-  0  },
+  1687574  },
 {
-  0  },
+  -38411490  },
 {
-  0  },
+  402885  },
 {
-  0  },
+  2754510  },
 {
-  0  },
+  443555  },
 {
-  0  },
+  99271  },
 {
-  0  },
+  565590  },
 {
-  0  },
+  410517  },
 {
-  0  },
+  -18465363  },
 {
-  0  },
+  102004  },
 {
-  0  },
+  544170  },
 {
-  0  },
+  505743  },
 {
-  0  },
+  5821074  },
 {
-  0  },
+  99590  },
 {
-  0  },
+  639795  },
 {
-  0  },
+  375518  },
 {
-  0  },
+  7109607  },
 {
-  0  },
+  100845  },
 {
-  0  },
+  528615  },
 {
-  0  },
+  537990  },
 {
-  0  },
+  204789  },
 {
-  0  },
+  1235475  },
 {
-  0  },
+  905718  },
 {
-  0  },
+  31634560  },
 {
-  0  },
+  204149  },
 {
-  0  },
+  1228845  },
 {
-  0  },
+  726287  },
 {
-  0  },
+  -16659297  },
 {
-  0  },
+  203540  },
 {
-  0  },
+  1221793  },
 {
-  0  },
+  198732  },
 {
-  0  },
+  49036  },
 {
-  0  },
+  261327  },
 {
-  0  },
+  210922  },
 {
-  0  },
+  6969704  },
 {
-  0  },
+  50164  },
 {
-  0  },
+  302685  },
 {
-  0  },
+  252311  },
 {
-  0  },
+  353015  },
 {
-  0  },
+  50667  },
 {
-  0  },
+  303960  },
 {
-  0  },
+  260486  },
 {
-  0  },
+  103665  },
 {
-  0  },
+  327165  },
 {
-  0  },
+  6510034  },
 {
-  0  },
+  1602517  },
 {
-  0  },
+  405173  },
 {
-  0  },
+  8618304  },
 {
-  0  },
+  3233890  },
 {
-  0  },
+  811326  },
 {
-  0  }
+  202401  }
 };
 static int activations_size[71] = {76800, 51200, 51200, 204800, 51200, 307200, 76800, 12800, 76800, 76800, 51200, 12800, 76800, 19200, 3200, 19200, 19200, 12800, 3200, 19200, 19200, 12800, 3200, 19200, 4800, 800, 4800, 4800, 3200, 800, 4800, 4800, 3200, 800, 4800, 4800, 3200, 800, 4800, 4800, 1600, 9600, 9600, 6400, 1600, 9600, 9600, 6400, 1600, 9600, 2400, 400, 2400, 2400, 1600, 400, 2400, 2400, 1600, 400, 2400, 2400, 800, 12800, 3200, 1600, 3200, 12800, 3200, 1600, 3200};
-static int out_mult_vector[71] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-static int out_shift_vector[71] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static int out_mult_vector[71] = {49, 62, 1, 1, 48, 46, 1, 42, 35, 1, 1, 34, 34, 1, 45, 33, 1, 1, 50, 37, 1, 1, 55, 38, 1, 54, 34, 1, 1, 53, 42, 1, 1, 56, 36, 1, 1, 58, 42, 1, 47, 36, 1, 1, 41, 37, 1, 1, 44, 43, 1, 52, 40, 1, 1, 54, 39, 1, 1, 53, 34, 1, 51, 1, 1, 1, 1, 1, 1, 1, 1};
+static int out_shift_vector[71] = {7, 7, 0, 0, 7, 8, 0, 7, 8, 0, 0, 7, 7, 0, 7, 7, 0, 0, 7, 7, 0, 0, 7, 7, 0, 7, 7, 0, 0, 7, 7, 0, 0, 7, 7, 0, 0, 7, 7, 0, 7, 7, 0, 0, 7, 7, 0, 0, 7, 7, 0, 7, 7, 0, 0, 7, 7, 0, 0, 7, 7, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0};
 static int activations_out_checksum[71][1] = {{
-  0 },
+  7162791 },
 {
-  0 },
+  3493520 },
 {
-  0 },
+  23175221 },
 {
-  0 },
+  23154151 },
 {
-  0 },
+  41626646 },
 {
-  0 },
+  6886646 },
 {
-  0 },
+  5953956 },
 {
-  0 },
+  9545415 },
 {
-  0 },
+  4203254 },
 {
-  0 },
+  8329505 },
 {
-  0 },
+  6142988 },
 {
-  0 },
+  8901030 },
 {
-  0 },
+  1535113 },
 {
-  0 },
+  1421544 },
 {
-  0 },
+  2446573 },
 {
-  0 },
+  1384674 },
 {
-  0 },
+  1533410 },
 {
-  0 },
+  1336153 },
 {
-  0 },
+  2741760 },
 {
-  0 },
+  1687574 },
 {
-  0 },
+  1750566 },
 {
-  0 },
+  1458483 },
 {
-  0 },
+  2754510 },
 {
-  0 },
+  443555 },
 {
-  0 },
+  449678 },
 {
-  0 },
+  565590 },
 {
-  0 },
+  410517 },
 {
-  0 },
+  470441 },
 {
-  0 },
+  488468 },
 {
-  0 },
+  544170 },
 {
-  0 },
+  505743 },
 {
-  0 },
+  385849 },
 {
-  0 },
+  464893 },
 {
-  0 },
+  639795 },
 {
-  0 },
+  375518 },
 {
-  0 },
+  381783 },
 {
-  0 },
+  449001 },
 {
-  0 },
+  528615 },
 {
-  0 },
+  537990 },
 {
-  0 },
+  805916 },
 {
-  0 },
+  1235475 },
 {
-  0 },
+  905718 },
 {
-  0 },
+  690874 },
 {
-  0 },
+  722896 },
 {
-  0 },
+  1228845 },
 {
-  0 },
+  726287 },
 {
-  0 },
+  890749 },
 {
-  0 },
+  789693 },
 {
-  0 },
+  1221793 },
 {
-  0 },
+  198732 },
 {
-  0 },
+  199313 },
 {
-  0 },
+  261327 },
 {
-  0 },
+  210922 },
 {
-  0 },
+  182016 },
 {
-  0 },
+  181985 },
 {
-  0 },
+  302685 },
 {
-  0 },
+  252311 },
 {
-  0 },
+  194589 },
 {
-  0 },
+  188473 },
 {
-  0 },
+  303960 },
 {
-  0 },
+  260486 },
 {
-  0 },
+  399842 },
 {
-  0 },
+  327165 },
 {
-  0 },
+  30118921 },
 {
-  0 },
+  7172802 },
 {
-  0 },
+  1671180 },
 {
-  0 },
+  39314577 },
 {
-  0 },
+  14549750 },
 {
-  0 },
+  3273626 },
 {
-  0 },
+  759574 },
 {
-  0 }
+  18785620 }
 };
-static int activations_out_size[71] = {204800, 204800, 204800, 204800, 1228800, 307200, 51200, 307200, 307200, 51200, 51200, 307200, 76800, 12800, 76800, 76800, 12800, 12800, 76800, 76800, 12800, 12800, 76800, 19200, 3200, 19200, 19200, 3200, 3200, 19200, 19200, 3200, 3200, 19200, 19200, 3200, 3200, 19200, 19200, 6400, 38400, 38400, 6400, 6400, 38400, 38400, 6400, 6400, 38400, 9600, 1600, 9600, 9600, 1600, 1600, 9600, 9600, 1600, 1600, 9600, 9600, 3200, 12800, 204800, 51200, 12800, 3200, 102400, 25600, 6400, 1600};
+static int activations_out_size[71] = {51200, 51200, 204800, 204800, 307200, 76800, 51200, 76800, 76800, 51200, 51200, 76800, 19200, 12800, 19200, 19200, 12800, 12800, 19200, 19200, 12800, 12800, 19200, 4800, 3200, 4800, 4800, 3200, 3200, 4800, 4800, 3200, 3200, 4800, 4800, 3200, 3200, 4800, 4800, 6400, 9600, 9600, 6400, 6400, 9600, 9600, 6400, 6400, 9600, 2400, 1600, 2400, 2400, 1600, 1600, 2400, 2400, 1600, 1600, 2400, 2400, 3200, 3200, 204800, 51200, 12800, 3200, 102400, 25600, 6400, 1600};
 static int layer_with_weights[71] = {1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 #endif
 

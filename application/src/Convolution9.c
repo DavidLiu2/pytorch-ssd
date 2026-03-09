@@ -18,7 +18,6 @@
  * limitations under the License. 
  */
 
-
 #include "Convolution9.h"
 #include "pulp.h"
 #include "pmsis.h"
@@ -26,10 +25,6 @@
 #include "dory_dma.h"
 #include "pulp_nn_kernels.h"
 
-
-#ifdef SINGLE_CORE_DMA
-L1_DATA static uint32_t dory_dma_channel = 0;
-#endif
 
 void Convolution9(
   void *args
@@ -53,21 +48,9 @@ void Convolution9(
   /////////////////////
   // DMA declaration //
   /////////////////////
-#ifndef SINGLE_CORE_DMA
   uint32_t dory_dma_channel = dory_dma_allocate();
-#else
-  if (pi_core_id() == 0)
-    dory_dma_channel = dory_dma_allocate();
-#endif
   volatile DMA_copy DMA_copy_k, DMA_copy_lambda;
   volatile DMA_copy DMA_copy_W, DMA_copy_x, DMA_copy_y;
-  volatile DMA_copy DMA_copy_bias;
-  DMA_copy_bias.hwc_to_chw = 0;
-  DMA_copy_bias.stride_2d = 0;
-  DMA_copy_bias.stride_1d = 0;
-  DMA_copy_bias.dir = 1;
-  DMA_copy_bias.tid = dory_dma_channel;
-
   DMA_copy_k.hwc_to_chw = 0;
   DMA_copy_k.stride_2d = 0;
   DMA_copy_k.stride_1d = 0;
@@ -126,23 +109,13 @@ void Convolution9(
   // tile loop indeces
   int _i_nof_load=0, _i_nif_load=0, _i_h_load=0, _i_w_load=0;
   int _i_nof_exec=1, _i_nif_exec=1, _i_h_exec=1, _i_w_exec=1;
-  int has_bias = 1;
   volatile uint8_t *im2col;
-  im2col = l1_buffer + 35016;
-  uint16_t out_mult = out_mult_in;
+  im2col = l1_buffer + 34984;
   uint16_t out_shift = out_shift_in;
 
   ////////////////////////////
   // First tile transfering //
   ////////////////////////////
-  DMA_copy_bias.ext = (uint32_t) l2_W+384;
-  DMA_copy_bias.loc = (uint32_t) (l1_buffer + 34984);
-  DMA_copy_bias.number_of_2d_copies = 1;
-  DMA_copy_bias.number_of_1d_copies = 1;
-  DMA_copy_bias.length_1d_copy = (uint16_t) 32;
-  dory_dma_memcpy_async(&DMA_copy_bias);
-  dory_dma_barrier(&DMA_copy_bias);
-
   pi_cl_team_barrier(0);
 
   int total_tiles = 6;
@@ -193,7 +166,6 @@ void Convolution9(
       }
     // creation of the pointers to input, output, weights, lambda and k
     x = (uint8_t *) (l1_buffer + 0);
-    b = (uint8_t *) (l1_buffer + 34984 + _i_nof_load*32);
     W = (uint8_t *) (l1_buffer + 34576);
     y = (uint8_t *) (l1_buffer + 20744);
     p_r = 0;
@@ -211,15 +183,14 @@ void Convolution9(
     pi_cl_team_barrier(0);
     pulp_nn_pointwise_HoWo_parallel(
       x, im2col,
-      b,
+      NULL,
       y, W,
       0, 0,
       out_mult, out_shift,
       x_tile_size_w, x_tile_size_h, x_tile_size_nif,
       y_tile_size_w, y_tile_size_h, y_tile_size_nof,
-      1,1,
-      p_t, p_b,  p_l, p_r, 1, 1,
-      
+      1, 1,
+      p_t, p_b, p_l, p_r, 1, 1,
       0, 0
       );
     pi_cl_team_barrier(0);

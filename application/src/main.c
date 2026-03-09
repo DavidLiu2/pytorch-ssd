@@ -3,7 +3,7 @@
  * Alessio Burrello <alessio.burrello@unibo.it>
  *
  * Copyright (C) 2019-2020 University of Bologna
- *
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,88 +14,91 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the License. 
  */
-#include "input.h"
-#define DEFINE_CONSTANTS
+#include "mem.h"
 #include "network.h"
 
 #include "pmsis.h"
+#include <stdint.h>
 
 #define VERBOSE 1
+#define L2_BUFFER_SIZE 412000
+#define L2_INPUT_SIZE 76800
+#define RAM_INPUT_SIZE 1000000
+#define IO_DUMP_BYTES 64
 
-void application(void *arg)
-{
-  /*
-      Opening of Filesystem and Ram
-  */
+static void dump_bytes(const char *label, const uint8_t *data, size_t data_size, size_t max_dump_size) {
+  size_t dump_size = data_size < max_dump_size ? data_size : max_dump_size;
+  printf("%s (%u bytes):\n", label, (unsigned int)dump_size);
+  for (size_t i = 0; i < dump_size; i++) {
+    if ((i % 16) == 0) {
+      printf("%04u: ", (unsigned int)i);
+    }
+    printf("%02x ", data[i]);
+    if ((i % 16) == 15 || i == dump_size - 1) {
+      printf("\n");
+    }
+  }
+}
+
+
+void application(void * arg) {
+/*
+    Opening of Filesystem and Ram
+*/
+  printf("MAIN START\n");
+  printf("BEFORE mem_init\n");
+  mem_init();
+  printf("AFTER mem_init\n");
+  printf("BEFORE network_initialize\n");
+  network_initialize();
+  printf("AFTER network_initialize\n");
   /*
     Allocating space for input
   */
-  printf("APPLICATION START\n");
-
-  for (int sz = 360000; sz >= 100000; sz -= 10000) {
-    void *p = pi_l2_malloc(sz);
-    if (p) { printf("max-ish L2 alloc: %d @ %p\n", sz, p); pi_l2_free(p, sz); break; }
+  void *l2_buffer = pi_l2_malloc(L2_BUFFER_SIZE);
+  if (NULL == l2_buffer) {
+#ifdef VERBOSE
+    printf("ERROR: L2 buffer allocation failed.");
+#endif
+    pmsis_exit(-1);
   }
-  
+#ifdef VERBOSE
+  printf("\nL2 Buffer alloc initial\t@ 0x%08x:\tOk\n", (unsigned int)l2_buffer);
+#endif
+  int initial_dir = 1;
 
-  #define L2_ARENA_SIZE 200000
-
-  void *l2_arena = pi_l2_malloc(L2_ARENA_SIZE);
-  if (NULL == l2_arena)
-  {
-    #ifdef VERBOSE
-        printf("ERROR: L2 buffer allocation failed.\n");
-    #endif
-        pmsis_exit(-1);
+  void *ram_input = ram_malloc(RAM_INPUT_SIZE);
+  if (NULL == ram_input) {
+    printf("ERROR: RAM input allocation failed.\n");
+    pmsis_exit(-1);
   }
-  #ifdef VERBOSE
-    printf("\nL2 Buffer alloc initial\t@ 0x%08x:\tOk\n", (unsigned int)l2_arena);
-  #endif
-  if (!l2_arena) pmsis_exit(-1);
-
-  void *l2_out = pi_l2_malloc(1600);       // based on your “boxes” size assumption
-  if (!l2_out) pmsis_exit(-2);
-
-  // If input is already a const array in L2 (like L2_input_h), you may not need to allocate.
-  // But many generated examples copy input to L2 first:
-  size_t input_size = sizeof(L2_input_h);
-  void *l2_in = pi_l2_malloc(input_size);
-  if (!l2_in) pmsis_exit(-3);
-  memcpy(l2_in, L2_input_h, input_size);
-  int initial_dir = 1; 
-
-  printf("activations_size[0] = %d\n", activations_size[0]);
-  printf("sizeof(L2_input_h)  = %d\n", (int)sizeof(L2_input_h));
-  printf("first byte L2_input_h[0] = %u\n", (unsigned)L2_input_h[0]);
-
-
-  network_run(l2_arena, L2_ARENA_SIZE, l2_out, 0, initial_dir, l2_in);
-
-  printf("---- OUTPUT ----\n");
-  float *boxes = (float *)l2_out;
-
-  int num_floats = 1600 / sizeof(float); // 400
-  int num_boxes = num_floats / 4;        // 100
-
-  printf("num_boxes = %d\n", num_boxes);
-
-  for (int i = 0; i < 10; i++)
-  { // print first 10 only
-    float x1 = boxes[4 * i + 0];
-    float y1 = boxes[4 * i + 1];
-    float x2 = boxes[4 * i + 2];
-    float y2 = boxes[4 * i + 3];
-
-    printf("[%d] %f %f %f %f\n", i, x1, y1, x2, y2);
+  printf("BEFORE load_file_to_ram\n");
+  size_t loaded_input_size = load_file_to_ram(ram_input, "inputs.hex");
+  printf("AFTER load_file_to_ram\n");
+  printf("Loaded inputs.hex bytes: %u\n", (unsigned int)loaded_input_size);
+  if (loaded_input_size < L2_INPUT_SIZE) {
+    printf("ERROR: inputs.hex too small (%u < %u)\n", (unsigned int)loaded_input_size, (unsigned int)L2_INPUT_SIZE);
+    pmsis_exit(-1);
   }
 
-  pi_l2_free(l2_arena, 200000);
+  printf("BEFORE ram_read\n");
+  ram_read(l2_buffer, ram_input, L2_INPUT_SIZE);
+  printf("AFTER ram_read\n");
+  dump_bytes("INPUT_DUMP", (const uint8_t *)l2_buffer, L2_INPUT_SIZE, IO_DUMP_BYTES);
+
+  printf("BEFORE network_run\n");
+  network_run(l2_buffer, L2_BUFFER_SIZE, l2_buffer, 0, initial_dir);
+  printf("AFTER network_run\n");
+  dump_bytes("OUTPUT_DUMP", (const uint8_t *)l2_buffer, L2_BUFFER_SIZE, IO_DUMP_BYTES);
+
+  ram_free(ram_input, RAM_INPUT_SIZE);
+  network_terminate();
+  pi_l2_free(l2_buffer, L2_BUFFER_SIZE);
 }
 
-int main()
-{
+int main () {
 #ifndef TARGET_CHIP_FAMILY_GAP9
   PMU_set_voltage(1000, 0);
 #else
@@ -107,6 +110,7 @@ int main()
   pi_freq_set(PI_FREQ_DOMAIN_CL, 100000000);
   pi_time_wait_us(10000);
 
-  pmsis_kickoff((void *)application);
+
+  pmsis_kickoff((void*)application);
   return 0;
 }
