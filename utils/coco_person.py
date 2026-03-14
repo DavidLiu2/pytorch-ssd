@@ -19,10 +19,13 @@ class COCOPersonDataset(Dataset):
       data/coco/annotations/val_person.json
     """
 
-    def __init__(self, root: str, ann_file: str, transforms=None):
+    def __init__(self, root: str, ann_file: str, transforms=None, image_mode: str = "RGB"):
         super().__init__()
         self.root = Path(root)
         self.transforms = transforms
+        if image_mode not in {"RGB", "L"}:
+            raise ValueError("image_mode must be 'RGB' or 'L'")
+        self.image_mode = image_mode
 
         self.coco = COCO(ann_file)
         # person-only JSON already filtered, but we’ll still pull category IDs:
@@ -40,7 +43,7 @@ class COCOPersonDataset(Dataset):
         img_info = self.coco.loadImgs(img_id)[0]
 
         img_path = self.root / img_info["file_name"]
-        img = Image.open(img_path).convert("RGB")
+        img = Image.open(img_path).convert(self.image_mode)
 
         boxes = []
         labels = []

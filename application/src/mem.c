@@ -43,6 +43,28 @@ static struct pi_readfs_conf fs_conf;
 static struct pi_device ram;
 static ram_conf_t ram_conf;
 
+static int hostfs_open_write(struct pi_device *host_fs, pi_fs_file_t **fd, const char *filename) {
+  struct pi_fs_conf conf;
+
+  pi_fs_conf_init(&conf);
+  conf.type = PI_FS_HOST;
+  pi_open_from_conf(host_fs, &conf);
+
+  if (pi_fs_mount(host_fs)) {
+    printf("ERROR: Cannot mount hostfs for %s\n", filename);
+    return -1;
+  }
+
+  *fd = pi_fs_open(host_fs, filename, PI_FS_FLAGS_WRITE);
+  if (*fd == NULL) {
+    printf("ERROR: Cannot open hostfs file %s for write\n", filename);
+    pi_fs_unmount(host_fs);
+    return -2;
+  }
+
+  return 0;
+}
+
 
 void mem_init() {
   flash_conf_init(&flash_conf);
@@ -134,4 +156,68 @@ size_t load_file_to_ram(const void *dest, const char *filename) {
   } while (offset < size);
 
   return offset;
+}
+
+int hostfs_write_file(const char *filename, const void *src, size_t size) {
+  struct pi_device host_fs;
+  pi_fs_file_t *fd = NULL;
+  const uint8_t *src_bytes = (const uint8_t *) src;
+  size_t offset = 0;
+  int ret = 0;
+
+  ret = hostfs_open_write(&host_fs, &fd, filename);
+  if (ret != 0) {
+    return ret;
+  }
+
+  while (offset < size) {
+    size_t chunk = BUFFER_SIZE;
+    if (chunk > (size - offset)) {
+      chunk = size - offset;
+    }
+
+    if ((size_t) pi_fs_write(fd, (void *) (src_bytes + offset), chunk) != chunk) {
+      printf("ERROR: hostfs write failed for %s at offset %u\n", filename, (unsigned int) offset);
+      ret = -3;
+      break;
+    }
+
+    offset += chunk;
+  }
+
+  pi_fs_close(fd);
+  pi_fs_unmount(&host_fs);
+  return ret == 0 ? (int) offset : ret;
+}
+
+int hostfs_write_file_from_ram(const char *filename, void *ram_src, size_t size) {
+  struct pi_device host_fs;
+  pi_fs_file_t *fd = NULL;
+  size_t offset = 0;
+  int ret = 0;
+
+  ret = hostfs_open_write(&host_fs, &fd, filename);
+  if (ret != 0) {
+    return ret;
+  }
+
+  while (offset < size) {
+    size_t chunk = BUFFER_SIZE;
+    if (chunk > (size - offset)) {
+      chunk = size - offset;
+    }
+
+    ram_read(buffer, (uint8_t *) ram_src + offset, chunk);
+    if ((size_t) pi_fs_write(fd, buffer, chunk) != chunk) {
+      printf("ERROR: hostfs RAM write failed for %s at offset %u\n", filename, (unsigned int) offset);
+      ret = -3;
+      break;
+    }
+
+    offset += chunk;
+  }
+
+  pi_fs_close(fd);
+  pi_fs_unmount(&host_fs);
+  return ret == 0 ? (int) offset : ret;
 }

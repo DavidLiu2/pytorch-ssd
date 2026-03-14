@@ -19,8 +19,16 @@ class MobileNetV2Backbone(nn.Module):
       - run a dummy input once in __init__ to infer out_channels
     """
 
-    def __init__(self, width_mult: float = 0.1, image_size: Tuple[int, int] = (160, 160)):
+    def __init__(
+        self,
+        width_mult: float = 0.1,
+        image_size: Tuple[int, int] = (160, 160),
+        input_channels: int = 3,
+    ):
         super().__init__()
+        if input_channels not in (1, 3):
+            raise ValueError("input_channels must be 1 or 3")
+        self.input_channels = input_channels
 
         # Compatible with both new and old torchvision APIs:
         # - New (>=0.13): mobilenet_v2(weights=None, width_mult=...)
@@ -44,6 +52,7 @@ class MobileNetV2Backbone(nn.Module):
 
 
         features = self._ensure_module_visible_stem(base.features)
+        features = self._replace_stem_input_channels(features, input_channels)
 
         # Explicit stage split points:
         #   stage0: features[0..3]
@@ -79,6 +88,46 @@ class MobileNetV2Backbone(nn.Module):
         features[0] = nn.Sequential(conv, bn, act)
         return features
 
+    @staticmethod
+    def _replace_stem_input_channels(features: nn.Sequential, input_channels: int) -> nn.Sequential:
+        stem = features[0]
+        stem_children = list(stem.children())
+        if not stem_children:
+            return features
+
+        conv = stem_children[0]
+        if not isinstance(conv, nn.Conv2d):
+            return features
+        if conv.in_channels == input_channels:
+            return features
+
+        new_conv = nn.Conv2d(
+            in_channels=input_channels,
+            out_channels=conv.out_channels,
+            kernel_size=conv.kernel_size,
+            stride=conv.stride,
+            padding=conv.padding,
+            dilation=conv.dilation,
+            groups=conv.groups,
+            bias=(conv.bias is not None),
+            padding_mode=conv.padding_mode,
+        )
+        with torch.no_grad():
+            if conv.in_channels == 3 and input_channels == 1:
+                new_conv.weight.copy_(conv.weight.mean(dim=1, keepdim=True))
+            elif conv.in_channels == 1 and input_channels == 3:
+                new_conv.weight.copy_(conv.weight.repeat(1, 3, 1, 1) / 3.0)
+            elif input_channels == conv.in_channels:
+                new_conv.weight.copy_(conv.weight)
+            else:
+                nn.init.kaiming_normal_(new_conv.weight, mode="fan_out", nonlinearity="relu")
+            if conv.bias is not None and new_conv.bias is not None:
+                new_conv.bias.copy_(conv.bias)
+
+        stem_children[0] = new_conv
+        features[0] = nn.Sequential(*stem_children)
+        return features
+
     def _forward_stages(self, x: torch.Tensor):
         x = self.stage0(x)
         fm0 = x
@@ -102,7 +151,7 @@ class MobileNetV2Backbone(nn.Module):
         self.eval()
         with torch.no_grad():
             # dummy on CPU is fine
-            x = torch.zeros(1, 3, image_size[0], image_size[1])
+            x = torch.zeros(1, self.input_channels, image_size[0], image_size[1])
             out_fms = self.forward_features(x)
 
         return [fm.shape[1] for fm in out_fms]
@@ -119,13 +168,15 @@ class MobileNetV2Backbone(nn.Module):
 
 def create_ssd_mobilenet_v2(num_classes: int = 2,
                             width_mult: float = 0.1,
-                            image_size: Tuple[int, int] = (160, 160)) -> SSD:
+                            image_size: Tuple[int, int] = (160, 160),
+                            input_channels: int = 3) -> SSD:
     """
     num_classes: includes background (for COCO-style detection, person-only → 2)
     """
 
     backbone = MobileNetV2Backbone(width_mult=width_mult,
-                                   image_size=image_size)
+                                   image_size=image_size,
+                                   input_channels=input_channels)
 
     # torchvision's SSD expects the backbone to have 'out_channels' attribute:
     backbone.out_channels = backbone.out_channels  # already a list
@@ -153,6 +204,8 @@ def create_ssd_mobilenet_v2(num_classes: int = 2,
         anchor_generator=anchor_generator,
         size=image_size,
         num_classes=num_classes,
+        image_mean=([0.5] * input_channels),
+        image_std=([0.5] * input_channels),
     )
 
     return model

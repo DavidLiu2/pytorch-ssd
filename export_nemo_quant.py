@@ -6,6 +6,7 @@ import types
 from copy import deepcopy
 from pathlib import Path
 
+import numpy as np
 import torch
 
 import nemo  # pytorch-nemo (pulp-platform)
@@ -14,11 +15,12 @@ from PIL import Image
 from models.ssd_mobilenet_v2_raw import SSDMobileNetV2Raw
 
 
-def build_model(num_classes: int, width_mult: float, image_size):
+def build_model(num_classes: int, width_mult: float, image_size, input_channels: int):
     return SSDMobileNetV2Raw(
         num_classes=num_classes,
         width_mult=width_mult,
         image_size=image_size,
+        input_channels=input_channels,
     )
 
 
@@ -99,6 +101,51 @@ def remap_backbone_feature_stage_keys(state: dict, to_stage: bool):
     return remapped, changed > 0
 
 
+def _reshape_first_conv_weight(weight: torch.Tensor, target_input_channels: int):
+    if weight.ndim != 4:
+        return None
+    source_channels = int(weight.shape[1])
+    if source_channels == target_input_channels:
+        return weight
+    if source_channels == 3 and target_input_channels == 1:
+        return weight.mean(dim=1, keepdim=True)
+    if source_channels == 1 and target_input_channels == 3:
+        return weight.repeat(1, 3, 1, 1) / 3.0
+    return None
+
+
+def adapt_state_dict_input_channels(state: dict, model):
+    model_state = model.state_dict()
+    target_weight = model_state.get("backbone.stage0.0.0.weight", None)
+    if target_weight is None:
+        return state, []
+
+    target_input_channels = int(target_weight.shape[1])
+    candidate_suffixes = (
+        "backbone.stage0.0.0.weight",
+        "backbone.features.0.0.weight",
+    )
+    adapted = dict(state)
+    adapted_info = []
+
+    for key, value in state.items():
+        if not torch.is_tensor(value):
+            continue
+        if not any(key == suffix or key.endswith(f".{suffix}") for suffix in candidate_suffixes):
+            continue
+
+        reshaped = _reshape_first_conv_weight(value, target_input_channels)
+        if reshaped is None:
+            continue
+        if tuple(reshaped.shape) == tuple(value.shape):
+            continue
+
+        adapted[key] = reshaped.to(dtype=value.dtype)
+        adapted_info.append((key, tuple(value.shape), tuple(reshaped.shape)))
+
+    return adapted, adapted_info
+
+
 def load_checkpoint(model, ckpt_path, device):
     print(f"[export_nemo_quant] Loading checkpoint from: {ckpt_path}")
     state = torch.load(ckpt_path, map_location=device)
@@ -136,9 +183,27 @@ def load_checkpoint(model, ckpt_path, device):
             expanded_candidates.append((f"{name}+stages_to_features", to_features))
     candidates = expanded_candidates
 
+    channel_adapted_candidates = []
+    for name, cand in candidates:
+        adapted, adapted_info = adapt_state_dict_input_channels(cand, model)
+        if adapted_info:
+            channel_adapted_candidates.append((f"{name}+adapt_input_channels", adapted))
+            print(
+                f"[export_nemo_quant] Candidate '{name}' adapted first conv for input channels: "
+                f"{adapted_info}"
+            )
+    candidates.extend(channel_adapted_candidates)
+
     best = None
     for name, cand in candidates:
-        missing, unexpected = model.load_state_dict(cand, strict=False)
+        try:
+            missing, unexpected = model.load_state_dict(cand, strict=False)
+        except RuntimeError as exc:
+            print(
+                f"[export_nemo_quant] Candidate '{name}' rejected during load_state_dict: "
+                f"{type(exc).__name__}: {exc}"
+            )
+            continue
         score = len(missing) + len(unexpected)
         if best is None or score < best["score"]:
             best = {
@@ -148,6 +213,12 @@ def load_checkpoint(model, ckpt_path, device):
                 "unexpected": unexpected,
                 "score": score,
             }
+
+    if best is None:
+        raise RuntimeError(
+            "Could not load checkpoint into model with any key mapping candidate. "
+            "If using grayscale export from RGB checkpoint, verify first-conv adaptation logic."
+        )
 
     # Reload best candidate so final model state matches chosen mapping.
     missing, unexpected = model.load_state_dict(best["state"], strict=False)
@@ -530,20 +601,27 @@ def run_best_effort_qd_steps(model, eps_in: float):
     print("[export_nemo_quant] QD fallback completed (stage='qd').")
 
 
-def image_to_tensor(path: Path, hw: tuple[int, int], device, mean=None, std=None):
-    # output: float32 [1,3,H,W] in [0,1] (optionally normalized)
-    im = Image.open(path).convert("RGB").resize((hw[1], hw[0]), resample=Image.BILINEAR)
-    x = torch.from_numpy((torch.ByteTensor(torch.ByteStorage.from_buffer(im.tobytes()))
-                          .view(im.size[1], im.size[0], 3)
-                          .numpy())).to(torch.uint8)
+def image_to_tensor(
+    path: Path,
+    hw: tuple[int, int],
+    device,
+    input_channels: int,
+    mean=None,
+    std=None,
+):
+    mode = "L" if input_channels == 1 else "RGB"
+    im = Image.open(path).convert(mode).resize((hw[1], hw[0]), resample=Image.BILINEAR)
+    x_np = np.asarray(im, dtype=np.uint8)
 
-    # (H,W,3) uint8 -> (1,3,H,W) float32 in [0,1]
-    x = x.permute(2, 0, 1).contiguous().unsqueeze(0).to(device=device)
+    if input_channels == 1:
+        x = torch.from_numpy(x_np).unsqueeze(0).contiguous().unsqueeze(0).to(device=device)
+    else:
+        x = torch.from_numpy(x_np).permute(2, 0, 1).contiguous().unsqueeze(0).to(device=device)
     x = x.float().div_(255.0)
 
     if mean is not None and std is not None:
-        m = torch.tensor(mean, device=device).view(1, 3, 1, 1)
-        s = torch.tensor(std, device=device).view(1, 3, 1, 1)
+        m = torch.tensor(mean, device=device).view(1, input_channels, 1, 1)
+        s = torch.tensor(std, device=device).view(1, input_channels, 1, 1)
         x = (x - m) / s
 
     return x
@@ -558,7 +636,9 @@ def iter_calib_batches(args, image_size, device):
         if isinstance(t, dict) and "data" in t:
             t = t["data"]
         assert isinstance(t, torch.Tensor), "calib_tensor must be a Tensor or dict with key 'data'"
-        assert t.ndim == 4 and t.shape[1] == 3, f"Expected [N,3,H,W], got {tuple(t.shape)}"
+        assert t.ndim == 4 and t.shape[1] == args.input_channels, (
+            f"Expected [N,{args.input_channels},H,W], got {tuple(t.shape)}"
+        )
         # If tensor resolution differs, user should pre-resize; we won't interpolate silently.
         for i in range(min(args.calib_batches, t.shape[0])):
             yield t[i:i+1].to(device=device, dtype=torch.float32)
@@ -575,16 +655,25 @@ def iter_calib_batches(args, image_size, device):
         if args.mean and args.std:
             mean = [float(x) for x in args.mean.split(",")]
             std = [float(x) for x in args.std.split(",")]
-            assert len(mean) == 3 and len(std) == 3, "mean/std must be 3 comma-separated values"
+            assert len(mean) == args.input_channels and len(std) == args.input_channels, (
+                f"mean/std must have {args.input_channels} comma-separated values"
+            )
 
         n = min(args.calib_batches, len(paths))
         for i in range(n):
-            yield image_to_tensor(paths[i], hw=hw, device=device, mean=mean, std=std)
+            yield image_to_tensor(
+                paths[i],
+                hw=hw,
+                device=device,
+                input_channels=args.input_channels,
+                mean=mean,
+                std=std,
+            )
         return
 
     # Fallback: dummy calibration (not recommended)
     for _ in range(args.calib_batches):
-        yield torch.rand(1, 3, hw[0], hw[1], device=device)
+        yield torch.rand(1, args.input_channels, hw[0], hw[1], device=device)
 
 
 def main():
@@ -598,6 +687,7 @@ def main():
     parser.add_argument("--width-mult", type=float, default=0.1)
     parser.add_argument("--height", type=int, default=160)
     parser.add_argument("--width", type=int, default=160)
+    parser.add_argument("--input-channels", type=int, default=1, choices=[1, 3])
 
     parser.add_argument("--bits", type=int, default=8, help="Quantization bits (like Q in notebook)")
     parser.add_argument(
@@ -621,13 +711,13 @@ def main():
     parser.add_argument("--calib-dir", type=str, default=None,
                         help="Directory of calibration images (jpg/png).")
     parser.add_argument("--calib-tensor", type=str, default=None,
-                        help="Path to a .pt tensor file shaped [N,3,H,W] for calibration.")
+                        help="Path to a .pt tensor file shaped [N,C,H,W] for calibration.")
     parser.add_argument("--calib-batches", type=int, default=64,
                         help="How many samples to use for activation calibration.")
     parser.add_argument("--mean", type=str, default=None,
-                        help="Optional normalization mean, e.g. '0.5,0.5,0.5'")
+                        help="Optional normalization mean, e.g. '0.5' (C=1) or '0.5,0.5,0.5' (C=3)")
     parser.add_argument("--std", type=str, default=None,
-                        help="Optional normalization std, e.g. '0.5,0.5,0.5'")
+                        help="Optional normalization std, e.g. '0.5' (C=1) or '0.5,0.5,0.5' (C=3)")
 
     args = parser.parse_args()
 
@@ -637,18 +727,22 @@ def main():
         else torch.device("cuda" if torch.cuda.is_available() else "cpu")
     )
     print(f"[export_nemo_quant] Using device: {device}")
+    print(
+        f"[export_nemo_quant] Input tensor config: "
+        f"C={args.input_channels}, H={args.height}, W={args.width}"
+    )
 
     image_size = (args.height, args.width)
 
     # 1) Build FP model + load weights
-    model_fp = build_model(args.num_classes, args.width_mult, image_size)
+    model_fp = build_model(args.num_classes, args.width_mult, image_size, args.input_channels)
     model_fp = load_checkpoint(model_fp, args.ckpt, device)
     if hasattr(model_fp, "enable_forward_raw_debug"):
         model_fp.enable_forward_raw_debug(args.debug_forward_raw)
     model_fp.to(device).eval()
 
     # NEMO expects a dummy_input for graph tracing
-    dummy_input = torch.randn(1, 3, args.height, args.width, device=device)
+    dummy_input = torch.randn(1, args.input_channels, args.height, args.width, device=device)
     if patch_model_to_graph_compat():
         print(
             "[export_nemo_quant] Applied _model_to_graph compatibility shim "
@@ -751,7 +845,7 @@ def main():
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    input_shape = (3, args.height, args.width)  # NEMO export_onnx expects (C,H,W)
+    input_shape = (args.input_channels, args.height, args.width)  # NEMO export_onnx expects (C,H,W)
     print(
         f"[export_nemo_quant] Exporting {exported_stage.upper()} model to ONNX:\n"
         f"  -> {out_path}\n"

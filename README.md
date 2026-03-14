@@ -43,4 +43,32 @@ The full path from PyTorch to GAP8 is:
 
 3. run train.py for 30 epochs
 
-4. run run_all.sh
+4. run run_all.sh with
+
+bash -lc "cd /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd && \
+INPUT_HEIGHT=128 INPUT_WIDTH=128 INPUT_CHANNELS=1 \
+OUT_ONNX=export/ssd_mbv2_nemo_id_gray1_128.onnx \
+SIM_ONNX=export/ssd_mbv2_nemo_id_gray1_128_sim.onnx \
+STAGE_REPORT=export/ssd_mbv2_final_stage_gray1_128.txt \
+DORY_ONNX=export/ssd_mbv2_dory_gray1_128.onnx \
+DORY_NO_AFFINE_ONNX=export/ssd_mbv2_gray1_128_noaffine.onnx \
+DORY_NO_TRANSPOSE_ONNX=export/ssd_mbv2_gray1_128_notranspose.onnx \
+DORY_NO_MIN_ONNX=export/ssd_mbv2_gray1_128_nomin.onnx \
+DORY_CONFIG_GEN=export/config_person_ssd_runtime_gray1_128.json \
+DORY_WEIGHTS_TXT_DIR=export/weights_txt_gray1_128 \
+DORY_ARTIFACT_MANIFEST=export/nemo_dory_artifacts_gray1_128.json \
+DORY_APP_DIR=application ./run_all.sh"
+
+bash -lc "cd /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd && \
+INPUT_HEIGHT=128 INPUT_WIDTH=128 INPUT_CHANNELS=1 \
+OUT_ONNX=export/ssd_mbv2_nemo_id_gray1_128.onnx \
+SIM_ONNX=export/ssd_mbv2_nemo_id_gray1_128_sim.onnx \
+STAGE_REPORT=export/ssd_mbv2_final_stage_gray1_128.txt \
+DORY_ONNX=export/ssd_mbv2_dory_gray1_128.onnx \
+DORY_NO_AFFINE_ONNX=export/ssd_mbv2_gray1_128_noaffine.onnx \
+DORY_NO_TRANSPOSE_ONNX=export/ssd_mbv2_gray1_128_notranspose.onnx \
+DORY_NO_MIN_ONNX=export/ssd_mbv2_gray1_128_nomin.onnx \
+DORY_CONFIG_GEN=export/config_person_ssd_runtime_gray1_128.json \
+DORY_WEIGHTS_TXT_DIR=export/weights_txt_gray1_128 \
+DORY_ARTIFACT_MANIFEST=export/nemo_dory_artifacts_gray1_128.json \
+DORY_APP_DIR=../crazyflie_ssd/generated ./run_all.sh"

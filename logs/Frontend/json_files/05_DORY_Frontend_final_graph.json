@@ -48,15 +48,15 @@
           2,
           2
         ],
-        "input_channels": 3,
+        "input_channels": 1,
         "output_channels": 8,
         "input_dimensions": [
-          160,
-          160
+          128,
+          128
         ],
         "output_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "pads": [
           1,
@@ -177,12 +177,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "output_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "pads": [
           1,
@@ -303,12 +303,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "output_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "pads": [
           0,
@@ -388,12 +388,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "output_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "pads": [
           0,
@@ -487,12 +487,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "output_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "pads": [
           0,
@@ -613,12 +613,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          80,
-          80
+          64,
+          64
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           1,
@@ -739,12 +739,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           0,
@@ -818,12 +818,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           0,
@@ -944,12 +944,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           1,
@@ -1070,12 +1070,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           0,
@@ -1155,12 +1155,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           0,
@@ -1254,12 +1254,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           0,
@@ -1380,12 +1380,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           1,
@@ -1506,12 +1506,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -1585,12 +1585,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -1711,12 +1711,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           1,
@@ -1837,12 +1837,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -1922,12 +1922,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -2021,12 +2021,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -2147,12 +2147,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           1,
@@ -2273,12 +2273,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -2358,12 +2358,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -2457,12 +2457,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           0,
@@ -2583,12 +2583,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -2709,12 +2709,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -2788,12 +2788,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -2914,12 +2914,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -3040,12 +3040,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -3125,12 +3125,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -3224,12 +3224,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -3350,12 +3350,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -3476,12 +3476,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -3561,12 +3561,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -3660,12 +3660,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -3786,12 +3786,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -3912,12 +3912,12 @@
         "input_channels": 48,
         "output_channels": 8,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -3997,12 +3997,12 @@
         "input_channels": 8,
         "output_channels": 8,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -4096,12 +4096,12 @@
         "input_channels": 8,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -4222,12 +4222,12 @@
         "input_channels": 48,
         "output_channels": 48,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -4348,12 +4348,12 @@
         "input_channels": 48,
         "output_channels": 16,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -4427,12 +4427,12 @@
         "input_channels": 16,
         "output_channels": 96,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -4553,12 +4553,12 @@
         "input_channels": 96,
         "output_channels": 96,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -4679,12 +4679,12 @@
         "input_channels": 96,
         "output_channels": 16,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -4764,12 +4764,12 @@
         "input_channels": 16,
         "output_channels": 16,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -4863,12 +4863,12 @@
         "input_channels": 16,
         "output_channels": 96,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -4989,12 +4989,12 @@
         "input_channels": 96,
         "output_channels": 96,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -5115,12 +5115,12 @@
         "input_channels": 96,
         "output_channels": 16,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -5200,12 +5200,12 @@
         "input_channels": 16,
         "output_channels": 16,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -5299,12 +5299,12 @@
         "input_channels": 16,
         "output_channels": 96,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           0,
@@ -5425,12 +5425,12 @@
         "input_channels": 96,
         "output_channels": 96,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           1,
@@ -5551,12 +5551,12 @@
         "input_channels": 96,
         "output_channels": 16,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -5630,12 +5630,12 @@
         "input_channels": 16,
         "output_channels": 96,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -5756,12 +5756,12 @@
         "input_channels": 96,
         "output_channels": 96,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           1,
@@ -5882,12 +5882,12 @@
         "input_channels": 96,
         "output_channels": 16,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -5967,12 +5967,12 @@
         "input_channels": 16,
         "output_channels": 16,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -6066,12 +6066,12 @@
         "input_channels": 16,
         "output_channels": 96,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -6192,12 +6192,12 @@
         "input_channels": 96,
         "output_channels": 96,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           1,
@@ -6318,12 +6318,12 @@
         "input_channels": 96,
         "output_channels": 16,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -6403,12 +6403,12 @@
         "input_channels": 16,
         "output_channels": 16,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -6502,12 +6502,12 @@
         "input_channels": 16,
         "output_channels": 96,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -6628,12 +6628,12 @@
         "input_channels": 96,
         "output_channels": 96,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           1,
@@ -6754,12 +6754,12 @@
         "input_channels": 96,
         "output_channels": 32,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -6833,12 +6833,12 @@
         "input_channels": 32,
         "output_channels": 128,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           0,
@@ -6960,12 +6960,12 @@
         "input_channels": 8,
         "output_channels": 32,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           1,
@@ -7044,12 +7044,12 @@
         "input_channels": 8,
         "output_channels": 32,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           1,
@@ -7128,12 +7128,12 @@
         "input_channels": 16,
         "output_channels": 32,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -7212,12 +7212,12 @@
         "input_channels": 128,
         "output_channels": 32,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           1,
@@ -7296,12 +7296,12 @@
         "input_channels": 8,
         "output_channels": 16,
         "input_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "output_dimensions": [
-          40,
-          40
+          32,
+          32
         ],
         "pads": [
           1,
@@ -7380,12 +7380,12 @@
         "input_channels": 8,
         "output_channels": 16,
         "input_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "output_dimensions": [
-          20,
-          20
+          16,
+          16
         ],
         "pads": [
           1,
@@ -7464,12 +7464,12 @@
         "input_channels": 16,
         "output_channels": 16,
         "input_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "output_dimensions": [
-          10,
-          10
+          8,
+          8
         ],
         "pads": [
           1,
@@ -7548,12 +7548,12 @@
         "input_channels": 128,
         "output_channels": 16,
         "input_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "output_dimensions": [
-          5,
-          5
+          4,
+          4
         ],
         "pads": [
           1,

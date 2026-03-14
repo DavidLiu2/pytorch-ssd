@@ -26,10 +26,20 @@ STAGE_REPORT="${STAGE_REPORT:-export/ssd_mbv2_final_stage.txt}"
 STRICT_STAGE="${STRICT_STAGE:-0}"
 BITS="${BITS:-8}"
 EPS_IN="${EPS_IN:-$(python3 -c "print(1/255)")}"
+INPUT_HEIGHT="${INPUT_HEIGHT:-160}"
+INPUT_WIDTH="${INPUT_WIDTH:-160}"
+INPUT_CHANNELS="${INPUT_CHANNELS:-1}"
 CALIB_DIR="${CALIB_DIR:-data/rep_images}"
 CALIB_BATCHES="${CALIB_BATCHES:-128}"
-MEAN="${MEAN:-0.5,0.5,0.5}"
-STD="${STD:-0.5,0.5,0.5}"
+if [ "${INPUT_CHANNELS}" = "1" ]; then
+  DEFAULT_MEAN="0.5"
+  DEFAULT_STD="0.5"
+else
+  DEFAULT_MEAN="0.5,0.5,0.5"
+  DEFAULT_STD="0.5,0.5,0.5"
+fi
+MEAN="${MEAN:-${DEFAULT_MEAN}}"
+STD="${STD:-${DEFAULT_STD}}"
 
 ########################################
 # DORY CONFIG
@@ -189,6 +199,9 @@ NEMO_CMD=(
   export_nemo_quant.py
   --ckpt "${CKPT}"
   --out "${OUT_ONNX}"
+  --height "${INPUT_HEIGHT}"
+  --width "${INPUT_WIDTH}"
+  --input-channels "${INPUT_CHANNELS}"
   --stage "${STAGE}"
   --stage-report "${STAGE_REPORT}"
   --bits "${BITS}"
@@ -377,6 +390,8 @@ echo "[run_all] Generating DORY input/output, golden activations, and weight txt
   --frontend "${DORY_FRONTEND}" \
   --target "${DORY_TARGET}" \
   --prefix "${DORY_PREFIX}" \
+  --fallback-height "${INPUT_HEIGHT}" \
+  --fallback-width "${INPUT_WIDTH}" \
   --weights-dir "${DORY_WEIGHTS_TXT_DIR_ABS}" \
   --manifest "${DORY_ARTIFACT_MANIFEST_ABS}"
 

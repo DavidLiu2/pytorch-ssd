@@ -20,7 +20,7 @@
 // first_layer                    0
 // ULTRA_VERBOSE                  False
 // verbose_log                    
-// node                           <dory.Parsers.HW_node.HW_node object at 0x7aeea9185e80>
+// node                           <dory.Parsers.HW_node.HW_node object at 0x72a94df43a90>
 // sdk                            gap_sdk
 // number_of_clusters             1
 // optional_type                  8bit
@@ -61,25 +61,25 @@
 // nof                            8
 // factor                         1.0
 // double_buffering               1
-// x_h                            10
-// x_w                            10
+// x_h                            8
+// x_w                            8
 // x_data_size_byte               32
 // x_tile_size_nif                8
-// x_tile_size_h                  10
-// x_tile_size_w                  10
-// x_tile_size_byte               3200
+// x_tile_size_h                  8
+// x_tile_size_w                  8
+// x_tile_size_byte               2048
 // x_tile_size_nif_byte           32
-// x_stride_w_byte                320
+// x_stride_w_byte                256
 // x_stride_c_byte                32
-// y_h                            10
-// y_w                            10
+// y_h                            8
+// y_w                            8
 // y_data_size_byte               32
 // act_dim_bit                    None
 // y_tile_size_nof                8
-// y_tile_size_h                  10
-// y_tile_size_w                  10
-// y_tile_size_byte               3200
-// y_stride_w_byte                320
+// y_tile_size_h                  8
+// y_tile_size_w                  8
+// y_tile_size_byte               2048
+// y_stride_w_byte                256
 // y_stride_c_byte                32
 // y_tile_size_nof_byte           32
 // tile_dim_h                     1
@@ -103,16 +103,16 @@
 // lambda_tile_size_byte_transfer 0
 // bias_tile_size_byte            0
 // l1_x_offset                    0
-// l1_y_offset                    3208
-// l1_x2_offset                   6416
+// l1_y_offset                    2056
+// l1_x2_offset                   4112
 // y_tile_size_nof_last           8
-// y_tile_size_h_last             10
-// y_tile_size_w_last             10
+// y_tile_size_h_last             8
+// y_tile_size_w_last             8
 // y_length_nof_byte_last         32
 // x_tile_size_nif_last           8
 // x_tile_size_nif_byte_last      32
-// x_tile_size_h_last             10
-// x_tile_size_w_last             10
+// x_tile_size_h_last             8
+// x_tile_size_w_last             8
 
 
 #include "Addition36.h"
@@ -164,19 +164,19 @@ void Addition36(
   volatile DMA_copy DMA_copy_x, DMA_copy_x2, DMA_copy_y;
 
   DMA_copy_x.hwc_to_chw = 0;
-  DMA_copy_x.stride_2d = 320;
+  DMA_copy_x.stride_2d = 256;
   DMA_copy_x.stride_1d = 32;
   DMA_copy_x.dir = 1;
   DMA_copy_x.tid = dory_dma_channel;
 
   DMA_copy_x2.hwc_to_chw = 0;
-  DMA_copy_x2.stride_2d = 320;
+  DMA_copy_x2.stride_2d = 256;
   DMA_copy_x2.stride_1d = 32;
   DMA_copy_x2.dir = 1;
   DMA_copy_x2.tid = dory_dma_channel;
   
   DMA_copy_y.hwc_to_chw = 0;
-  DMA_copy_y.stride_2d = 320;
+  DMA_copy_y.stride_2d = 256;
   DMA_copy_y.stride_1d = 32;
   DMA_copy_y.dir = 0;
   DMA_copy_y.tid = dory_dma_channel;
@@ -197,14 +197,14 @@ void Addition36(
     last_w = (_i_w_load+1 == 1) ? 1 : 0;
 
     x_tile_size_nif = (last_nif) ? 8 : 8;
-    x_tile_size_h   = (last_h)   ? 10 : 10;
-    x_tile_size_w   = (last_w)   ? 10 : 10;
+    x_tile_size_h   = (last_h)   ? 8 : 8;
+    x_tile_size_w   = (last_w)   ? 8 : 8;
     x_tile_size_byte = x_tile_size_nif*x_tile_size_h*x_tile_size_w*32/8;
     x_length_nif_byte = (last_nif)   ? 32 : 32;
     // additionally overlap by padding for the first tile after a border one
     //this because in the first tile we use less pixels from x_buffer, since we have the ones of padding
 
-    DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 10, 10, 8, 10, 8,  0, 0,0, 0, 0, 0, 32);
+    DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 8, 8, 8, 8, 8,  0, 0,0, 0, 0, 0, 32);
     DMA_copy_x.loc = (l1_buffer + 0);
     DMA_copy_x.number_of_2d_copies = x_tile_size_h;
     DMA_copy_x.number_of_1d_copies = x_tile_size_w;
@@ -212,24 +212,24 @@ void Addition36(
     dory_dma_memcpy_async(&DMA_copy_x);
     dory_dma_barrier(&DMA_copy_x);
 
-    DMA_copy_x2.ext = dory_get_tile_3d(l2_x2, _i_h_load, _i_w_load, _i_nif_load, 10, 10, 8, 10, 8,  0, 0,0, 0, 0, 0, 32);
-    DMA_copy_x2.loc = (l1_buffer + 6416);
+    DMA_copy_x2.ext = dory_get_tile_3d(l2_x2, _i_h_load, _i_w_load, _i_nif_load, 8, 8, 8, 8, 8,  0, 0,0, 0, 0, 0, 32);
+    DMA_copy_x2.loc = (l1_buffer + 4112);
     DMA_copy_x2.number_of_2d_copies = x_tile_size_h;
     DMA_copy_x2.number_of_1d_copies = x_tile_size_w;
     DMA_copy_x2.length_1d_copy = x_length_nif_byte;
     dory_dma_memcpy_async(&DMA_copy_x2);
     dory_dma_barrier(&DMA_copy_x2);
 
-    y_tile_size_h   = (last_h)   ? 10 : 10;
-    y_tile_size_w   = (last_w)   ? 10 : 10;
+    y_tile_size_h   = (last_h)   ? 8 : 8;
+    y_tile_size_w   = (last_w)   ? 8 : 8;
 
     x = (uint8_t *) (l1_buffer + 0);
-    x2 = (uint8_t *) (l1_buffer + 6416);
-    y = (uint8_t *) (l1_buffer + 3208);
+    x2 = (uint8_t *) (l1_buffer + 4112);
+    y = (uint8_t *) (l1_buffer + 2056);
 
     y_tile_size_nof = (last_nof) ? 8 : 8;
-    y_tile_size_h   = (last_h)   ? 10 : 10;
-    y_tile_size_w   = (last_w)   ? 10 : 10;
+    y_tile_size_h   = (last_h)   ? 8 : 8;
+    y_tile_size_w   = (last_w)   ? 8 : 8;
     y_tile_size_byte = y_tile_size_nof*y_tile_size_h*y_tile_size_w*32/8;
     y_length_nof_byte = (last_nof)   ? 32 : 32;
     asm volatile("": : :"memory");
@@ -249,8 +249,8 @@ void Addition36(
     pi_cl_team_barrier(0);
     // wait for DMA write
     // copying output back to L2
-    DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 10, 10, 8, 10, 8, 0, 0, 0, 0, 0, 0, 32);
-    DMA_copy_y.loc = (l1_buffer + 3208);
+    DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 32);
+    DMA_copy_y.loc = (l1_buffer + 2056);
     DMA_copy_y.number_of_2d_copies = y_tile_size_h;
     DMA_copy_y.number_of_1d_copies = y_tile_size_w;
     DMA_copy_y.length_1d_copy = y_length_nof_byte;

@@ -29,6 +29,9 @@ def parse_args():
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--num_workers", type=int, default=4)
     ap.add_argument("--output_dir", type=str, default="pytorch_ssd/training/person_ssd_pytorch")
+    ap.add_argument("--height", type=int, default=160)
+    ap.add_argument("--width", type=int, default=160)
+    ap.add_argument("--input-channels", type=int, default=1, choices=[1, 3])
     return ap.parse_args()
 
 def reduce_losses(loss_out):
@@ -82,16 +85,21 @@ def main():
     repo_root = Path(__file__).resolve().parents[1]
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    image_size = (args.height, args.width)
+    image_mode = "L" if args.input_channels == 1 else "RGB"
+
     # datasets
     train_ds = COCOPersonDataset(
         root=str(repo_root / args.data_root),
         ann_file=str(repo_root / args.train_ann),
-        transforms=get_train_transforms(),
+        transforms=get_train_transforms(input_channels=args.input_channels),
+        image_mode=image_mode,
     )
     val_ds = COCOPersonDataset(
         root=str(repo_root / args.val_root),
         ann_file=str(repo_root / args.val_ann),
-        transforms=get_val_transforms(),
+        transforms=get_val_transforms(input_channels=args.input_channels),
+        image_mode=image_mode,
     )
 
     train_loader = DataLoader(
@@ -110,7 +118,12 @@ def main():
     )
 
     # model
-    model = SSDMobileNetV2Raw(num_classes=2, width_mult=0.1, image_size=(160, 160))
+    model = SSDMobileNetV2Raw(
+        num_classes=2,
+        width_mult=0.1,
+        image_size=image_size,
+        input_channels=args.input_channels,
+    )
     model.to(device)
 
     params = [p for p in model.parameters() if p.requires_grad]

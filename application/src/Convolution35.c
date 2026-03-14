@@ -68,7 +68,7 @@ void Convolution35(
   DMA_copy_lambda.tid = dory_dma_channel;
   
   DMA_copy_x.hwc_to_chw = 0;
-  DMA_copy_x.stride_2d = 480;
+  DMA_copy_x.stride_2d = 384;
   DMA_copy_x.stride_1d = 48;
   DMA_copy_x.dir = 1;
   DMA_copy_x.tid = dory_dma_channel;
@@ -82,7 +82,7 @@ void Convolution35(
   DMA_copy_W.tid = dory_dma_channel;
   
   DMA_copy_y.hwc_to_chw = 0;
-  DMA_copy_y.stride_2d = 320;
+  DMA_copy_y.stride_2d = 256;
   DMA_copy_y.stride_1d = 32;
   DMA_copy_y.dir = 0;
   DMA_copy_y.tid = dory_dma_channel;
@@ -110,7 +110,7 @@ void Convolution35(
   int _i_nof_load=0, _i_nif_load=0, _i_h_load=0, _i_w_load=0;
   int _i_nof_exec=1, _i_nif_exec=1, _i_h_exec=1, _i_w_exec=1;
   volatile uint8_t *im2col;
-  im2col = l1_buffer + 8424;
+  im2col = l1_buffer + 5544;
   uint16_t out_shift = out_shift_in;
 
   ////////////////////////////
@@ -123,8 +123,8 @@ void Convolution35(
   for(iter=0; iter < total_tiles; iter++) {
     // check if last in any dimension
       x_tile_size_nif = (_i_nif_load+1 == 1) ? 48 : 48;
-      x_tile_size_h   = (_i_h_load+1 == 1)   ? 10 : 10;
-      x_tile_size_w   = (_i_w_load+1 == 1)   ? 10 : 10;
+      x_tile_size_h   = (_i_h_load+1 == 1)   ? 8 : 8;
+      x_tile_size_w   = (_i_w_load+1 == 1)   ? 8 : 8;
       x_tile_size_byte = x_tile_size_nif*x_tile_size_h*x_tile_size_w*8/8;
       x_length_nif_byte = (_i_nif_load+1 == 1)   ? 48 : 48;
       // additionally overlap by padding for the first tile after a border one
@@ -134,8 +134,8 @@ void Convolution35(
         pad_offset_h = 0;
       if(_i_w_load > 0)
         pad_offset_w = 0;
-      y_tile_size_h   = (_i_h_load+1 == 1)   ? 10 : 10;
-      y_tile_size_w   = (_i_w_load+1 == 1)   ? 10 : 10;
+      y_tile_size_h   = (_i_h_load+1 == 1)   ? 8 : 8;
+      y_tile_size_w   = (_i_w_load+1 == 1)   ? 8 : 8;
       y_tile_size_nof = (_i_nof_load+1 == 1) ? 8 : 8;
       y_tile_size_byte = y_tile_size_nof*y_tile_size_h*y_tile_size_w*32/8;
       y_length_nof_byte = (_i_nof_load+1 == 1)   ? 32 : 32;
@@ -146,7 +146,7 @@ void Convolution35(
       // transfer of next input tile in double buffering
       if (_i_nif_load!=_i_nif_exec || _i_w_load!=_i_w_exec || _i_h_load!=_i_h_exec)
       {
-        DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 10, 10, 48, 10, 48,  0, 0,0, pad_offset_h, pad_offset_w, 0, 8);
+        DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 8, 8, 48, 8, 48,  0, 0,0, pad_offset_h, pad_offset_w, 0, 8);
         DMA_copy_x.loc = (l1_buffer + 0);
         DMA_copy_x.number_of_2d_copies = x_tile_size_h;
         DMA_copy_x.number_of_1d_copies = x_tile_size_w;
@@ -158,7 +158,7 @@ void Convolution35(
       if (_i_nif_load!=_i_nif_exec || _i_nof_load!=_i_nof_exec)
       {
         DMA_copy_W.ext = dory_get_tile_3d(l2_W, _i_nof_load, 0, _i_nif_load, 8, 1*1, 48, 1*1, 48, 0,0,0,0,0,0, 8);
-        DMA_copy_W.loc = (l1_buffer + 8016);
+        DMA_copy_W.loc = (l1_buffer + 5136);
         DMA_copy_W.number_of_2d_copies = W_tile_size_nof;
         DMA_copy_W.length_1d_copy = W_length_nif_byte;
         dory_dma_memcpy_async(&DMA_copy_W);
@@ -166,8 +166,8 @@ void Convolution35(
       }
     // creation of the pointers to input, output, weights, lambda and k
     x = (uint8_t *) (l1_buffer + 0);
-    W = (uint8_t *) (l1_buffer + 8016);
-    y = (uint8_t *) (l1_buffer + 4808);
+    W = (uint8_t *) (l1_buffer + 5136);
+    y = (uint8_t *) (l1_buffer + 3080);
     p_r = 0;
     p_l = 0;
     p_t = 0;
@@ -195,8 +195,8 @@ void Convolution35(
       0, 0
       );
     pi_cl_team_barrier(0);
-      DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 10, 10, 8, 10, 8, 0, 0, 0, 0, 0, 0, 32);
-      DMA_copy_y.loc = (l1_buffer + 4808);
+      DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 32);
+      DMA_copy_y.loc = (l1_buffer + 3080);
       DMA_copy_y.number_of_2d_copies = y_tile_size_h;
       DMA_copy_y.number_of_1d_copies = y_tile_size_w;
       DMA_copy_y.length_1d_copy = y_length_nof_byte;

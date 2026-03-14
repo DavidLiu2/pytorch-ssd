@@ -31,29 +31,34 @@ class RandomHorizontalFlip:
         return img, target
 
 
-class ToTensorGray3:
+class ToTensorGray:
     """
-    Convert RGB PIL image -> grayscale -> 3-channel tensor [3,H,W] in [0,1].
+    Convert PIL image -> grayscale tensor.
 
-    We leave resizing and normalization to torchvision's SSDTransform.
+    By default returns true single-channel tensors [1,H,W].
     """
+
+    def __init__(self, output_channels: int = 1):
+        if output_channels not in (1, 3):
+            raise ValueError("output_channels must be 1 or 3")
+        self.output_channels = output_channels
 
     def __call__(self, img: Image.Image, target: Dict[str, Any]):
-        # Convert to grayscale (single channel)
-        img_gray = img.convert("L")          # PIL, 1-channel
-        img_t = F.to_tensor(img_gray)        # [1,H,W] float in [0,1]
-        img_t = img_t.repeat(3, 1, 1)        # [3,H,W], identical channels
+        img_gray = img.convert("L")   # PIL, 1-channel
+        img_t = F.to_tensor(img_gray) # [1,H,W] float in [0,1]
+        if self.output_channels == 3:
+            img_t = img_t.repeat(3, 1, 1)
         return img_t, target
 
 
-def get_train_transforms():
+def get_train_transforms(input_channels: int = 1):
     return Compose([
         RandomHorizontalFlip(0.5),
-        ToTensorGray3(),
+        ToTensorGray(output_channels=input_channels),
     ])
 
 
-def get_val_transforms():
+def get_val_transforms(input_channels: int = 1):
     return Compose([
-        ToTensorGray3(),
+        ToTensorGray(output_channels=input_channels),
     ])

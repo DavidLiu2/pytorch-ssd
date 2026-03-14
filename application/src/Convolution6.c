@@ -68,7 +68,7 @@ void Convolution6(
   DMA_copy_lambda.tid = dory_dma_channel;
   
   DMA_copy_x.hwc_to_chw = 0;
-  DMA_copy_x.stride_2d = 1920;
+  DMA_copy_x.stride_2d = 1536;
   DMA_copy_x.stride_1d = 48;
   DMA_copy_x.dir = 1;
   DMA_copy_x.tid = dory_dma_channel;
@@ -82,7 +82,7 @@ void Convolution6(
   DMA_copy_W.tid = dory_dma_channel;
   
   DMA_copy_y.hwc_to_chw = 0;
-  DMA_copy_y.stride_2d = 1280;
+  DMA_copy_y.stride_2d = 1024;
   DMA_copy_y.stride_1d = 32;
   DMA_copy_y.dir = 0;
   DMA_copy_y.tid = dory_dma_channel;
@@ -118,13 +118,13 @@ void Convolution6(
   ////////////////////////////
   pi_cl_team_barrier(0);
 
-  int total_tiles = 6;
+  int total_tiles = 4;
   // tile loop nest
   for(iter=0; iter < total_tiles; iter++) {
     // check if last in any dimension
       x_tile_size_nif = (_i_nif_load+1 == 1) ? 48 : 48;
-      x_tile_size_h   = (_i_h_load+1 == 2)   ? 16 : 24;
-      x_tile_size_w   = (_i_w_load+1 == 3)   ? 4 : 18;
+      x_tile_size_h   = (_i_h_load+1 == 2)   ? 8 : 24;
+      x_tile_size_w   = (_i_w_load+1 == 2)   ? 14 : 18;
       x_tile_size_byte = x_tile_size_nif*x_tile_size_h*x_tile_size_w*8/8;
       x_length_nif_byte = (_i_nif_load+1 == 1)   ? 48 : 48;
       // additionally overlap by padding for the first tile after a border one
@@ -134,8 +134,8 @@ void Convolution6(
         pad_offset_h = 0;
       if(_i_w_load > 0)
         pad_offset_w = 0;
-      y_tile_size_h   = (_i_h_load+1 == 2)   ? 16 : 24;
-      y_tile_size_w   = (_i_w_load+1 == 3)   ? 4 : 18;
+      y_tile_size_h   = (_i_h_load+1 == 2)   ? 8 : 24;
+      y_tile_size_w   = (_i_w_load+1 == 2)   ? 14 : 18;
       y_tile_size_nof = (_i_nof_load+1 == 1) ? 8 : 8;
       y_tile_size_byte = y_tile_size_nof*y_tile_size_h*y_tile_size_w*32/8;
       y_length_nof_byte = (_i_nof_load+1 == 1)   ? 32 : 32;
@@ -146,7 +146,7 @@ void Convolution6(
       // transfer of next input tile in double buffering
       if (_i_nif_load!=_i_nif_exec || _i_w_load!=_i_w_exec || _i_h_load!=_i_h_exec)
       {
-        DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 24, 18, 48, 40, 48,  0, 0,0, pad_offset_h, pad_offset_w, 0, 8);
+        DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 24, 18, 48, 32, 48,  0, 0,0, pad_offset_h, pad_offset_w, 0, 8);
         DMA_copy_x.loc = (l1_buffer + 0);
         DMA_copy_x.number_of_2d_copies = x_tile_size_h;
         DMA_copy_x.number_of_1d_copies = x_tile_size_w;
@@ -178,7 +178,7 @@ void Convolution6(
       p_l = 0;
     if (_i_h_load == 2-1)
       p_b = 0;
-    if (_i_w_load == 3-1)
+    if (_i_w_load == 2-1)
       p_r = 0;
     pi_cl_team_barrier(0);
     pulp_nn_pointwise_HoWo_parallel(
@@ -194,7 +194,7 @@ void Convolution6(
       0, 0
       );
     pi_cl_team_barrier(0);
-      DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 24, 18, 8, 40, 8, 0, 0, 0, 0, 0, 0, 32);
+      DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 24, 18, 8, 32, 8, 0, 0, 0, 0, 0, 0, 32);
       DMA_copy_y.loc = (l1_buffer + 20744);
       DMA_copy_y.number_of_2d_copies = y_tile_size_h;
       DMA_copy_y.number_of_1d_copies = y_tile_size_w;
@@ -208,7 +208,7 @@ void Convolution6(
     _i_h_exec = _i_h_load;
     _i_w_exec = _i_w_load;
       _i_w_load += 1;
-      if(_i_w_load==3) 
+      if(_i_w_load==2) 
       {
         _i_w_load = 0;
         _i_h_load += 1;

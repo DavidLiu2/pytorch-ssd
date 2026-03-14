@@ -25,10 +25,12 @@ class SSDMobileNetV2Raw(SSD):
         num_classes: int = 2,
         width_mult: float = 0.1,
         image_size: Tuple[int, int] = (160, 160),
+        input_channels: int = 3,
     ):
         backbone = MobileNetV2Backbone(
             width_mult=width_mult,
             image_size=image_size,
+            input_channels=input_channels,
         )
 
         num_feature_maps = len(backbone.out_channels)
@@ -44,7 +46,10 @@ class SSDMobileNetV2Raw(SSD):
             anchor_generator=anchor_generator,
             size=image_size,
             num_classes=num_classes,
+            image_mean=([0.5] * input_channels),
+            image_std=([0.5] * input_channels),
         )
+        self.input_channels = input_channels
         self._debug_forward_raw = False
         self._forward_raw_calls = 0
 
@@ -55,7 +60,7 @@ class SSDMobileNetV2Raw(SSD):
         """
         Raw head forward used by NEMO export.
 
-        x: [B, 3, H, W]
+        x: [B, C, H, W]
         returns:
             locs:       [B, N_boxes, 4]
             cls_logits: [B, N_boxes, num_classes]
