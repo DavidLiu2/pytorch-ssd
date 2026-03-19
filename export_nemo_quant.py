@@ -12,15 +12,45 @@ import torch
 import nemo  # pytorch-nemo (pulp-platform)
 from PIL import Image
 
+from models.hybrid_follow_net import HybridFollowNet
 from models.ssd_mobilenet_v2_raw import SSDMobileNetV2Raw
 
 
-def build_model(num_classes: int, width_mult: float, image_size, input_channels: int):
+def build_model(
+    model_type: str,
+    num_classes: int,
+    width_mult: float,
+    image_size,
+    input_channels: int,
+):
+    if model_type == "hybrid_follow":
+        return HybridFollowNet(
+            input_channels=input_channels,
+            image_size=image_size,
+        )
+
     return SSDMobileNetV2Raw(
         num_classes=num_classes,
         width_mult=width_mult,
         image_size=image_size,
         input_channels=input_channels,
+    )
+
+
+def export_fp_onnx(model, dummy_input: torch.Tensor, out_path: Path, opset_version: int):
+    output_names = ["follow_raw"]
+    if isinstance(model, SSDMobileNetV2Raw):
+        output_names = ["bbox_regression", "cls_logits"]
+
+    torch.onnx.export(
+        model,
+        dummy_input,
+        str(out_path),
+        export_params=True,
+        opset_version=opset_version,
+        do_constant_folding=True,
+        input_names=["input"],
+        output_names=output_names,
     )
 
 
@@ -303,7 +333,15 @@ def is_qd_eps_mapping_error(exc: Exception) -> bool:
         return True
     if isinstance(exc, KeyError):
         key = exc.args[0] if exc.args else ""
-        if isinstance(key, str) and ("backbone." in key or "ssd.backbone" in key):
+        if isinstance(key, str) and (
+            "backbone." in key
+            or "ssd.backbone" in key
+            or key.startswith("stem.")
+            or key.startswith("stage")
+            or key.startswith("global_pool")
+            or key.startswith("head.")
+            or key.startswith("head_")
+        ):
             return True
     return False
 
@@ -678,16 +716,23 @@ def iter_calib_batches(args, image_size, device):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Export SSD-MobileNetV2 to ONNX using NEMO FQ/QD/ID stages (ETH tutorial flow)"
+        description="Export SSD or hybrid_follow models to ONNX using FP or NEMO FQ/QD/ID stages."
+    )
+    parser.add_argument(
+        "--model-type",
+        type=str,
+        default="hybrid_follow",
+        choices=["ssd", "hybrid_follow"],
     )
     parser.add_argument("--ckpt", type=str, default="training/person_ssd_pytorch/ssd_mbv2_raw.pth")
     parser.add_argument("--out", type=str, default="export/ssd_mbv2_nemo_id.onnx")
 
     parser.add_argument("--num-classes", type=int, default=2)
     parser.add_argument("--width-mult", type=float, default=0.1)
-    parser.add_argument("--height", type=int, default=160)
-    parser.add_argument("--width", type=int, default=160)
+    parser.add_argument("--height", type=int, default=128)
+    parser.add_argument("--width", type=int, default=128)
     parser.add_argument("--input-channels", type=int, default=1, choices=[1, 3])
+    parser.add_argument("--opset-version", type=int, default=13)
 
     parser.add_argument("--bits", type=int, default=8, help="Quantization bits (like Q in notebook)")
     parser.add_argument(
@@ -697,8 +742,8 @@ def main():
         help="Input quantum eps_in. For images in [0,1], use 1/255.",
     )
 
-    parser.add_argument("--stage", choices=["fq", "qd", "id"], default="id",
-                        help="Which stage to export (fq/q d/id).")
+    parser.add_argument("--stage", choices=["fp", "fq", "qd", "id"], default="fp",
+                        help="Which stage to export (fp/fq/qd/id).")
     parser.add_argument("--strict-stage", action="store_true",
                         help="Fail instead of falling back when qd/id conversion errors out.")
     parser.add_argument("--stage-report", type=str, default=None,
@@ -721,6 +766,9 @@ def main():
 
     args = parser.parse_args()
 
+    if args.model_type == "hybrid_follow" and args.input_channels != 1:
+        raise ValueError("hybrid_follow export requires --input-channels 1.")
+
     device = (
         torch.device("cpu")
         if args.force_cpu
@@ -735,7 +783,13 @@ def main():
     image_size = (args.height, args.width)
 
     # 1) Build FP model + load weights
-    model_fp = build_model(args.num_classes, args.width_mult, image_size, args.input_channels)
+    model_fp = build_model(
+        args.model_type,
+        args.num_classes,
+        args.width_mult,
+        image_size,
+        args.input_channels,
+    )
     model_fp = load_checkpoint(model_fp, args.ckpt, device)
     if hasattr(model_fp, "enable_forward_raw_debug"):
         model_fp.enable_forward_raw_debug(args.debug_forward_raw)
@@ -743,10 +797,39 @@ def main():
 
     # NEMO expects a dummy_input for graph tracing
     dummy_input = torch.randn(1, args.input_channels, args.height, args.width, device=device)
-    if patch_model_to_graph_compat():
+    if args.stage != "fp" and patch_model_to_graph_compat():
         print(
             "[export_nemo_quant] Applied _model_to_graph compatibility shim "
             "for older torch versions."
+        )
+
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if args.stage == "fp":
+        print(
+            f"[export_nemo_quant] Exporting FP model to ONNX:\n"
+            f"  -> {out_path}\n"
+            f"  input_shape=(1,{args.input_channels},{args.height},{args.width})"
+        )
+        export_fp_onnx(
+            model=model_fp,
+            dummy_input=dummy_input,
+            out_path=out_path,
+            opset_version=args.opset_version,
+        )
+        if args.stage_report:
+            stage_path = Path(args.stage_report)
+            stage_path.parent.mkdir(parents=True, exist_ok=True)
+            stage_path.write_text("fp\n", encoding="utf-8")
+        print("[export_nemo_quant] Final exported stage: FP")
+        print("[export_nemo_quant] Done.")
+        return
+
+    if args.model_type == "hybrid_follow":
+        print(
+            "[export_nemo_quant] hybrid_follow quantized export requested. "
+            "Keeping the graph simple, but FP export is the validated path for now."
         )
 
     # 2) FQ: quantize_pact + set bitwidth + activation calibration (ETH notebook)
@@ -786,7 +869,8 @@ def main():
 
     # 3) QD / ID using the notebook API (qd_stage / id_stage)
     if args.stage in ["qd", "id"]:
-        debug_backbone_feature_paths(model_deploy, context="before qd_stage")
+        if args.model_type == "ssd":
+            debug_backbone_feature_paths(model_deploy, context="before qd_stage")
         print(f"[export_nemo_quant] Entering QuantizedDeployable (QD) via qd_stage(eps_in={args.eps_in}) ...")
         try:
             model_deploy.qd_stage(eps_in=args.eps_in)

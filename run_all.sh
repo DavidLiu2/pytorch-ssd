@@ -1,5 +1,4 @@
 #!/bin/bash
-exec > log.txt 2>&1
 set -euo pipefail
 
 ########################################
@@ -7,6 +6,7 @@ set -euo pipefail
 ########################################
 
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "${PROJECT_ROOT}"
 
 DORY_ENV_DIR="${PROJECT_ROOT}/../doryenv"
 NEMO_ENV_DIR="${PROJECT_ROOT}/../nemoenv"
@@ -18,19 +18,59 @@ NEMO_REQ="${PROJECT_ROOT}/requirements_nemoenv.txt"
 # QUANT/SIM CONFIG
 ########################################
 
-CKPT="${CKPT:-training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth}"
-OUT_ONNX="${OUT_ONNX:-export/ssd_mbv2_nemo_id.onnx}"
-SIM_ONNX="${SIM_ONNX:-export/ssd_mbv2_nemo_id_sim.onnx}"
-STAGE="${STAGE:-id}"
-STAGE_REPORT="${STAGE_REPORT:-export/ssd_mbv2_final_stage.txt}"
+MODEL_TYPE="${MODEL_TYPE:-hybrid_follow}"
+if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
+  DEFAULT_CKPT="training/hybrid_follow/hybrid_follow_best_visibility.pth"
+  DEFAULT_OUT_ONNX="export/hybrid_follow/hybrid_follow_fp.onnx"
+  DEFAULT_SIM_ONNX="export/hybrid_follow/hybrid_follow_fp_sim.onnx"
+  DEFAULT_STAGE="fp"
+  DEFAULT_STAGE_REPORT="export/hybrid_follow/hybrid_follow_final_stage.txt"
+  DEFAULT_INPUT_HEIGHT="128"
+  DEFAULT_INPUT_WIDTH="128"
+  DEFAULT_INPUT_CHANNELS="1"
+  DEFAULT_CALIB_DIR=""
+  DEFAULT_DORY_CONFIG_GEN="export/hybrid_follow/config_hybrid_follow_runtime.json"
+  DEFAULT_DORY_ONNX="export/hybrid_follow/hybrid_follow_dory.onnx"
+  DEFAULT_DORY_NO_AFFINE_ONNX="export/hybrid_follow/hybrid_follow_noaffine.onnx"
+  DEFAULT_DORY_NO_TRANSPOSE_ONNX="export/hybrid_follow/hybrid_follow_notranspose.onnx"
+  DEFAULT_DORY_NO_MIN_ONNX="export/hybrid_follow/hybrid_follow_nomin.onnx"
+  DEFAULT_DORY_WEIGHTS_TXT_DIR="export/hybrid_follow/weights_txt"
+  DEFAULT_DORY_ARTIFACT_MANIFEST="export/hybrid_follow/nemo_dory_artifacts.json"
+  DEFAULT_RUN_DORY="0"
+else
+  DEFAULT_CKPT="training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth"
+  DEFAULT_OUT_ONNX="export/ssd_mbv2_nemo_id.onnx"
+  DEFAULT_SIM_ONNX="export/ssd_mbv2_nemo_id_sim.onnx"
+  DEFAULT_STAGE="id"
+  DEFAULT_STAGE_REPORT="export/ssd_mbv2_final_stage.txt"
+  DEFAULT_INPUT_HEIGHT="160"
+  DEFAULT_INPUT_WIDTH="160"
+  DEFAULT_INPUT_CHANNELS="1"
+  DEFAULT_CALIB_DIR="data/rep_images"
+  DEFAULT_DORY_CONFIG_GEN="export/config_person_ssd_runtime.json"
+  DEFAULT_DORY_ONNX="export/ssd_mbv2_dory.onnx"
+  DEFAULT_DORY_NO_AFFINE_ONNX="export/ssd_mbv2_noaffine.onnx"
+  DEFAULT_DORY_NO_TRANSPOSE_ONNX="export/ssd_mbv2_notranspose.onnx"
+  DEFAULT_DORY_NO_MIN_ONNX="export/ssd_mbv2_nomin.onnx"
+  DEFAULT_DORY_WEIGHTS_TXT_DIR="export/weights_txt"
+  DEFAULT_DORY_ARTIFACT_MANIFEST="export/nemo_dory_artifacts.json"
+  DEFAULT_RUN_DORY="1"
+fi
+
+CKPT="${CKPT:-${DEFAULT_CKPT}}"
+OUT_ONNX="${OUT_ONNX:-${DEFAULT_OUT_ONNX}}"
+SIM_ONNX="${SIM_ONNX:-${DEFAULT_SIM_ONNX}}"
+STAGE="${STAGE:-${DEFAULT_STAGE}}"
+STAGE_REPORT="${STAGE_REPORT:-${DEFAULT_STAGE_REPORT}}"
 STRICT_STAGE="${STRICT_STAGE:-0}"
 BITS="${BITS:-8}"
 EPS_IN="${EPS_IN:-$(python3 -c "print(1/255)")}"
-INPUT_HEIGHT="${INPUT_HEIGHT:-160}"
-INPUT_WIDTH="${INPUT_WIDTH:-160}"
-INPUT_CHANNELS="${INPUT_CHANNELS:-1}"
-CALIB_DIR="${CALIB_DIR:-data/rep_images}"
+INPUT_HEIGHT="${INPUT_HEIGHT:-${DEFAULT_INPUT_HEIGHT}}"
+INPUT_WIDTH="${INPUT_WIDTH:-${DEFAULT_INPUT_WIDTH}}"
+INPUT_CHANNELS="${INPUT_CHANNELS:-${DEFAULT_INPUT_CHANNELS}}"
+CALIB_DIR="${CALIB_DIR:-${DEFAULT_CALIB_DIR}}"
 CALIB_BATCHES="${CALIB_BATCHES:-128}"
+RUN_DORY="${RUN_DORY:-${DEFAULT_RUN_DORY}}"
 if [ "${INPUT_CHANNELS}" = "1" ]; then
   DEFAULT_MEAN="0.5"
   DEFAULT_STD="0.5"
@@ -47,17 +87,17 @@ STD="${STD:-${DEFAULT_STD}}"
 
 DORY_ROOT="${DORY_ROOT:-${PROJECT_ROOT}/../dory}"
 DORY_CONFIG_TEMPLATE="${DORY_CONFIG_TEMPLATE:-${PROJECT_ROOT}/../dory_examples/config_files/config_person_ssd.json}"
-DORY_CONFIG_GEN="${DORY_CONFIG_GEN:-export/config_person_ssd_runtime.json}"
-DORY_ONNX="${DORY_ONNX:-export/ssd_mbv2_dory.onnx}"
-DORY_NO_AFFINE_ONNX="${DORY_NO_AFFINE_ONNX:-export/ssd_mbv2_noaffine.onnx}"
-DORY_NO_TRANSPOSE_ONNX="${DORY_NO_TRANSPOSE_ONNX:-export/ssd_mbv2_notranspose.onnx}"
-DORY_NO_MIN_ONNX="${DORY_NO_MIN_ONNX:-export/ssd_mbv2_nomin.onnx}"
+DORY_CONFIG_GEN="${DORY_CONFIG_GEN:-${DEFAULT_DORY_CONFIG_GEN}}"
+DORY_ONNX="${DORY_ONNX:-${DEFAULT_DORY_ONNX}}"
+DORY_NO_AFFINE_ONNX="${DORY_NO_AFFINE_ONNX:-${DEFAULT_DORY_NO_AFFINE_ONNX}}"
+DORY_NO_TRANSPOSE_ONNX="${DORY_NO_TRANSPOSE_ONNX:-${DEFAULT_DORY_NO_TRANSPOSE_ONNX}}"
+DORY_NO_MIN_ONNX="${DORY_NO_MIN_ONNX:-${DEFAULT_DORY_NO_MIN_ONNX}}"
 DORY_FRONTEND="${DORY_FRONTEND:-NEMO}"
 DORY_TARGET="${DORY_TARGET:-PULP.GAP8}"
 DORY_APP_DIR="${DORY_APP_DIR:-${PROJECT_ROOT}/../dory_examples/application}"
 DORY_PREFIX="${DORY_PREFIX:-}"
-DORY_WEIGHTS_TXT_DIR="${DORY_WEIGHTS_TXT_DIR:-export/weights_txt}"
-DORY_ARTIFACT_MANIFEST="${DORY_ARTIFACT_MANIFEST:-export/nemo_dory_artifacts.json}"
+DORY_WEIGHTS_TXT_DIR="${DORY_WEIGHTS_TXT_DIR:-${DEFAULT_DORY_WEIGHTS_TXT_DIR}}"
+DORY_ARTIFACT_MANIFEST="${DORY_ARTIFACT_MANIFEST:-${DEFAULT_DORY_ARTIFACT_MANIFEST}}"
 
 ########################################
 # HELPERS
@@ -139,6 +179,83 @@ abspath_with_python() {
   "$py_bin" -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$path_value"
 }
 
+resolve_existing_path() {
+  local path_value="$1"
+  if [ -f "$path_value" ]; then
+    printf '%s\n' "$path_value"
+    return 0
+  fi
+
+  local rooted="${PROJECT_ROOT}/${path_value}"
+  if [ -f "$rooted" ]; then
+    printf '%s\n' "$rooted"
+    return 0
+  fi
+
+  return 1
+}
+
+select_hybrid_follow_ckpt() {
+  local found_path
+
+  if found_path="$(resolve_existing_path "${CKPT}")"; then
+    printf '%s\n' "$found_path"
+    return 0
+  fi
+
+  local best_vis_ckpt="${PROJECT_ROOT}/training/hybrid_follow/hybrid_follow_best_visibility.pth"
+  if [ -f "${best_vis_ckpt}" ]; then
+    printf '%s\n' "$best_vis_ckpt"
+    return 0
+  fi
+
+  local latest_train_ckpt
+  latest_train_ckpt="$(ls -1 "${PROJECT_ROOT}/training/hybrid_follow"/hybrid_follow_epoch_*.pth 2>/dev/null | tail -n1 || true)"
+  if [ -n "${latest_train_ckpt}" ] && [ -f "${latest_train_ckpt}" ]; then
+    printf '%s\n' "$latest_train_ckpt"
+    return 0
+  fi
+
+  local tmp_ckpt="${PROJECT_ROOT}/export/tmp_hybrid_ckpt.pth"
+  if [ -f "${tmp_ckpt}" ]; then
+    printf '%s\n' "$tmp_ckpt"
+    return 0
+  fi
+
+  return 1
+}
+
+bootstrap_hybrid_follow_ckpt() {
+  local py_bin="$1"
+  local bootstrap_rel="export/hybrid_follow/bootstrap_hybrid_follow_random.pth"
+  local bootstrap_abs="${PROJECT_ROOT}/${bootstrap_rel}"
+
+  mkdir -p "$(dirname "${bootstrap_abs}")"
+  BOOTSTRAP_CKPT_PATH="${bootstrap_abs}" "$py_bin" - <<'PY'
+from pathlib import Path
+import os
+
+import torch
+
+from models.hybrid_follow_net import HybridFollowNet
+
+out_path = Path(os.environ["BOOTSTRAP_CKPT_PATH"])
+model = HybridFollowNet(input_channels=1, image_size=(128, 128))
+torch.save(
+    {
+        "model_type": "hybrid_follow",
+        "height": 128,
+        "width": 128,
+        "input_channels": 1,
+        "state_dict": model.state_dict(),
+    },
+    out_path,
+)
+print(out_path)
+PY
+  printf '%s\n' "${bootstrap_abs}"
+}
+
 ########################################
 # ENSURE ENVS EXIST
 ########################################
@@ -150,14 +267,14 @@ ensure_venv "$NEMO_ENV_DIR" "$NEMO_REQ"
 # 1. TRAIN (whatever env you started in, usually doryenv)
 ########################################
 
-echo "=== [1/4] Training SSD-MobileNetV2 ==="
+echo "=== [1/4] Training (${MODEL_TYPE}) ==="
 # python3 train.py
 
 ########################################
 # 2. NEMO QUANT EXPORT (in nemoenv)
 ########################################
 
-echo "=== [2/4] Exporting NEMO-quantized ONNX (using nemoenv) ==="
+echo "=== [2/4] Exporting ONNX (using nemoenv) ==="
 
 ORIG_VENV="${VIRTUAL_ENV:-}"   # remember where we started
 
@@ -195,8 +312,20 @@ ensure_module_or_sync_requirements "nemo" "$NEMO_REQ" "$NEMO_PY"
 ensure_nemo_requirement_sync "$NEMO_REQ" "$NEMO_PY"
 ensure_module_or_sync_requirements "onnxsim" "$NEMO_REQ" "$NEMO_PY"
 
+if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
+  if HYBRID_CKPT_PATH="$(select_hybrid_follow_ckpt)"; then
+    CKPT="${HYBRID_CKPT_PATH}"
+    echo "[run_all] Using hybrid_follow checkpoint: ${CKPT}"
+  else
+    echo "[run_all] No hybrid_follow checkpoint found; creating bootstrap random-init checkpoint for export smoke test."
+    CKPT="$(bootstrap_hybrid_follow_ckpt "$NEMO_PY")"
+    echo "[run_all] Bootstrap checkpoint created: ${CKPT}"
+  fi
+fi
+
 NEMO_CMD=(
   export_nemo_quant.py
+  --model-type "${MODEL_TYPE}"
   --ckpt "${CKPT}"
   --out "${OUT_ONNX}"
   --height "${INPUT_HEIGHT}"
@@ -208,7 +337,6 @@ NEMO_CMD=(
   --eps-in "${EPS_IN}"
   --calib-batches "${CALIB_BATCHES}"
   --strict-stage
-  --debug-forward-raw
 )
 
 if [ "${STRICT_STAGE}" = "1" ]; then
@@ -262,6 +390,19 @@ if [ -n "$ORIG_VENV" ] && { [ -f "$ORIG_VENV/bin/activate" ] || [ -f "$ORIG_VENV
 elif [ -d "$DORY_ENV_DIR" ]; then
   activate_venv "$DORY_ENV_DIR"
   echo "activated original venv: $DORY_ENV_DIR"
+fi
+
+if [ "${RUN_DORY}" != "1" ]; then
+  echo "=== DORY/codegen skipped (RUN_DORY=${RUN_DORY}) ==="
+  if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
+    echo "[run_all] hybrid_follow currently defaults to straight FP export."
+    echo "[run_all] SSD-specific cleanup passes are not needed for the FP graph."
+    echo "[run_all] Revisit strip_fake_quant and DORY cleanup after QD/ID export is enabled."
+  fi
+  echo "[run_all] Final stage: ${FINAL_STAGE^^}"
+  echo "[run_all] Exported ONNX: ${OUT_ONNX}"
+  echo "[run_all] Simplified ONNX: ${SIM_ONNX}"
+  exit 0
 fi
 
 ########################################

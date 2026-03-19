@@ -5,7 +5,6 @@ from typing import Any, Dict, List, Tuple
 import torch
 from torch.utils.data import Dataset
 from PIL import Image
-from pycocotools.coco import COCO
 
 
 class COCOPersonDataset(Dataset):
@@ -21,6 +20,8 @@ class COCOPersonDataset(Dataset):
 
     def __init__(self, root: str, ann_file: str, transforms=None, image_mode: str = "RGB"):
         super().__init__()
+        from pycocotools.coco import COCO
+
         self.root = Path(root)
         self.transforms = transforms
         if image_mode not in {"RGB", "L"}:

@@ -68,6 +68,7 @@ struct network_progress_state {
   uint32_t started;
   uint32_t finished;
   int32_t latest_completed_layer;
+  int32_t current_direction;
   uint32_t heartbeat_count;
   uint32_t latest_output_size;
   uint32_t latest_output_sample_size;

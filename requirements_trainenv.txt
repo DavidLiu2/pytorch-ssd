@@ -1,0 +1,15 @@
+# Lean training-only environment for pytorch_ssd/train.py.
+# Uses CPU PyTorch wheels to avoid pulling the larger CUDA runtime stack by default.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+numpy==1.24.4; python_version < "3.12"
+numpy>=2.1,<2.3; python_version >= "3.12"
+
+torch==2.4.1+cpu; python_version < "3.12"
+torchvision==0.19.1+cpu; python_version < "3.12"
+torch>=2.6,<2.7; python_version >= "3.12"
+torchvision>=0.21,<0.22; python_version >= "3.12"
+
+pillow==10.4.0
+pycocotools==2.0.7
+tqdm==4.67.1

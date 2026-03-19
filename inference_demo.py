@@ -18,6 +18,11 @@ def load_model(ckpt_path: Path, num_classes=2, width_mult=0.1):
         image_size=(160, 160),
     )
     state = torch.load(ckpt_path, map_location=device)
+    if isinstance(state, dict):
+        for key in ("state_dict", "model", "net", "module"):
+            if key in state and isinstance(state[key], dict):
+                state = state[key]
+                break
     model.load_state_dict(state)
     model.to(device)
     model.eval()

@@ -169,6 +169,7 @@ typedef struct {
 typedef struct {
   uint32_t l2_buffer_base_addr;
   uint32_t l2_buffer_total_size;
+  uint32_t current_direction;
   uint32_t bbox_output_addr;
   uint32_t cls_output_addr;
   uint32_t bbox_offset;
@@ -347,6 +348,7 @@ static void progress_clear_marker_fields(void) {
   g_network_progress.marker_layer = -1;
   g_network_progress.l2_buffer_base_addr = 0;
   g_network_progress.l2_buffer_total_size = 0;
+  g_network_progress.current_direction = 0;
   progress_clear_allocator_state(&g_network_progress.allocator);
   g_network_progress.allocator_begin_addr = 0;
   g_network_progress.allocator_end_addr = 0;
@@ -390,6 +392,7 @@ void network_note_runtime_marker(
   g_network_progress.marker_layer = layer;
   g_network_progress.l2_buffer_base_addr = g_network_progress_ctx.l2_buffer_base_addr;
   g_network_progress.l2_buffer_total_size = g_network_progress_ctx.l2_buffer_total_size;
+  g_network_progress.current_direction = (int32_t) g_network_progress_ctx.current_direction;
   progress_store_allocator_state(&g_network_progress.allocator, &allocator_state);
   g_network_progress.allocator_begin_addr = g_network_progress.allocator.begin_addr;
   g_network_progress.allocator_end_addr = g_network_progress.allocator.end_addr;
@@ -426,6 +429,7 @@ static void progress_reset() {
   g_network_progress.started = 1;
   g_network_progress.finished = 0;
   g_network_progress.latest_completed_layer = -1;
+  g_network_progress.current_direction = 0;
   g_network_progress.heartbeat_count = 0;
   g_network_progress.latest_output_size = 0;
   g_network_progress.latest_output_sample_size = 0;
@@ -1026,6 +1030,7 @@ int network_get_progress_snapshot(struct network_progress_state *out) {
     out->started = g_network_progress.started;
     out->finished = g_network_progress.finished;
     out->latest_completed_layer = g_network_progress.latest_completed_layer;
+    out->current_direction = g_network_progress.current_direction;
     out->heartbeat_count = g_network_progress.heartbeat_count;
     out->latest_output_size = g_network_progress.latest_output_size;
     out->latest_output_sample_size = g_network_progress.latest_output_sample_size;
@@ -1123,6 +1128,7 @@ void network_run_cluster(void *args) {
   directional_allocator_init(l2_buffer, l2_buffer_size);
   g_network_progress_ctx.l2_buffer_base_addr = (uint32_t) l2_buffer;
   g_network_progress_ctx.l2_buffer_total_size = (uint32_t) l2_buffer_size;
+  g_network_progress_ctx.current_direction = (uint32_t) dir;
   g_network_progress_ctx.bbox_output_addr = (uint32_t) bbox_output;
   g_network_progress_ctx.cls_output_addr = (uint32_t) cls_output;
   g_network_progress_ctx.bbox_offset = 0;
@@ -1197,6 +1203,21 @@ void network_run_cluster(void *args) {
         0,
         NULL);
   }
+  network_note_runtime_marker(
+      "POST_CACHE_SETUP",
+      -1,
+      NULL,
+      0,
+      NULL,
+      0,
+      NULL,
+      0,
+      NULL,
+      NULL,
+      0,
+      NULL,
+      0,
+      NULL);
 
 /* ---------------------------------- */
 /* --------- SECTION 1 END ---------- */
@@ -1213,6 +1234,21 @@ void network_run_cluster(void *args) {
 /* -------- SECTION 2 BEGIN --------- */
 /* ---------------------------------- */
   int weight_l_cnt = 0; // count how many layers with weights we have processed to increment the weights_L3 pointer
+  network_note_runtime_marker(
+      "PRE_LAYER_LOOP",
+      -1,
+      NULL,
+      0,
+      NULL,
+      0,
+      NULL,
+      0,
+      NULL,
+      NULL,
+      0,
+      NULL,
+      0,
+      NULL);
   for (int i = 0; i < NETWORK_NUM_LAYERS; i++) {
     void *capture_dest = NULL;
     size_t capture_size = 0;
@@ -1223,9 +1259,9 @@ void network_run_cluster(void *args) {
   - allocate weights
   - read weights
 */
-    if (i == 67) {
+    if (i == 0 || i == 67) {
       network_note_runtime_marker(
-          "L67_PRE_SETUP",
+          i == 0 ? "LAYER0_PREP_BEGIN" : "L67_PRE_SETUP",
           i,
           L2_input,
           layer_input_size,
@@ -1243,9 +1279,9 @@ void network_run_cluster(void *args) {
 
     L2_output = dmalloc(activations_out_size[i], !dir);
     progress_record_output_alloc_probe(i);
-    if (i == 66 || i == 67) {
+    if (i == 0 || i == 66 || i == 67) {
       network_note_runtime_marker(
-          i == 66 ? "L66_OUTPUT_ALLOC" : "L67_OUTPUT_ALLOC",
+          i == 0 ? "LAYER0_OUTPUT_READY" : (i == 66 ? "L66_OUTPUT_ALLOC" : "L67_OUTPUT_ALLOC"),
           i,
           L2_input,
           layer_input_size,
@@ -1284,6 +1320,23 @@ void network_run_cluster(void *args) {
     if (L3_input_layers[i] == 1) {
       L2_input = dmalloc(activations_size[i], dir);
       current_input_alloc_size = activations_size[i];
+      if (i == 0) {
+        network_note_runtime_marker(
+            "LAYER0_INPUT_READY",
+            i,
+            L2_input,
+            current_input_alloc_size,
+            L2_output,
+            activations_out_size[i],
+            L2_weights,
+            0,
+            NULL,
+            NULL,
+            0,
+            NULL,
+            0,
+            NULL);
+      }
     } else if (head_cache_index >= 0) {
       if (head_feature_caches[head_cache_index] == NULL) {
         final_status = NETWORK_PROGRESS_STATUS_HEAD_CACHE_ERROR;
@@ -1353,11 +1406,28 @@ void network_run_cluster(void *args) {
             "L2_weights allocation returned NULL");
         goto network_run_cluster_abort;
       }
+      if (i == 0) {
+        network_note_runtime_marker(
+            "LAYER0_WEIGHTS_READY",
+            i,
+            L2_input,
+            layer_input_size,
+            L2_output,
+            activations_out_size[i],
+            L2_weights,
+            weights_size[i],
+            NULL,
+            NULL,
+            0,
+            NULL,
+            0,
+            NULL);
+      }
     }
 
-    if (i == 67) {
+    if (i == 0 || i == 67) {
       network_note_runtime_marker(
-          "L67_PTRS_READY",
+          i == 0 ? "LAYER0_PTRS_READY" : "L67_PTRS_READY",
           i,
           L2_input,
           layer_input_size,
@@ -1388,9 +1458,9 @@ void network_run_cluster(void *args) {
     }
 
     if (allocate_layer[i] == 1) {
-      if (i == 67) {
+      if (i == 0 || i == 67) {
         network_note_runtime_marker(
-            "L67_BEFORE_WEIGHT_LOAD",
+            i == 0 ? "L0_BEFORE_WEIGHT_LOAD" : "L67_BEFORE_WEIGHT_LOAD",
             i,
             L2_input,
             activations_size[i],
@@ -1406,9 +1476,9 @@ void network_run_cluster(void *args) {
             NULL);
       }
       cl_ram_read(L2_weights, L3_weights_curr, weights_size[i]);
-      if (i == 67) {
+      if (i == 0 || i == 67) {
         network_note_runtime_marker(
-            "L67_AFTER_WEIGHT_LOAD",
+            i == 0 ? "L0_AFTER_WEIGHT_LOAD" : "L67_AFTER_WEIGHT_LOAD",
             i,
             L2_input,
             activations_size[i],
@@ -1757,6 +1827,7 @@ void network_run_cluster(void *args) {
     if (layer_with_weights[i])
        L3_weights_curr += L3_weights_size[weight_l_cnt++];
     dir = !dir;
+    g_network_progress_ctx.current_direction = (uint32_t) dir;
   }
 
 network_run_cluster_abort:

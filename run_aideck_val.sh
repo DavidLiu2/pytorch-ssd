@@ -23,6 +23,7 @@ RUN_IO="${RUN_IO:-host}"
 RUN_EXTRA_MAKE_ARGS="${RUN_EXTRA_MAKE_ARGS:-}"
 RUN_LOG_NAME="${RUN_LOG_NAME:-run_${PLATFORM}.log}"
 RUN_PID_FILE="${RUN_PID_FILE:-gvsoc_run.pid}"
+CONTAINER_TERM="${CONTAINER_TERM:-dumb}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST_REPO_ROOT="${HOST_REPO_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
@@ -69,6 +70,7 @@ docker exec "$CONTAINER_NAME" bash -lc "
 echo "[4/5] Show toolchain environment..."
 docker exec "$CONTAINER_NAME" bash -lc "
   set -e
+  export TERM='$CONTAINER_TERM'
   cd /gap_sdk
   source configs/ai_deck.sh
   which riscv32-unknown-elf-gcc
@@ -79,6 +81,7 @@ docker exec "$CONTAINER_NAME" bash -lc "
 echo "[5/5] Build application (platform=$PLATFORM)..."
 docker exec "$CONTAINER_NAME" bash -lc "
   set -eo pipefail
+  export TERM='$CONTAINER_TERM'
   cd /gap_sdk
   source configs/ai_deck.sh
   cd '$CONTAINER_APP_DIR'
@@ -113,6 +116,7 @@ if [[ "$RUN_AFTER_BUILD" == "1" ]]; then
   if [[ "$DETACH_RUN" == "1" ]]; then
     docker exec "$CONTAINER_NAME" bash -lc "
       set -e
+      export TERM='$CONTAINER_TERM'
       cd /gap_sdk
       source configs/ai_deck.sh
       cd '$CONTAINER_APP_DIR'
@@ -130,6 +134,7 @@ if [[ "$RUN_AFTER_BUILD" == "1" ]]; then
   else
     docker exec "$CONTAINER_NAME" bash -lc "
       set -e
+      export TERM='$CONTAINER_TERM'
       cd /gap_sdk
       source configs/ai_deck.sh
       cd '$CONTAINER_APP_DIR'

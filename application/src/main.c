@@ -223,6 +223,7 @@ static int write_progress_file(const struct network_progress_state *progress, ui
       "sd=%u\n"
       "fn=%u\n"
       "l=%d\n"
+      "dr=%d\n"
       "ln=%s\n"
       "hb=%u\n"
       "cy=%u\n"
@@ -253,6 +254,7 @@ static int write_progress_file(const struct network_progress_state *progress, ui
       (unsigned int) progress->started,
       (unsigned int) progress->finished,
       (int) progress->latest_completed_layer,
+      (int) progress->current_direction,
       network_get_layer_name(progress->latest_completed_layer),
       (unsigned int) progress->heartbeat_count,
       (unsigned int) progress->cycle_count,
