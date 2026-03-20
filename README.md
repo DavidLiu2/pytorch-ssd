@@ -3,7 +3,7 @@
 This folder is the model-development and export side of the project.
 It trains the detector, exports a quantized ONNX with NEMO, cleans the
 graph for DORY, and can emit GAP8 application artifacts that are later
-used by `../crazyflie_ssd`.
+validated locally from `pytorch_ssd/application`.
 
 ## Current Model
 
@@ -40,25 +40,30 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
 - `run_all.sh`
   End-to-end export script. Runs NEMO export, onnxsim, custom ONNX cleanup,
   DORY config generation, artifact generation, and `network_generate.py`.
+- `run_aideck_val.sh`
+  Single-sample AI-Deck Docker validation for the currently generated app.
+- `run_real_image_val.sh`
+  Batch real-image validation wrapper around the existing AI-Deck flow.
 - `export/`
   ONNX files, stripped graphs, DORY configs, manifests, weight text dumps,
   and other export/debug artifacts.
 - `training/person_ssd_pytorch/`
   Saved checkpoints and a small demo output image.
 - `application/`
-  A generated GAP8 application snapshot from this pipeline. Useful as a
-  historical artifact, but the more active runtime wrapper now lives in
-  `../crazyflie_ssd`.
+  The active generated GAP8 application used by the validation pipeline.
+  `run_all.sh` writes DORY output here by default, and `run_aideck_val.sh`
+  validates this local app without touching another repo.
 
 ## How The Current Pipeline Works
 
 1. `train.py` trains `SSDMobileNetV2Raw` on person-only COCO annotations.
 2. `export_nemo_quant.py` loads a checkpoint and exports a NEMO-quantized ONNX.
 3. `run_all.sh` simplifies and strips unsupported ONNX ops for DORY.
-4. `run_all.sh` can generate DORY output into a target app directory. In this
-   project that is often `../crazyflie_ssd/generated`.
-5. `../crazyflie_ssd` wraps the generated network with camera capture,
-   preprocessing, runtime buffer management, and transport/debug code.
+4. `run_all.sh` generates the DORY app into `pytorch_ssd/application` by default.
+5. `run_aideck_val.sh` builds that app in the AI-Deck Docker image and compares
+   GVSOC output against Python-side golden tensors.
+6. `run_real_image_val.sh` stages real images into `input.txt` plus `inputs.hex`,
+   runs GVSOC per image, and writes per-image artifacts plus batch summaries.
 
 ## Important Current Quirks
 
@@ -97,10 +102,9 @@ After that, the files that usually need to move together are:
 - `export_nemo_quant.py`
 - `run_all.sh`
 - `export/` cleanup scripts and configs
-- `../crazyflie_ssd/app_config.h`
-- `../crazyflie_ssd/preprocess.c`
-- `../crazyflie_ssd/ssd_postprocess.c`
-- regenerated artifacts under `../crazyflie_ssd/generated`
+- `application/`
+- `run_aideck_val.sh`
+- `run_real_image_val.sh`
 
 ## Practical Warning
 
@@ -110,6 +114,7 @@ The hard parts are:
 - staying compatible with NEMO export
 - staying compatible with DORY graph restrictions
 - fitting GAP8 memory
-- matching the runtime assumptions in `../crazyflie_ssd`
+- matching the generated-app runtime assumptions in `application/`
 
-Treat this folder and `../crazyflie_ssd` as one system.
+Optional sync back into another repo is still possible with
+`SYNC_TO_CRAZYFLIE=1`, but it is no longer part of the default pipeline.

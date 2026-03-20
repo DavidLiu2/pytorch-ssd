@@ -11,4 +11,5 @@ export/tmp_stage.txt
 export/hybrid_follow/*.txt
 export/hybrid_follow/*.json
 export/hybrid_follow/weights_txt/
+export/hybrid_follow/real_image_validation/
 visibility_diagnostic*.csv

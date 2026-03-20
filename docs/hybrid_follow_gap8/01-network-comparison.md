@@ -7,10 +7,10 @@ This note describes how the working `hybrid_follow` GAP8 application is organize
 The deployment is split into three layers:
 
 1. Export and code generation in `pytorch_ssd`
-2. The generated DORY network bundle in `crazyflie_ssd/generated`
-3. The application-facing wrapper in `crazyflie_ssd`
+2. The generated DORY network bundle in `pytorch_ssd/application`
+3. An optional later sync into an external wrapper app, if you choose to copy it elsewhere
 
-That separation is useful because the generated network changes when the model changes, while the wrapper app and pipeline scripts stay relatively stable.
+That separation is useful because the generated network changes when the model changes, while the local export and validation pipeline stays relatively stable.
 
 ## Directory Layout
 
@@ -18,15 +18,14 @@ That separation is useful because the generated network changes when the model c
 | --- | --- |
 | `pytorch_ssd/` | training, export, codegen, validation scripts, and documentation |
 | `pytorch_ssd/export/hybrid_follow/` | ONNX exports, DORY-cleaned ONNX, golden outputs, and weight text artifacts |
-| `crazyflie_ssd/generated/` | the generated GAP8 network bundle that DORY emits |
-| `crazyflie_ssd/generated/inc/` | generated public headers and layer/kernel declarations |
-| `crazyflie_ssd/generated/src/` | generated runtime, layer wrappers, and backend kernels |
-| `crazyflie_ssd/generated/hex/` | readfs weight and IO blobs used by the generated app |
-| `crazyflie_ssd/` | deployment wrapper app that owns config, runtime allocation, and integration |
+| `pytorch_ssd/application/` | the generated GAP8 network bundle that DORY emits |
+| `pytorch_ssd/application/inc/` | generated public headers and layer/kernel declarations |
+| `pytorch_ssd/application/src/` | generated runtime, layer wrappers, and backend kernels |
+| `pytorch_ssd/application/hex/` | readfs weight and IO blobs used by the generated app |
 
 ## What Lives In The Generated Bundle
 
-The generated bundle in `crazyflie_ssd/generated` is a self-contained network application.
+The generated bundle in `pytorch_ssd/application` is a self-contained network application.
 
 ### `inc/`
 
@@ -62,18 +61,13 @@ These are what let the generated app be dropped into the GAP build flow without 
 
 ## What Lives In The Wrapper App
 
-The wrapper app in `crazyflie_ssd` is the stable integration layer around the generated network.
+The local validation pipeline now stops at `pytorch_ssd/application`.
 
-The most important files are:
-
-- `app_config.h`, which defines app-level contracts such as input geometry, arena size, and `APP_NET_OUTPUT_BYTES`
-- `src/net_runner.c`, which allocates buffers, calls the generated network, and exposes a simpler app-facing API
-
-The key idea is that `crazyflie_ssd/generated` owns network internals, while `crazyflie_ssd` owns how the rest of the application interacts with that network.
+If you later copy this bundle into another wrapper app, the key idea is still the same: the generated bundle owns network internals, while the wrapper owns how the rest of the application interacts with that network.
 
 ## Generated Runtime API
 
-The generated runtime API is declared in `crazyflie_ssd/generated/inc/network.h` and implemented in `crazyflie_ssd/generated/src/network.c`.
+The generated runtime API is declared in `pytorch_ssd/application/inc/network.h` and implemented in `pytorch_ssd/application/src/network.c`.
 
 The main entry points are:
 
@@ -91,32 +85,9 @@ The main entry points are:
 - `network_run()` is the synchronous convenience wrapper around `network_run_async()` plus `network_run_wait()`.
 - `network_terminate()` frees the generated runtime's L3 allocations.
 
-## Wrapper App API
-
-The wrapper API is implemented in `crazyflie_ssd/src/net_runner.c`.
-
-The main calls are:
-
-- `net_runner_init()`
-- `net_runner_get_input_buffer()`
-- `net_runner_get_output_buffer()`
-- `net_runner_get_output_size()`
-- `net_runner_run()`
-
-### Why The Wrapper Exists
-
-The generated runtime API is low-level and DORY-specific. The wrapper app makes the contract simpler:
-
-- the application asks for an input buffer
-- the wrapper owns the L2 arena and output allocation
-- the wrapper calls `network_initialize()` once and `network_run()` when needed
-- the application reads back a fixed-size output buffer
-
-This is also the layer that enforces the 12-byte output contract for the current hybrid-follow model.
-
 ## Layering Inside `network.c`
 
-`crazyflie_ssd/generated/src/network.c` is the top of the generated runtime stack.
+`pytorch_ssd/application/src/network.c` is the top of the generated runtime stack.
 
 Conceptually it does four jobs:
 
@@ -131,11 +102,10 @@ The layer wrappers then call the lower-level `pulp_nn_*` kernels that do the act
 
 The normal flow is:
 
-1. `pytorch_ssd/run_all.sh` exports the model and generates the app into `crazyflie_ssd/generated`.
-2. `crazyflie_ssd/src/net_runner.c` allocates the input arena and output buffer.
+1. `pytorch_ssd/run_all.sh` exports the model and generates the app into `pytorch_ssd/application`.
+2. `pytorch_ssd/application/src/main.c` or `pytorch_ssd/aideck_val_main_hybrid.c` loads `inputs.hex` and prepares the input/output buffer.
 3. `network_initialize()` loads the readfs weights into L3.
 4. `network_run()` dispatches the generated runtime on the cluster.
 5. `network.c` walks through the generated layer wrappers and kernels.
-6. The final output tensor is written into the wrapper's output buffer.
+6. The final output tensor is written into the caller-provided output buffer.
 7. The caller reads 3 `int32` outputs, which correspond to 12 bytes total.
-

@@ -36,9 +36,9 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   DEFAULT_DORY_NO_MIN_ONNX="export/hybrid_follow/hybrid_follow_nomin.onnx"
   DEFAULT_DORY_WEIGHTS_TXT_DIR="export/hybrid_follow/weights_txt"
   DEFAULT_DORY_ARTIFACT_MANIFEST="export/hybrid_follow/nemo_dory_artifacts.json"
-  DEFAULT_DORY_APP_DIR="${PROJECT_ROOT}/../crazyflie_ssd/generated"
+  DEFAULT_DORY_APP_DIR="${PROJECT_ROOT}/application"
   DEFAULT_RUN_DORY="1"
-  DEFAULT_SYNC_TO_CRAZYFLIE="1"
+  DEFAULT_SYNC_TO_CRAZYFLIE="0"
 else
   DEFAULT_CKPT="training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth"
   DEFAULT_OUT_ONNX="export/ssd_mbv2_nemo_id.onnx"
@@ -487,7 +487,7 @@ if [ "${RUN_DORY}" != "1" ]; then
   echo "=== DORY/codegen skipped (RUN_DORY=${RUN_DORY}) ==="
   if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
     echo "[run_all] hybrid_follow uses quantized ID export with a single 3-output head for DORY."
-    echo "[run_all] Re-run with RUN_DORY=1 to regenerate and sync crazyflie_ssd deployment artifacts."
+    echo "[run_all] Re-run with RUN_DORY=1 to regenerate the local pytorch_ssd/application deployment artifacts."
   fi
   echo "[run_all] Final stage: ${FINAL_STAGE^^}"
   echo "[run_all] Exported ONNX: ${OUT_ONNX}"

@@ -7,9 +7,9 @@
 The script performs these steps:
 
 1. If started from MINGW, MSYS, or Cygwin, it re-enters through WSL automatically.
-2. It treats `crazyflie_ssd/generated` as the primary generated app.
+2. It treats `pytorch_ssd/application` as the primary generated app.
 3. It checks whether that app is fresh relative to the latest export artifacts.
-4. If needed, it can copy a fresh fallback app or rerun `run_all.sh`.
+4. If needed, it reruns `run_all.sh` to refresh the local app.
 5. It stages the app into the AI-Deck example tree.
 6. It overlays `aideck_val_main_hybrid.c`.
 7. It builds the app inside the `bitcraze/aideck` container.
@@ -20,7 +20,7 @@ The script performs these steps:
 
 The primary source is:
 
-- `crazyflie_ssd/generated`
+- `pytorch_ssd/application`
 
 The script considers the app fresh when it contains:
 
@@ -36,8 +36,7 @@ and when `src/network.c` is newer than:
 
 If that app is not fresh:
 
-- it tries `pytorch_ssd/application` as a fallback source
-- if that is also stale, it reruns `pytorch_ssd/run_all.sh`
+- it reruns `pytorch_ssd/run_all.sh`
 
 ## Basic Usage
 
@@ -58,7 +57,8 @@ bash pytorch_ssd/run_aideck_val.sh
 
 Common overrides:
 
-- `HOST_APP_DIR`: generated app source, default `crazyflie_ssd/generated`
+- `HOST_APP_DIR`: generated app source, default `pytorch_ssd/application`
+- `HOST_INPUT_HEX`: optional `inputs.hex` override for a staged real image
 - `AUTO_REFRESH_APP`: set to `0` to forbid automatic refresh
 - `REFRESH_SCRIPT`: script used when a refresh is needed, default `pytorch_ssd/run_all.sh`
 - `PLATFORM`: `gvsoc` by default, can be changed to `board`
@@ -66,11 +66,21 @@ Common overrides:
 - `AIDECK_IMAGE`: Docker image, default `bitcraze/aideck`
 - `VERIFY_AFTER_RUN`: set to `0` to skip the final tensor comparison
 - `DETACH_RUN`: set to `1` for a detached run
+- `HOST_RUN_LOG_COPY`: optional path to copy the final GVSOC log after the run
 
 Example:
 
 ```bash
 PLATFORM=gvsoc AUTO_REFRESH_APP=0 ./run_aideck_val.sh
+```
+
+With a staged real-image input:
+
+```bash
+HOST_INPUT_HEX=export/hybrid_follow/real_image_validation/demo/0001/inputs.hex \
+HOST_EXPECTED_OUTPUT=export/hybrid_follow/real_image_validation/demo/0001/output.txt \
+HOST_RUN_LOG_COPY=export/hybrid_follow/real_image_validation/demo/0001/gvsoc.log \
+./run_aideck_val.sh
 ```
 
 ## Logs And Outputs
@@ -112,6 +122,6 @@ Rerun `run_all.sh` when:
 - calibration data changed
 - export-side code changed
 - DORY parser or backend kernel code changed
-- `crazyflie_ssd/generated` is missing or stale
+- `pytorch_ssd/application` is missing or stale
 
-In most normal cases you do not need to copy files manually. `run_all.sh` already generates directly into `crazyflie_ssd/generated`, and `run_aideck_val.sh` already prefers that location.
+In most normal cases you do not need to copy files manually. `run_all.sh` already generates directly into `pytorch_ssd/application`, and `run_aideck_val.sh` already prefers that location.

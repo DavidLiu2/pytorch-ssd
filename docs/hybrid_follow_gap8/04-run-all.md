@@ -13,8 +13,8 @@ For `MODEL_TYPE=hybrid_follow`, the script does all of the following:
 5. Simplifies and cleans the ONNX for DORY.
 6. Generates DORY IO artifacts and weight text dumps.
 7. Runs `network_generate.py`.
-8. Writes the generated app into `crazyflie_ssd/generated`.
-9. Syncs `hex/` and `vars.mk` back into `crazyflie_ssd/`.
+8. Writes the generated app into `pytorch_ssd/application`.
+9. Leaves the whole pipeline inside `pytorch_ssd` unless `SYNC_TO_CRAZYFLIE=1` is set manually.
 
 ## Default Hybrid-Follow Settings
 
@@ -23,9 +23,9 @@ Important defaults for the hybrid model:
 - `MODEL_TYPE=hybrid_follow`
 - checkpoint default: `training/hybrid_follow/hybrid_follow_best_visibility.pth`
 - final export stage: `id`
-- output app dir: `../crazyflie_ssd/generated`
+- output app dir: `application`
 - `RUN_DORY=1`
-- `SYNC_TO_CRAZYFLIE=1`
+- `SYNC_TO_CRAZYFLIE=0`
 
 ## Basic Usage
 
@@ -65,6 +65,12 @@ CALIB_DIR=training/hybrid_follow/eval_epoch_012 ./run_all.sh
 DORY_APP_DIR=/tmp/hybrid_gap8_app SYNC_TO_CRAZYFLIE=0 ./run_all.sh
 ```
 
+### Opt in to the old external sync
+
+```bash
+SYNC_TO_CRAZYFLIE=1 CRAZYFLIE_APP_DIR=../crazyflie_ssd ./run_all.sh
+```
+
 ### Skip DORY generation and only do export
 
 ```bash
@@ -78,10 +84,21 @@ The hybrid export pipeline writes the main artifacts here:
 - ONNX export: `pytorch_ssd/export/hybrid_follow/hybrid_follow_quant.onnx`
 - simplified ONNX: `pytorch_ssd/export/hybrid_follow/hybrid_follow_quant_sim.onnx`
 - DORY-ready ONNX: `pytorch_ssd/export/hybrid_follow/hybrid_follow_dory.onnx`
-- generated DORY app: `crazyflie_ssd/generated`
+- generated DORY app: `pytorch_ssd/application`
 - DORY weights text: `pytorch_ssd/export/hybrid_follow/weights_txt`
 - DORY manifest: `pytorch_ssd/export/hybrid_follow/nemo_dory_artifacts.json`
 - golden output tensor: `pytorch_ssd/export/hybrid_follow/output.txt`
+
+## How The Default Staged Sample Is Created
+
+The current single-sample smoke test is still generated automatically during `run_all.sh`.
+
+- `export/generate_dory_io_artifacts.py` writes `pytorch_ssd/export/hybrid_follow/input.txt`.
+- That file currently contains a random uint8 input tensor shaped `1 x 1 x 128 x 128`.
+- The same script runs ONNXRuntime on `hybrid_follow_dory.onnx` and writes the matching final tensor to `pytorch_ssd/export/hybrid_follow/output.txt`.
+- When DORY runs `network_generate.py`, it converts `input.txt` into `pytorch_ssd/application/hex/inputs.hex`.
+
+That staged sample is useful for a quick smoke test, but it is not a real image. The real-image path is documented in [06-real-image-validation.md](06-real-image-validation.md).
 
 ## How It Chooses The Model
 
@@ -114,10 +131,10 @@ A successful run ends with output like this conceptually:
 
 The most important success condition for deployment is that these files exist afterward:
 
-- `crazyflie_ssd/generated/src/network.c`
-- `crazyflie_ssd/generated/inc/network.h`
-- `crazyflie_ssd/generated/hex/inputs.hex`
-- `crazyflie_ssd/generated/vars.mk`
+- `pytorch_ssd/application/src/network.c`
+- `pytorch_ssd/application/inc/network.h`
+- `pytorch_ssd/application/hex/inputs.hex`
+- `pytorch_ssd/application/vars.mk`
 
 ## What `run_all.sh` Does Not Do
 

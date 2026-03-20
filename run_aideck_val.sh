@@ -26,8 +26,10 @@ case "$(uname -s)" in
           EXPECTED_TENSOR_COUNT
           HOST_REPO_ROOT
           HOST_APP_DIR
+          HOST_INPUT_HEX
           HOST_VALIDATION_MAIN
           HOST_EXPECTED_OUTPUT
+          HOST_RUN_LOG_COPY
           COMPARE_SCRIPT
           AUTO_REFRESH_APP
           MODEL_SENTINEL
@@ -63,8 +65,10 @@ esac
 #   AIDECK_IMAGE=bitcraze/aideck
 #   HOST_REPO_ROOT=/abs/path/to/DroneRS
 #   HOST_APP_DIR=/abs/path/to/generated/app
+#   HOST_INPUT_HEX=/abs/path/to/inputs.hex
 #   HOST_VALIDATION_MAIN=/abs/path/to/validation_main.c
 #   HOST_EXPECTED_OUTPUT=/abs/path/to/output.txt
+#   HOST_RUN_LOG_COPY=/abs/path/to/output/run_gvsoc.log
 #   COMPARE_SCRIPT=/abs/path/to/compare_gap8_final_tensor.py
 #   PLATFORM=gvsoc            # gvsoc (default) or board
 #   EXTRA_MAKE_ARGS="..."     # extra args appended to make clean all
@@ -88,14 +92,16 @@ EXPECTED_TENSOR_COUNT="${EXPECTED_TENSOR_COUNT:-3}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST_REPO_ROOT="${HOST_REPO_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
-HOST_APP_DIR="${HOST_APP_DIR:-$HOST_REPO_ROOT/crazyflie_ssd/generated}"
+HOST_APP_DIR="${HOST_APP_DIR:-$HOST_REPO_ROOT/pytorch_ssd/application}"
+HOST_INPUT_HEX="${HOST_INPUT_HEX:-}"
 HOST_VALIDATION_MAIN="${HOST_VALIDATION_MAIN:-$HOST_REPO_ROOT/pytorch_ssd/aideck_val_main_hybrid.c}"
 HOST_EXPECTED_OUTPUT="${HOST_EXPECTED_OUTPUT:-$HOST_REPO_ROOT/pytorch_ssd/export/hybrid_follow/output.txt}"
+HOST_RUN_LOG_COPY="${HOST_RUN_LOG_COPY:-}"
 COMPARE_SCRIPT="${COMPARE_SCRIPT:-$HOST_REPO_ROOT/pytorch_ssd/export/compare_gap8_final_tensor.py}"
 AUTO_REFRESH_APP="${AUTO_REFRESH_APP:-1}"
 MODEL_SENTINEL="${MODEL_SENTINEL:-$HOST_REPO_ROOT/pytorch_ssd/export/hybrid_follow/hybrid_follow_nomin.onnx}"
 MODEL_MANIFEST="${MODEL_MANIFEST:-$HOST_REPO_ROOT/pytorch_ssd/export/hybrid_follow/nemo_dory_artifacts.json}"
-FALLBACK_APP_DIR="${FALLBACK_APP_DIR:-$HOST_REPO_ROOT/pytorch_ssd/application}"
+FALLBACK_APP_DIR="${FALLBACK_APP_DIR:-}"
 REFRESH_SCRIPT="${REFRESH_SCRIPT:-$HOST_REPO_ROOT/pytorch_ssd/run_all.sh}"
 HOST_BUILD_DIR="$HOST_REPO_ROOT/aideck-gap8-examples/examples/other/dory_examples/application/BUILD/GAP8_V2/GCC_RISCV_PULPOS"
 CONTAINER_APP_DIR="/module/aideck-gap8-examples/examples/other/dory_examples/application"
@@ -149,7 +155,7 @@ refresh_generated_app() {
     return 0
   fi
 
-  if app_dir_is_fresh "$FALLBACK_APP_DIR"; then
+  if [[ -n "$FALLBACK_APP_DIR" && "$FALLBACK_APP_DIR" != "$HOST_APP_DIR" ]] && app_dir_is_fresh "$FALLBACK_APP_DIR"; then
     echo "[model] Copying fresh generated app from $FALLBACK_APP_DIR to $HOST_APP_DIR"
     copy_app_dir "$FALLBACK_APP_DIR" "$HOST_APP_DIR"
     return 0
@@ -196,6 +202,11 @@ if [[ "$USE_VALIDATION_MAIN" == "1" && ! -f "$HOST_VALIDATION_MAIN" ]]; then
   exit 1
 fi
 
+if [[ -n "$HOST_INPUT_HEX" && ! -f "$HOST_INPUT_HEX" ]]; then
+  echo "ERROR: input hex override not found: $HOST_INPUT_HEX"
+  exit 1
+fi
+
 if [[ "$VERIFY_AFTER_RUN" == "1" ]]; then
   if [[ ! -f "$HOST_EXPECTED_OUTPUT" ]]; then
     echo "ERROR: expected output file not found: $HOST_EXPECTED_OUTPUT"
@@ -208,6 +219,10 @@ if [[ "$VERIFY_AFTER_RUN" == "1" ]]; then
 fi
 
 CONTAINER_APP_SRC_DIR="$(container_path_from_host "$HOST_APP_DIR")"
+CONTAINER_INPUT_HEX=""
+if [[ -n "$HOST_INPUT_HEX" ]]; then
+  CONTAINER_INPUT_HEX="$(container_path_from_host "$HOST_INPUT_HEX")"
+fi
 CONTAINER_VALIDATION_MAIN=""
 if [[ "$USE_VALIDATION_MAIN" == "1" ]]; then
   CONTAINER_VALIDATION_MAIN="$(container_path_from_host "$HOST_VALIDATION_MAIN")"
@@ -230,6 +245,9 @@ docker exec "$CONTAINER_NAME" bash -lc "
   cp -a '$CONTAINER_APP_SRC_DIR' '$CONTAINER_APP_DIR'
   if [[ '$USE_VALIDATION_MAIN' == '1' ]]; then
     cp '$CONTAINER_VALIDATION_MAIN' '$CONTAINER_APP_DIR/src/main.c'
+  fi
+  if [[ -n '$CONTAINER_INPUT_HEX' ]]; then
+    cp '$CONTAINER_INPUT_HEX' '$CONTAINER_APP_DIR/hex/inputs.hex'
   fi
   if grep -q 'unsigned int args\\[4\\];' '$CONTAINER_APP_DIR/src/network.c'; then
     perl -0pi -e 's/unsigned int args\\[4\\];/unsigned int args[5];/' '$CONTAINER_APP_DIR/src/network.c'
@@ -322,6 +340,10 @@ if [[ "$RUN_AFTER_BUILD" == "1" ]]; then
       mkdir -p '$CONTAINER_BUILD_DIR'
       bash -lc \"$run_cmd_str\" 2>&1 | tee '$CONTAINER_BUILD_DIR/$RUN_LOG_NAME'
     "
+    if [[ -n "$HOST_RUN_LOG_COPY" ]]; then
+      mkdir -p "$(dirname "$HOST_RUN_LOG_COPY")"
+      cp "$HOST_RUN_LOG" "$HOST_RUN_LOG_COPY"
+    fi
     if [[ "$VERIFY_AFTER_RUN" == "1" ]]; then
       echo "[verify] Comparing GVSOC final tensor against $HOST_EXPECTED_OUTPUT..."
       python3 "$COMPARE_SCRIPT" \
@@ -336,10 +358,16 @@ fi
 echo
 echo "Done."
 echo "Host app source: $HOST_APP_DIR"
+if [[ -n "$HOST_INPUT_HEX" ]]; then
+  echo "Host input hex override: $HOST_INPUT_HEX"
+fi
 echo "Container app path: $CONTAINER_APP_DIR"
 echo "Build log: $CONTAINER_APP_DIR/build_${PLATFORM}.log"
 echo "Host build dir: $HOST_BUILD_DIR"
 echo "Host run log: $HOST_RUN_LOG"
+if [[ -n "$HOST_RUN_LOG_COPY" ]]; then
+  echo "Copied run log: $HOST_RUN_LOG_COPY"
+fi
 if [[ "$VERIFY_AFTER_RUN" == "1" && "$DETACH_RUN" != "1" ]]; then
   echo "Expected output: $HOST_EXPECTED_OUTPUT"
 fi
