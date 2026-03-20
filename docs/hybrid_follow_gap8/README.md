@@ -4,7 +4,7 @@ This folder explains how the working `hybrid_follow` GAP8 deployment differs fro
 
 ## Document Map
 
-- [01-network-comparison.md](01-network-comparison.md): compare the Frontnet reference runtime with the generated `hybrid_follow` runtime.
+- [01-network-comparison.md](01-network-comparison.md): describe the `hybrid_follow` application layout and the runtime API structure.
 - [02-generated-network-patch-guide.md](02-generated-network-patch-guide.md): the complete patch set that made the generated network work.
 - [03-residual-branch-debugging.md](03-residual-branch-debugging.md): the residual-branch dtype investigation and the final root cause.
 - [04-run-all.md](04-run-all.md): how to export, quantize, generate, and sync the app with `run_all.sh`.
