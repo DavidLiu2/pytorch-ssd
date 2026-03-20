@@ -17,7 +17,6 @@
 
 
 CORE ?= 1
-MAIN_STACK_SIZE ?= 1024
 
 APP = main
 APP_SRCS := $(wildcard src/*.c)

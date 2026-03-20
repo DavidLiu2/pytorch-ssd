@@ -30,7 +30,7 @@
 void __attribute__ ((noinline)) pulp_nn_conv_Ho_parallel(
                                                          const uint8_t * pInBuffer,
                                                          uint8_t *       pIm2ColBuffer,
-                                                         const int8_t *  bias,
+                                                         const int32_t * bias,
                                                          uint8_t *       pOutBuffer,
                                                          const int8_t *  pWeight,
                                                          int32_t *       k,
@@ -56,6 +56,8 @@ void __attribute__ ((noinline)) pulp_nn_conv_Ho_parallel(
   {
 
   int core_id = pi_core_id();
+  int output_is_i32 = (flag_relu == 0 && flag_batch_norm == 0);
+  int output_size = output_is_i32 ? (int) sizeof(int32_t) : (int) sizeof(uint8_t);
   uint8_t * pIm2ColBase = pIm2ColBuffer + (2*core_id*ch_in*dim_kernel_x*dim_kernel_y);
 
   // local vars
@@ -71,7 +73,7 @@ void __attribute__ ((noinline)) pulp_nn_conv_Ho_parallel(
   stop_pixel = min(start_pixel+chunk, dim_out_y);
 
   uint8_t *pIm2Col = pIm2ColBase;
-  uint8_t *pOut    = pOutBuffer + start_pixel * ch_out * dim_out_x;
+  uint8_t *pOut    = pOutBuffer + start_pixel * ch_out * dim_out_x * output_size;
 
   for (i_out_y = start_pixel; i_out_y < stop_pixel; i_out_y++)
   {
@@ -175,7 +177,7 @@ void __attribute__ ((noinline)) pulp_nn_conv_Ho_parallel(
           lambda,
           bias,
           pOut,
-          pOut + ch_out,
+          pOut + (ch_out * output_size),
           flag_relu,
           flag_batch_norm
         );
@@ -236,12 +238,13 @@ void __attribute__ ((noinline)) pulp_nn_conv_Ho_parallel(
         if(flag_relu == 1)
         {
           *pOut = pulp_nn_quant_u8(sum, out_mult, out_shift);
+          pOut++;
         }
         else
         {
-          *pOut = (uint8_t) clip8(sum >> out_shift);
+          *((int32_t *) pOut) = sum;
+          pOut += sizeof(int32_t);
         }
-        pOut++;
       }
     }
   }

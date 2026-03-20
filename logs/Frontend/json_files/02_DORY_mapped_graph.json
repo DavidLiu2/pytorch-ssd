@@ -5,14 +5,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "0"
+          "input.1"
         ],
-        "output_index": "152",
+        "output_index": "130",
         "constant_names": [
-          "stem.0.weight"
+          "stem.0.weight",
+          "stem.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -76,6 +77,10 @@
         "stem.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stem.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -84,9 +89,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "152"
+          "130"
         ],
-        "output_index": "160",
+        "output_index": "138",
         "constant_names": [
           "outmul",
           "outshift"
@@ -130,14 +135,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "160"
+          "138"
         ],
-        "output_index": "161",
+        "output_index": "140",
         "constant_names": [
-          "stage1.0.proj.0.weight"
+          "stage1.0.proj.0.weight",
+          "stage1.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -201,6 +207,10 @@
         "stage1.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -209,14 +219,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "160"
+          "138"
         ],
-        "output_index": "167",
+        "output_index": "143",
         "constant_names": [
-          "stage1.0.conv1.weight"
+          "stage1.0.conv1.weight",
+          "stage1.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -280,6 +291,10 @@
         "stage1.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -288,9 +303,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "167"
+          "143"
         ],
-        "output_index": "175",
+        "output_index": "151",
         "constant_names": [
           "outmul",
           "outshift"
@@ -334,14 +349,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "175"
+          "151"
         ],
-        "output_index": "176",
+        "output_index": "153",
         "constant_names": [
-          "stage1.0.conv2.weight"
+          "stage1.0.conv2.weight",
+          "stage1.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -405,18 +421,22 @@
         "stage1.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "176",
-          "161"
+          "153",
+          "140"
         ],
-        "output_index": "180",
+        "output_index": "163",
         "constant_names": [
           "outmul",
           "outadd",
@@ -426,7 +446,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -487,6 +507,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -518,9 +550,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "180"
+          "163"
         ],
-        "output_index": "188",
+        "output_index": "171",
         "constant_names": [
           "outmul",
           "outshift"
@@ -564,14 +596,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "188"
+          "171"
         ],
-        "output_index": "192",
+        "output_index": "174",
         "constant_names": [
-          "stage1.1.conv1.weight"
+          "stage1.1.conv1.weight",
+          "stage1.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -635,6 +668,10 @@
         "stage1.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -643,9 +680,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "192"
+          "174"
         ],
-        "output_index": "200",
+        "output_index": "182",
         "constant_names": [
           "outmul",
           "outshift"
@@ -689,14 +726,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "200"
+          "182"
         ],
-        "output_index": "201",
+        "output_index": "184",
         "constant_names": [
-          "stage1.1.conv2.weight"
+          "stage1.1.conv2.weight",
+          "stage1.1.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -760,18 +798,22 @@
         "stage1.1.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "201",
-          "188"
+          "184",
+          "171"
         ],
-        "output_index": "205",
+        "output_index": "194",
         "constant_names": [
           "outmul",
           "outadd",
@@ -781,7 +823,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -842,6 +884,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -873,9 +927,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "205"
+          "194"
         ],
-        "output_index": "213",
+        "output_index": "202",
         "constant_names": [
           "outmul",
           "outshift"
@@ -919,14 +973,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "213"
+          "202"
         ],
-        "output_index": "214",
+        "output_index": "204",
         "constant_names": [
-          "stage2.0.proj.0.weight"
+          "stage2.0.proj.0.weight",
+          "stage2.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -990,6 +1045,10 @@
         "stage2.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -998,14 +1057,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "213"
+          "202"
         ],
-        "output_index": "220",
+        "output_index": "207",
         "constant_names": [
-          "stage2.0.conv1.weight"
+          "stage2.0.conv1.weight",
+          "stage2.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1069,6 +1129,10 @@
         "stage2.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -1077,9 +1141,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "220"
+          "207"
         ],
-        "output_index": "228",
+        "output_index": "215",
         "constant_names": [
           "outmul",
           "outshift"
@@ -1123,14 +1187,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "228"
+          "215"
         ],
-        "output_index": "229",
+        "output_index": "217",
         "constant_names": [
-          "stage2.0.conv2.weight"
+          "stage2.0.conv2.weight",
+          "stage2.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1194,18 +1259,22 @@
         "stage2.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "229",
-          "214"
+          "217",
+          "204"
         ],
-        "output_index": "233",
+        "output_index": "227",
         "constant_names": [
           "outmul",
           "outadd",
@@ -1215,7 +1284,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1276,6 +1345,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -1307,9 +1388,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "233"
+          "227"
         ],
-        "output_index": "241",
+        "output_index": "235",
         "constant_names": [
           "outmul",
           "outshift"
@@ -1353,14 +1434,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "241"
+          "235"
         ],
-        "output_index": "245",
+        "output_index": "238",
         "constant_names": [
-          "stage2.1.conv1.weight"
+          "stage2.1.conv1.weight",
+          "stage2.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1424,6 +1506,10 @@
         "stage2.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -1432,9 +1518,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "245"
+          "238"
         ],
-        "output_index": "253",
+        "output_index": "246",
         "constant_names": [
           "outmul",
           "outshift"
@@ -1478,14 +1564,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "253"
+          "246"
         ],
-        "output_index": "254",
+        "output_index": "248",
         "constant_names": [
-          "stage2.1.conv2.weight"
+          "stage2.1.conv2.weight",
+          "stage2.1.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1549,16 +1636,20 @@
         "stage2.1.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "254",
-          "241"
+          "248",
+          "235"
         ],
         "output_index": "258",
         "constant_names": [
@@ -1570,7 +1661,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1631,6 +1722,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -1710,12 +1813,13 @@
         "input_indexes": [
           "266"
         ],
-        "output_index": "267",
+        "output_index": "268",
         "constant_names": [
-          "stage3.0.proj.0.weight"
+          "stage3.0.proj.0.weight",
+          "stage3.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1752,7 +1856,7 @@
           2
         ],
         "input_channels": 32,
-        "output_channels": 48,
+        "output_channels": 64,
         "input_dimensions": [
           16,
           16
@@ -1779,6 +1883,10 @@
         "stage3.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -1789,12 +1897,13 @@
         "input_indexes": [
           "266"
         ],
-        "output_index": "273",
+        "output_index": "271",
         "constant_names": [
-          "stage3.0.conv1.weight"
+          "stage3.0.conv1.weight",
+          "stage3.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1831,7 +1940,7 @@
           2
         ],
         "input_channels": 32,
-        "output_channels": 48,
+        "output_channels": 64,
         "input_dimensions": [
           16,
           16
@@ -1858,6 +1967,10 @@
         "stage3.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -1866,9 +1979,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "273"
+          "271"
         ],
-        "output_index": "281",
+        "output_index": "279",
         "constant_names": [
           "outmul",
           "outshift"
@@ -1912,14 +2025,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "281"
+          "279"
         ],
-        "output_index": "282",
+        "output_index": "281",
         "constant_names": [
-          "stage3.0.conv2.weight"
+          "stage3.0.conv2.weight",
+          "stage3.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1955,8 +2069,8 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
           8,
           8
@@ -1983,18 +2097,22 @@
         "stage3.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "282",
-          "267"
+          "281",
+          "268"
         ],
-        "output_index": "286",
+        "output_index": "291",
         "constant_names": [
           "outmul",
           "outadd",
@@ -2004,7 +2122,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2040,8 +2158,8 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
           8,
           8
@@ -2065,6 +2183,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -2096,9 +2226,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "286"
+          "291"
         ],
-        "output_index": "294",
+        "output_index": "299",
         "constant_names": [
           "outmul",
           "outshift"
@@ -2142,14 +2272,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "294"
+          "299"
         ],
-        "output_index": "298",
+        "output_index": "302",
         "constant_names": [
-          "stage3.1.conv1.weight"
+          "stage3.1.conv1.weight",
+          "stage3.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2185,8 +2316,8 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
           8,
           8
@@ -2213,6 +2344,10 @@
         "stage3.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -2221,9 +2356,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "298"
+          "302"
         ],
-        "output_index": "306",
+        "output_index": "310",
         "constant_names": [
           "outmul",
           "outshift"
@@ -2267,14 +2402,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "306"
+          "310"
         ],
-        "output_index": "307",
+        "output_index": "312",
         "constant_names": [
-          "stage3.1.conv2.weight"
+          "stage3.1.conv2.weight",
+          "stage3.1.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2310,8 +2446,8 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
           8,
           8
@@ -2338,18 +2474,22 @@
         "stage3.1.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "307",
-          "294"
+          "312",
+          "299"
         ],
-        "output_index": "311",
+        "output_index": "322",
         "constant_names": [
           "outmul",
           "outadd",
@@ -2359,7 +2499,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2395,8 +2535,8 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
           8,
           8
@@ -2420,6 +2560,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -2451,9 +2603,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "311"
+          "322"
         ],
-        "output_index": "319",
+        "output_index": "330",
         "constant_names": [
           "outmul",
           "outshift"
@@ -2497,14 +2649,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "319"
+          "330"
         ],
-        "output_index": "320",
+        "output_index": "332",
         "constant_names": [
-          "stage4.0.proj.0.weight"
+          "stage4.0.proj.0.weight",
+          "stage4.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2537,18 +2690,18 @@
         ],
         "group": 1,
         "strides": [
-          1,
-          1
+          2,
+          2
         ],
-        "input_channels": 48,
-        "output_channels": 64,
+        "input_channels": 64,
+        "output_channels": 80,
         "input_dimensions": [
           8,
           8
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           0,
@@ -2568,6 +2721,10 @@
         "stage4.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -2576,14 +2733,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "319"
+          "330"
         ],
-        "output_index": "326",
+        "output_index": "335",
         "constant_names": [
-          "stage4.0.conv1.weight"
+          "stage4.0.conv1.weight",
+          "stage4.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2616,18 +2774,18 @@
         ],
         "group": 1,
         "strides": [
-          1,
-          1
+          2,
+          2
         ],
-        "input_channels": 48,
-        "output_channels": 64,
+        "input_channels": 64,
+        "output_channels": 80,
         "input_dimensions": [
           8,
           8
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           1,
@@ -2647,6 +2805,10 @@
         "stage4.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -2655,9 +2817,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "326"
+          "335"
         ],
-        "output_index": "334",
+        "output_index": "343",
         "constant_names": [
           "outmul",
           "outshift"
@@ -2701,14 +2863,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "334"
+          "343"
         ],
-        "output_index": "335",
+        "output_index": "345",
         "constant_names": [
-          "stage4.0.conv2.weight"
+          "stage4.0.conv2.weight",
+          "stage4.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2744,15 +2907,15 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           1,
@@ -2772,18 +2935,22 @@
         "stage4.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "335",
-          "320"
+          "345",
+          "332"
         ],
-        "output_index": "339",
+        "output_index": "355",
         "constant_names": [
           "outmul",
           "outadd",
@@ -2793,7 +2960,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2829,15 +2996,15 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           0,
@@ -2854,6 +3021,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -2885,9 +3064,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "339"
+          "355"
         ],
-        "output_index": "347",
+        "output_index": "363",
         "constant_names": [
           "outmul",
           "outshift"
@@ -2931,14 +3110,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "347"
+          "363"
         ],
-        "output_index": "351",
+        "output_index": "366",
         "constant_names": [
-          "stage4.1.conv1.weight"
+          "stage4.1.conv1.weight",
+          "stage4.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2974,15 +3154,15 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           1,
@@ -3002,6 +3182,10 @@
         "stage4.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -3010,9 +3194,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "351"
+          "366"
         ],
-        "output_index": "359",
+        "output_index": "374",
         "constant_names": [
           "outmul",
           "outshift"
@@ -3056,14 +3240,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "359"
+          "374"
         ],
-        "output_index": "360",
+        "output_index": "376",
         "constant_names": [
-          "stage4.1.conv2.weight"
+          "stage4.1.conv2.weight",
+          "stage4.1.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -3099,15 +3284,15 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           1,
@@ -3127,18 +3312,22 @@
         "stage4.1.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
     {
-      "name": "Addition",
+      "name": "QAddition",
       "DORY_node_parameters": {
-        "op_type": "Add",
+        "op_type": "QAddition",
         "input_indexes": [
-          "360",
-          "347"
+          "376",
+          "363"
         ],
-        "output_index": "364",
+        "output_index": "386",
         "constant_names": [
           "outmul",
           "outadd",
@@ -3148,7 +3337,7 @@
           "inadd2"
         ],
         "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
+        "number_of_input_constants": 3,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -3184,15 +3373,15 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           0,
@@ -3209,6 +3398,18 @@
         "layout": null
       },
       "Weights": {
+        "inmul1": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "inmul2": {
+          "Present": "Yes",
+          "Layout": ""
+        },
+        "outshift": {
+          "Present": "Yes",
+          "Layout": ""
+        },
         "outmul": {
           "Present": "Yes",
           "Layout": ""
@@ -3240,9 +3441,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "364"
+          "386"
         ],
-        "output_index": "372",
+        "output_index": "394",
         "constant_names": [
           "outmul",
           "outshift"
@@ -3286,9 +3487,9 @@
       "DORY_node_parameters": {
         "op_type": "AveragePool",
         "input_indexes": [
-          "372"
+          "394"
         ],
-        "output_index": "373",
+        "output_index": "395",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -3315,8 +3516,8 @@
       },
       "Layer_node_parameters": {
         "kernel_shape": [
-          8,
-          8
+          4,
+          4
         ],
         "dilations": [
           1,
@@ -3324,14 +3525,14 @@
         ],
         "group": 1,
         "strides": [
-          8,
-          8
+          4,
+          4
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
           1,
@@ -3358,9 +3559,9 @@
       "DORY_node_parameters": {
         "op_type": "Relu",
         "input_indexes": [
-          "373"
+          "395"
         ],
-        "output_index": "381",
+        "output_index": "403",
         "constant_names": [
           "outmul",
           "outshift"
@@ -3404,9 +3605,9 @@
       "DORY_node_parameters": {
         "op_type": "Gemm",
         "input_indexes": [
-          "381"
+          "403"
         ],
-        "output_index": "382",
+        "output_index": "404",
         "constant_names": [
           "head.weight",
           "head.bias"
@@ -3448,7 +3649,7 @@
           1,
           1
         ],
-        "input_channels": 64,
+        "input_channels": 80,
         "output_channels": 3,
         "input_dimensions": [
           1,

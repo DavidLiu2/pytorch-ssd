@@ -50,11 +50,6 @@ class SSDMobileNetV2Raw(SSD):
             image_std=([0.5] * input_channels),
         )
         self.input_channels = input_channels
-        self._debug_forward_raw = False
-        self._forward_raw_calls = 0
-
-    def enable_forward_raw_debug(self, enabled: bool = True):
-        self._debug_forward_raw = bool(enabled)
 
     def forward_raw(self, x: torch.Tensor):
         """
@@ -65,13 +60,6 @@ class SSDMobileNetV2Raw(SSD):
             locs:       [B, N_boxes, 4]
             cls_logits: [B, N_boxes, num_classes]
         """
-        self._forward_raw_calls += 1
-        if self._debug_forward_raw:
-            print(
-                "[ssd_mobilenet_v2_raw] forward_raw called "
-                f"(call={self._forward_raw_calls}, input_shape={tuple(x.shape)})"
-            )
-
         features_list = self.backbone.forward_features(x)
         head_outputs = self.head(features_list)
         locs = head_outputs["bbox_regression"]

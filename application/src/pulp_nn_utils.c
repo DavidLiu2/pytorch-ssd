@@ -150,7 +150,7 @@ uint8_t __attribute__((always_inline)) pulp_nn_quant_u8(
   int16_t m,
   int8_t  d
 ) {
-  int16_t x = (m * phi) >> d;
+  int32_t x = (m * phi) >> d;
   uint8_t res = __builtin_pulp_clipu_r(x,255);
   return res;
 }

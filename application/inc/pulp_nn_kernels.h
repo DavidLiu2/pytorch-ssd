@@ -30,6 +30,32 @@ void __attribute__ ((noinline))  pulp_nn_add (
   uint16_t  ch_im_in          // number of channels of the IFM
 );
 
+void __attribute__ ((noinline)) pulp_nn_add_raw_i32_u8(
+  const int32_t *Im_in_1,
+  const int32_t *Im_in_2,
+  uint8_t *Im_out,
+  uint16_t in_mult1,
+  uint16_t in_mult2,
+  uint16_t add_shift,
+  uint16_t out_mult,
+  uint16_t out_shift,
+  uint32_t num_elements,
+  const char *layer_name
+);
+
+void __attribute__ ((noinline)) pulp_nn_add_raw_i32_u8_mixed(
+  const int32_t *Im_in_1,
+  const uint8_t *Im_in_2,
+  uint8_t *Im_out,
+  uint16_t in_mult1,
+  uint16_t in_mult2,
+  uint16_t add_shift,
+  uint16_t out_mult,
+  uint16_t out_shift,
+  uint32_t num_elements,
+  const char *layer_name
+);
+
 void pulp_nn_avgpool (
   uint8_t *  Im_in,
   uint8_t * Im_out,
@@ -56,7 +82,7 @@ void pulp_nn_avgpool (
 void pulp_nn_conv_Ho_parallel(
   const uint8_t * pInBuffer,
   uint8_t *       pIm2ColBuffer,
-  const int8_t *  bias,
+  const int32_t * bias,
   uint8_t *       pOutBuffer,
   const int8_t *  pWeight,
   int32_t *       k,
@@ -238,7 +264,7 @@ void pulp_nn_linear(
 
 void pulp_nn_linear_out_32(
   uint8_t *pInBuffer,
-  int8_t *bias,
+  const int32_t *bias,
   int32_t *pOutBuffer,
   int8_t *pWeights,
   uint16_t dim_vec,
@@ -254,7 +280,7 @@ uint8_t * pulp_nn_matmul(
   uint16_t        out_mult,
   int32_t *       k,
   int32_t *       lambda,
-  const int8_t *  bias,
+  const int32_t * bias,
   uint8_t *       pOut,
   uint8_t *       pOut2,
   int             flag_relu,

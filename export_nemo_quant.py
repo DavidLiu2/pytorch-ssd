@@ -37,6 +37,95 @@ def build_model(
     )
 
 
+def _get_fuse_modules_fn():
+    ao_quant = getattr(getattr(torch, "ao", None), "quantization", None)
+    if ao_quant is not None and hasattr(ao_quant, "fuse_modules"):
+        return ao_quant.fuse_modules
+    quant = getattr(torch, "quantization", None)
+    if quant is not None and hasattr(quant, "fuse_modules"):
+        return quant.fuse_modules
+    return None
+
+
+def maybe_fuse_hybrid_follow_for_export(model):
+    if not isinstance(model, HybridFollowNet):
+        return model
+
+    fuse_modules = _get_fuse_modules_fn()
+    if fuse_modules is None:
+        print("[export_nemo_quant] WARNING: torch fuse_modules() unavailable; exporting unfused hybrid_follow model.")
+        return model
+
+    model = deepcopy(model).eval()
+
+    fuse_groups = [["stem.0", "stem.1"]]
+    for stage_name in ("stage1", "stage2", "stage3", "stage4"):
+        stage = getattr(model, stage_name)
+        for block_idx, block in enumerate(stage):
+            block_prefix = f"{stage_name}.{block_idx}"
+            fuse_groups.append([f"{block_prefix}.conv1", f"{block_prefix}.bn1"])
+            fuse_groups.append([f"{block_prefix}.conv2", f"{block_prefix}.bn2"])
+            if getattr(block, "proj", None) is not None:
+                fuse_groups.append([f"{block_prefix}.proj.0", f"{block_prefix}.proj.1"])
+
+    fuse_modules(model, fuse_groups, inplace=True)
+    print(f"[export_nemo_quant] Fused {len(fuse_groups)} Conv-BN groups for hybrid_follow export.")
+    return model
+
+
+class HybridFollowExportNet(torch.nn.Module):
+    def __init__(self, model: HybridFollowNet):
+        super().__init__()
+        self.stem = model.stem
+        self.stage1 = model.stage1
+        self.stage2 = model.stage2
+        self.stage3 = model.stage3
+        self.stage4 = model.stage4
+        self.global_pool = model.global_pool
+        self.head = torch.nn.Linear(model.head_x.in_features, 3)
+
+        with torch.no_grad():
+            self.head.weight.copy_(
+                torch.cat(
+                    [
+                        model.head_x.weight.detach(),
+                        model.head_size.weight.detach(),
+                        model.head_vis.weight.detach(),
+                    ],
+                    dim=0,
+                )
+            )
+            self.head.bias.copy_(
+                torch.cat(
+                    [
+                        model.head_x.bias.detach(),
+                        model.head_size.bias.detach(),
+                        model.head_vis.bias.detach(),
+                    ],
+                    dim=0,
+                )
+            )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.stem(x)
+        x = self.stage1(x)
+        x = self.stage2(x)
+        x = self.stage3(x)
+        x = self.stage4(x)
+        x = self.global_pool(x)
+        x = torch.flatten(x, 1)
+        return self.head(x)
+
+
+def maybe_convert_hybrid_follow_to_export_head(model):
+    if not isinstance(model, HybridFollowNet):
+        return model
+
+    export_model = HybridFollowExportNet(model).eval()
+    print("[export_nemo_quant] Collapsed hybrid_follow export head to a single 3-output linear layer.")
+    return export_model
+
+
 def export_fp_onnx(model, dummy_input: torch.Tensor, out_path: Path, opset_version: int):
     output_names = ["follow_raw"]
     if isinstance(model, SSDMobileNetV2Raw):
@@ -52,6 +141,61 @@ def export_fp_onnx(model, dummy_input: torch.Tensor, out_path: Path, opset_versi
         input_names=["input"],
         output_names=output_names,
     )
+
+
+def clamp_dory_weight_initializers_to_int8(onnx_path: Path) -> None:
+    import onnx
+    from onnx import numpy_helper
+
+    model = onnx.load(str(onnx_path))
+
+    weight_initializer_names = set()
+    for node in model.graph.node:
+        if node.op_type in {"Conv", "Gemm", "MatMul"} and len(node.input) >= 2:
+            weight_initializer_names.add(node.input[1])
+
+    clipped = []
+    for initializer in model.graph.initializer:
+        if initializer.name not in weight_initializer_names:
+            continue
+
+        arr = numpy_helper.to_array(initializer)
+        if arr.dtype.kind not in {"f", "i", "u"}:
+            continue
+
+        rounded = np.rint(arr).astype(np.int64, copy=False)
+        clipped_arr = np.clip(rounded, -128, 127)
+        changed = rounded != clipped_arr
+        if not np.any(changed):
+            continue
+
+        replacement = clipped_arr.astype(arr.dtype, copy=False)
+        initializer.CopyFrom(numpy_helper.from_array(replacement, initializer.name))
+        clipped.append(
+            (
+                initializer.name,
+                int(np.count_nonzero(changed)),
+                float(np.min(arr)),
+                float(np.max(arr)),
+            )
+        )
+
+    if clipped:
+        onnx.save(model, str(onnx_path))
+        print(
+            "[export_nemo_quant] Clipped weight initializers to int8 range "
+            f"for DORY export ({len(clipped)} tensors)."
+        )
+        for name, count, min_value, max_value in clipped[:20]:
+            print(
+                "[export_nemo_quant]   "
+                f"{name}: clipped {count} values (min={min_value:g}, max={max_value:g})"
+            )
+        if len(clipped) > 20:
+            print(
+                "[export_nemo_quant]   "
+                f"... truncated report: showing 20/{len(clipped)} tensors"
+            )
 
 
 def patch_model_to_graph_compat():
@@ -268,65 +412,6 @@ def load_checkpoint(model, ckpt_path, device):
     return model
 
 
-def debug_backbone_feature_paths(model, context: str):
-    max_list_items = 12
-    path_tokens = ("backbone.features", "backbone.stage")
-    module_names = sorted(
-        n for n, _ in model.named_modules() if any(tok in n for tok in path_tokens)
-    )
-    module_set = set(module_names)
-    targets = [
-        "ssd.backbone.features.0.1",
-        "backbone.features.0.1",
-        "ssd.backbone.stage0.0.1",
-        "backbone.stage0.0.1",
-    ]
-
-    print(
-        f"[export_nemo_quant][debug] {context}: "
-        f"{len(module_names)} module names contain backbone feature/stage paths"
-    )
-    for name in module_names[:max_list_items]:
-        print(f"[export_nemo_quant][debug] module: {name}")
-    if len(module_names) > max_list_items:
-        print(
-            "[export_nemo_quant][debug] module list truncated: "
-            f"showing {max_list_items}/{len(module_names)}"
-        )
-    for target in targets:
-        print(
-            f"[export_nemo_quant][debug] module exists '{target}': "
-            f"{target in module_set}"
-        )
-
-    graph = getattr(model, "graph", None)
-    if graph is None:
-        print(f"[export_nemo_quant][debug] {context}: model.graph is None")
-        return
-
-    graph_names = sorted({
-        name for name in graph.non_unique_names_dict.values()
-        if any(tok in name for tok in path_tokens)
-    })
-    graph_set = set(graph_names)
-    print(
-        f"[export_nemo_quant][debug] {context}: "
-        f"{len(graph_names)} graph scope names contain backbone feature/stage paths"
-    )
-    for name in graph_names[:max_list_items]:
-        print(f"[export_nemo_quant][debug] graph: {name}")
-    if len(graph_names) > max_list_items:
-        print(
-            "[export_nemo_quant][debug] graph list truncated: "
-            f"showing {max_list_items}/{len(graph_names)}"
-        )
-    for target in targets:
-        print(
-            f"[export_nemo_quant][debug] graph scope exists '{target}': "
-            f"{target in graph_set}"
-        )
-
-
 def is_qd_eps_mapping_error(exc: Exception) -> bool:
     msg = str(exc)
     if isinstance(exc, AttributeError) and "NoneType" in msg and "item" in msg:
@@ -374,24 +459,24 @@ def set_uniform_eps_by_named_modules(model, eps_in: float):
 
         if hasattr(module, "eps_in_list"):
             old_list = getattr(module, "eps_in_list")
-            if isinstance(old_list, list) and len(old_list) > 0:
-                new_list = []
-                for old_eps in old_list:
-                    if torch.is_tensor(old_eps):
-                        new_list.append(
-                            torch.tensor(
-                                float(eps_in),
-                                dtype=old_eps.dtype,
-                                device=old_eps.device,
-                                requires_grad=False,
-                            )
+            list_len = len(old_list) if isinstance(old_list, list) and len(old_list) > 0 else 2
+            new_list = []
+            for old_eps in (old_list if isinstance(old_list, list) and len(old_list) > 0 else [None] * list_len):
+                if torch.is_tensor(old_eps):
+                    new_list.append(
+                        torch.tensor(
+                            float(eps_in),
+                            dtype=old_eps.dtype,
+                            device=old_eps.device,
+                            requires_grad=False,
                         )
-                    else:
-                        new_list.append(
-                            torch.tensor(float(eps_in), dtype=torch.float32, requires_grad=False)
-                        )
-                module.eps_in_list = new_list
-                updated_eps_list.append(name)
+                    )
+                else:
+                    new_list.append(
+                        torch.tensor(float(eps_in), dtype=torch.float32, requires_grad=False)
+                    )
+            module.eps_in_list = new_list
+            updated_eps_list.append(name)
 
     model.eps_in = float(eps_in)
     print(
@@ -500,6 +585,13 @@ def safe_set_eps_in_pact(self, eps_in):
             existing_list = getattr(module, "eps_in_list", None)
             if isinstance(existing_list, list) and existing_list:
                 eps_values = existing_list
+            elif hasattr(self, "eps_in"):
+                fallback_eps = getattr(self, "eps_in")
+                if fallback_eps is not None:
+                    eps_values = [fallback_eps, fallback_eps]
+                else:
+                    unresolved.append(name)
+                    continue
             elif isinstance(eps_in, (float, int)):
                 eps_values = [eps_in, eps_in]
             else:
@@ -749,9 +841,6 @@ def main():
     parser.add_argument("--stage-report", type=str, default=None,
                         help="Optional path to write the final exported stage (fq/qd/id).")
     parser.add_argument("--force-cpu", action="store_true")
-    parser.add_argument("--debug-forward-raw", action="store_true",
-                        help="Print when forward_raw() is called to verify tracing/calibration path.")
-
     # Calibration inputs (matches notebook's statistics_act() idea)
     parser.add_argument("--calib-dir", type=str, default=None,
                         help="Directory of calibration images (jpg/png).")
@@ -791,8 +880,8 @@ def main():
         args.input_channels,
     )
     model_fp = load_checkpoint(model_fp, args.ckpt, device)
-    if hasattr(model_fp, "enable_forward_raw_debug"):
-        model_fp.enable_forward_raw_debug(args.debug_forward_raw)
+    model_fp = maybe_fuse_hybrid_follow_for_export(model_fp)
+    model_fp = maybe_convert_hybrid_follow_to_export_head(model_fp)
     model_fp.to(device).eval()
 
     # NEMO expects a dummy_input for graph tracing
@@ -829,14 +918,12 @@ def main():
     if args.model_type == "hybrid_follow":
         print(
             "[export_nemo_quant] hybrid_follow quantized export requested. "
-            "Keeping the graph simple, but FP export is the validated path for now."
+            "Using the DORY-compatible single-head export wrapper."
         )
 
     # 2) FQ: quantize_pact + set bitwidth + activation calibration (ETH notebook)
     print("[export_nemo_quant] Building FakeQuantized (FQ) model via quantize_pact...")
     model_q = nemo.transform.quantize_pact(deepcopy(model_fp), dummy_input=dummy_input)
-    if hasattr(model_q, "enable_forward_raw_debug"):
-        model_q.enable_forward_raw_debug(args.debug_forward_raw)
     model_q.to(device).eval()
     if bind_safe_set_eps_in(model_q):
         print(
@@ -869,15 +956,14 @@ def main():
 
     # 3) QD / ID using the notebook API (qd_stage / id_stage)
     if args.stage in ["qd", "id"]:
-        if args.model_type == "ssd":
-            debug_backbone_feature_paths(model_deploy, context="before qd_stage")
         print(f"[export_nemo_quant] Entering QuantizedDeployable (QD) via qd_stage(eps_in={args.eps_in}) ...")
         try:
             model_deploy.qd_stage(eps_in=args.eps_in)
         except Exception as e:
-            if is_qd_eps_mapping_error(e):
-                print(f"[export_nemo_quant] WARNING: qd_stage eps-mapping failed ({type(e).__name__}: {e}).")
-                print("[export_nemo_quant] Applying named_modules() eps fallback and continuing QD conversion.")
+            should_try_best_effort_qd = is_qd_eps_mapping_error(e) or args.model_type == "hybrid_follow"
+            if should_try_best_effort_qd:
+                print(f"[export_nemo_quant] WARNING: qd_stage failed ({type(e).__name__}: {e}).")
+                print("[export_nemo_quant] Applying best-effort QD fallback and continuing conversion.")
                 try:
                     run_best_effort_qd_steps(model_deploy, eps_in=args.eps_in)
                 except Exception as fallback_error:
@@ -944,6 +1030,7 @@ def main():
         round_params=True,
         batch_size=1,
     )
+    clamp_dory_weight_initializers_to_int8(out_path)
 
     if args.stage_report:
         stage_path = Path(args.stage_report)

@@ -51,6 +51,13 @@ void ReluConvolution5(
   uint32_t dory_dma_channel = dory_dma_allocate();
   volatile DMA_copy DMA_copy_k, DMA_copy_lambda;
   volatile DMA_copy DMA_copy_W, DMA_copy_x, DMA_copy_y;
+  volatile DMA_copy DMA_copy_bias;
+  DMA_copy_bias.hwc_to_chw = 0;
+  DMA_copy_bias.stride_2d = 0;
+  DMA_copy_bias.stride_1d = 0;
+  DMA_copy_bias.dir = 1;
+  DMA_copy_bias.tid = dory_dma_channel;
+
   DMA_copy_k.hwc_to_chw = 0;
   DMA_copy_k.stride_2d = 0;
   DMA_copy_k.stride_1d = 0;
@@ -67,23 +74,23 @@ void ReluConvolution5(
   DMA_copy_lambda.dir = 1;
   DMA_copy_lambda.tid = dory_dma_channel;
   
-  DMA_copy_x.hwc_to_chw = 1;
-  DMA_copy_x.stride_2d = 3072;
-  DMA_copy_x.stride_1d = 48;
+  DMA_copy_x.hwc_to_chw = 0;
+  DMA_copy_x.stride_2d = 768;
+  DMA_copy_x.stride_1d = 24;
   DMA_copy_x.dir = 1;
   DMA_copy_x.tid = dory_dma_channel;
   
   DMA_copy_W.hwc_to_chw = 0;
-  DMA_copy_W.stride_2d = 9;
-  DMA_copy_W.stride_1d = 1;
-  DMA_copy_W.number_of_2d_copies = 1;
-  DMA_copy_W.number_of_1d_copies = 1;
+  DMA_copy_W.stride_2d = 216;
+  DMA_copy_W.stride_1d = 24;
+  DMA_copy_W.number_of_2d_copies = 24;
+  DMA_copy_W.number_of_1d_copies = 9;
   DMA_copy_W.dir = 1;
   DMA_copy_W.tid = dory_dma_channel;
   
   DMA_copy_y.hwc_to_chw = 0;
-  DMA_copy_y.stride_2d = 1536;
-  DMA_copy_y.stride_1d = 48;
+  DMA_copy_y.stride_2d = 768;
+  DMA_copy_y.stride_1d = 24;
   DMA_copy_y.dir = 0;
   DMA_copy_y.tid = dory_dma_channel;
 
@@ -109,27 +116,34 @@ void ReluConvolution5(
   // tile loop indeces
   int _i_nof_load=0, _i_nif_load=0, _i_h_load=0, _i_w_load=0;
   int _i_nof_exec=1, _i_nif_exec=1, _i_h_exec=1, _i_w_exec=1;
+  int has_bias = 1;
   volatile uint8_t *im2col;
-  im2col = l1_buffer + 31928;
-  volatile uint8_t *pwt_buffer;
-  pwt_buffer = im2col + 672;
+  im2col = l1_buffer + 32968;
   uint16_t out_mult = out_mult_in;
   uint16_t out_shift = out_shift_in;
 
   ////////////////////////////
   // First tile transfering //
   ////////////////////////////
+  DMA_copy_bias.ext = (uint32_t) l2_W+5184;
+  DMA_copy_bias.loc = (uint32_t) (l1_buffer + 32872);
+  DMA_copy_bias.number_of_2d_copies = 1;
+  DMA_copy_bias.number_of_1d_copies = 1;
+  DMA_copy_bias.length_1d_copy = (uint16_t) 96;
+  dory_dma_memcpy_async(&DMA_copy_bias);
+  dory_dma_barrier(&DMA_copy_bias);
+
   pi_cl_team_barrier(0);
 
-  int total_tiles = 9;
+  int total_tiles = 4;
   // tile loop nest
   for(iter=0; iter < total_tiles; iter++) {
     // check if last in any dimension
-      x_tile_size_nif = (_i_nif_load+1 == 3) ? 16 : 16;
-      x_tile_size_h   = (_i_h_load+1 == 3)   ? 17 : 25;
-      x_tile_size_w   = (_i_w_load+1 == 1)   ? 64 : 64;
+      x_tile_size_nif = (_i_nif_load+1 == 1) ? 24 : 24;
+      x_tile_size_h   = (_i_h_load+1 == 2)   ? 9 : 26;
+      x_tile_size_w   = (_i_w_load+1 == 2)   ? 11 : 24;
       x_tile_size_byte = x_tile_size_nif*x_tile_size_h*x_tile_size_w*8/8;
-      x_length_nif_byte = (_i_nif_load+1 == 3)   ? 16 : 16;
+      x_length_nif_byte = (_i_nif_load+1 == 1)   ? 24 : 24;
       // additionally overlap by padding for the first tile after a border one
       //this because in the first tile we use less pixels from x_buffer, since we have the ones of padding
       pad_offset_h=0, pad_offset_w=0;
@@ -137,19 +151,19 @@ void ReluConvolution5(
         pad_offset_h = 1;
       if(_i_w_load > 0)
         pad_offset_w = 1;
-      y_tile_size_h   = (_i_h_load+1 == 3)   ? 8 : 12;
-      y_tile_size_w   = (_i_w_load+1 == 1)   ? 32 : 32;
-      y_tile_size_nof = (_i_nof_load+1 == 3) ? 16 : 16;
+      y_tile_size_h   = (_i_h_load+1 == 2)   ? 8 : 24;
+      y_tile_size_w   = (_i_w_load+1 == 2)   ? 10 : 22;
+      y_tile_size_nof = (_i_nof_load+1 == 1) ? 24 : 24;
       y_tile_size_byte = y_tile_size_nof*y_tile_size_h*y_tile_size_w*8/8;
-      y_length_nof_byte = (_i_nof_load+1 == 3)   ? 16 : 16;
-      W_tile_size_nof = (_i_nof_load+1 == 3) ? 16 : 16;
-      W_tile_size_nif = (_i_nif_load+1 == 3) ? 1 : 1;
-      W_tile_size_byte = W_tile_size_nof*W_tile_size_nif*3*3;
-      W_length_nif_byte = (_i_nif_load+1 == 3) ? 1 : 1;
+      y_length_nof_byte = (_i_nof_load+1 == 1)   ? 24 : 24;
+      W_tile_size_nof = (_i_nof_load+1 == 1) ? 24 : 24;
+      W_tile_size_nif = (_i_nif_load+1 == 1) ? 24 : 24;
+      W_tile_size_byte = W_tile_size_nof*W_tile_size_nif*8*3*3/8;
+      W_length_nif_byte = (_i_nif_load+1 == 1) ? 24 : 24;
       // transfer of next input tile in double buffering
       if (_i_nif_load!=_i_nif_exec || _i_w_load!=_i_w_exec || _i_h_load!=_i_h_exec)
       {
-        DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 25, 64, 16, 64, 48,  1, 1,0, pad_offset_h, pad_offset_w, 0, 8);
+        DMA_copy_x.ext = dory_get_tile_3d(l2_x, _i_h_load, _i_w_load, _i_nif_load, 26, 24, 24, 32, 24,  2, 2,0, pad_offset_h, pad_offset_w, 0, 8);
         DMA_copy_x.loc = (l1_buffer + 0);
         DMA_copy_x.number_of_2d_copies = x_tile_size_h;
         DMA_copy_x.number_of_1d_copies = x_tile_size_w;
@@ -160,17 +174,18 @@ void ReluConvolution5(
       // transfer of next weight tile if changed input or output channels
       if (_i_nif_load!=_i_nif_exec || _i_nof_load!=_i_nof_exec)
       {
-        DMA_copy_W.ext = dory_get_tile_3d(l2_W, _i_nof_load, 0, 0, 16, 3*3, 1, 3*3, 1, 0,0,0,0,0,0, 8);
-        DMA_copy_W.loc = (l1_buffer + 31760);
-        DMA_copy_W.length_1d_copy = (int) W_tile_size_nof * 8 * 9 / 8;
+        DMA_copy_W.ext = dory_get_tile_3d(l2_W, _i_nof_load, 0, _i_nif_load, 24, 3*3, 24, 3*3, 24, 0,0,0,0,0,0, 8);
+        DMA_copy_W.loc = (l1_buffer + 27664);
+        DMA_copy_W.number_of_2d_copies = W_tile_size_nof;
+        DMA_copy_W.length_1d_copy = W_length_nif_byte;
         dory_dma_memcpy_async(&DMA_copy_W);
         dory_dma_barrier(&DMA_copy_W);
       }
     // creation of the pointers to input, output, weights, lambda and k
-    asm volatile("": : :"memory");
     x = (uint8_t *) (l1_buffer + 0);
-    W = (uint8_t *) (l1_buffer + 31760);
-    y = (uint8_t *) (l1_buffer + 25608);
+    b = (uint8_t *) (l1_buffer + 32872 + _i_nof_load*96);
+    W = (uint8_t *) (l1_buffer + 27664);
+    y = (uint8_t *) (l1_buffer + 14984);
     p_r = 0;
     p_l = 0;
     p_t = 0;
@@ -179,28 +194,26 @@ void ReluConvolution5(
       p_t = 1;
     if (_i_w_load == 0)
       p_l = 1;
-    if (_i_h_load == 3-1)
+    if (_i_h_load == 2-1)
       p_b = 1;
-    if (_i_w_load == 1-1)
+    if (_i_w_load == 2-1)
       p_r = 1;
     pi_cl_team_barrier(0);
-    asm volatile("": : :"memory");
-    pulp_nn_depthwise_generic(
+    pulp_nn_conv_Ho_parallel(
       x, im2col,
-      NULL,
+      (const int32_t *) b,
       y, W,
-      pwt_buffer,
       0, 0,
       out_mult, out_shift,
       x_tile_size_w, x_tile_size_h, x_tile_size_nif,
       y_tile_size_w, y_tile_size_h, y_tile_size_nof,
       3, 3,
-      p_t, p_b, p_l, p_r, 2, 2,
+      p_t, p_b, p_l, p_r, 1, 1,
       1, 0
       );
     pi_cl_team_barrier(0);
-      DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 12, 32, 16, 32, 48, 0, 0, 0, 0, 0, 0, 8);
-      DMA_copy_y.loc = (l1_buffer + 25608);
+      DMA_copy_y.ext = dory_get_tile_3d(l2_y, _i_h_load, _i_w_load, _i_nof_load, 24, 22, 24, 32, 24, 0, 0, 0, 0, 0, 0, 8);
+      DMA_copy_y.loc = (l1_buffer + 14984);
       DMA_copy_y.number_of_2d_copies = y_tile_size_h;
       DMA_copy_y.number_of_1d_copies = y_tile_size_w;
       DMA_copy_y.length_1d_copy = y_length_nof_byte;
@@ -213,14 +226,13 @@ void ReluConvolution5(
     _i_h_exec = _i_h_load;
     _i_w_exec = _i_w_load;
       _i_w_load += 1;
-      if(_i_w_load==1) 
+      if(_i_w_load==2) 
       {
         _i_w_load = 0;
         _i_h_load += 1;
-        if(_i_h_load==3) 
+        if(_i_h_load==2) 
         {
           _i_h_load = 0;
-        _i_nif_load += 1;
           _i_nof_load += 1;
         }
       }

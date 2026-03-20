@@ -33,7 +33,7 @@ uint8_t __attribute__ ((noinline)) *pulp_nn_matmul(
   uint16_t       out_mult,
   int32_t *      k,
   int32_t *      lambda,
-  const int8_t * bias,
+  const int32_t * bias,
   uint8_t *      pOut,
   uint8_t *      pOut2,
   int            flag_relu,
@@ -41,6 +41,9 @@ uint8_t __attribute__ ((noinline)) *pulp_nn_matmul(
 ) {
   int8_t  *pA = pWeight;
   uint16_t chan_left = ch_out & 0x3;
+  int output_is_i32 = (flag_relu == 0 && flag_batch_norm == 0);
+  int32_t *pOut_i32 = (int32_t *) pOut;
+  int32_t *pOut2_i32 = (int32_t *) pOut2;
 
   v4s vecA;
   v4s vecA2;
@@ -195,23 +198,38 @@ uint8_t __attribute__ ((noinline)) *pulp_nn_matmul(
       }
       else
       {
-        *pOut = (uint8_t) clip8(sum >> out_shift);
-        pOut++;
-        *pOut = (uint8_t) clip8(sum2 >> out_shift);
-        pOut++;
-        *pOut = (uint8_t) clip8(sum3 >> out_shift);
-        pOut++;
-        *pOut = (uint8_t) clip8(sum4 >> out_shift);
-        pOut++;
+        if (output_is_i32)
+        {
+          *pOut_i32++ = sum;
+          *pOut_i32++ = sum2;
+          *pOut_i32++ = sum3;
+          *pOut_i32++ = sum4;
 
-        *pOut2 = (uint8_t) clip8(sum5 >> out_shift);
-        pOut2++;
-        *pOut2 = (uint8_t) clip8(sum6 >> out_shift);
-        pOut2++;
-        *pOut2 = (uint8_t) clip8(sum7 >> out_shift);
-        pOut2++;
-        *pOut2 = (uint8_t) clip8(sum8 >> out_shift);
-        pOut2++;
+          *pOut2_i32++ = sum5;
+          *pOut2_i32++ = sum6;
+          *pOut2_i32++ = sum7;
+          *pOut2_i32++ = sum8;
+        }
+        else
+        {
+          *pOut = (uint8_t) clip8(sum >> out_shift);
+          pOut++;
+          *pOut = (uint8_t) clip8(sum2 >> out_shift);
+          pOut++;
+          *pOut = (uint8_t) clip8(sum3 >> out_shift);
+          pOut++;
+          *pOut = (uint8_t) clip8(sum4 >> out_shift);
+          pOut++;
+
+          *pOut2 = (uint8_t) clip8(sum5 >> out_shift);
+          pOut2++;
+          *pOut2 = (uint8_t) clip8(sum6 >> out_shift);
+          pOut2++;
+          *pOut2 = (uint8_t) clip8(sum7 >> out_shift);
+          pOut2++;
+          *pOut2 = (uint8_t) clip8(sum8 >> out_shift);
+          pOut2++;
+        }
       }
     }
 
@@ -284,14 +302,27 @@ uint8_t __attribute__ ((noinline)) *pulp_nn_matmul(
       }
       else
       {
-        *pOut = (uint8_t) clip8(sum >> out_shift);
-        pOut++;
+        if (output_is_i32)
+        {
+          *pOut_i32++ = sum;
+          *pOut2_i32++ = sum2;
+        }
+        else
+        {
+          *pOut = (uint8_t) clip8(sum >> out_shift);
+          pOut++;
 
-        *pOut2 = (uint8_t) clip8(sum2 >> out_shift);
-        pOut2++;
+          *pOut2 = (uint8_t) clip8(sum2 >> out_shift);
+          pOut2++;
+        }
       }
     }
     chan_left--;
+  }
+  if (output_is_i32)
+  {
+    pOut_i32 += ch_out;
+    return (uint8_t *) pOut_i32;
   }
   pOut += ch_out;
   return pOut;

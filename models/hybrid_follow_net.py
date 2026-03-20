@@ -5,6 +5,15 @@ from typing import Dict, Tuple
 import torch
 import torch.nn as nn
 
+try:
+    from nemo.quant.pact import PACT_IntegerAdd
+except ImportError:
+    class PACT_IntegerAdd(nn.Module):
+        def forward(self, *x: torch.Tensor) -> torch.Tensor:
+            if len(x) != 2:
+                raise ValueError("PACT_IntegerAdd fallback expects exactly two input tensors.")
+            return x[0] + x[1]
+
 
 class ConvBNReLU(nn.Sequential):
     def __init__(
@@ -67,6 +76,8 @@ class ResidualBlock(nn.Module):
         else:
             self.proj = None
 
+        # NEMO needs an explicit module here for branched residual adds.
+        self.add = PACT_IntegerAdd()
         self.out_relu = nn.ReLU(inplace=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -77,7 +88,7 @@ class ResidualBlock(nn.Module):
         out = self.relu1(out)
         out = self.conv2(out)
         out = self.bn2(out)
-        out = out + identity
+        out = self.add(out, identity)
         out = self.out_relu(out)
         return out
 

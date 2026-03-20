@@ -1,18 +1,65 @@
 {
   "graph": [
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "input.1"
+        ],
+        "output_index": "128",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "0"
+          "128"
         ],
-        "output_index": "152",
+        "output_index": "130",
         "constant_names": [
-          "stem.0.weight"
+          "stem.0.weight",
+          "stem.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -51,18 +98,18 @@
         "input_channels": 1,
         "output_channels": 16,
         "input_dimensions": [
-          128,
-          128
+          130,
+          130
         ],
         "output_dimensions": [
           64,
           64
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -76,6 +123,10 @@
         "stem.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stem.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -84,11 +135,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "152"
+          "130"
         ],
-        "output_index": "154",
+        "output_index": "132",
         "constant_names": [
-          "153"
+          "131"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -114,7 +165,7 @@
         "prefix": ""
       },
       "Weights": {
-        "153": {
+        "131": {
           "Present": "Yes",
           "Layout": null
         }
@@ -125,11 +176,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "154"
+          "132"
         ],
-        "output_index": "159",
+        "output_index": "137",
         "constant_names": [
-          "155"
+          "133"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -155,7 +206,7 @@
         "prefix": ""
       },
       "Weights": {
-        "155": {
+        "133": {
           "Present": "Yes",
           "Layout": null
         }
@@ -166,9 +217,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "159"
+          "137"
         ],
-        "output_index": "160",
+        "output_index": "138",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -196,18 +247,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "138"
+        ],
+        "output_index": "139",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "160"
+          "139"
         ],
-        "output_index": "161",
+        "output_index": "140",
         "constant_names": [
-          "stage1.0.proj.0.weight"
+          "stage1.0.proj.0.weight",
+          "stage1.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -271,22 +369,73 @@
         "stage1.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
+    },
+    {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "138"
+        ],
+        "output_index": "141",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
     },
     {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "160"
+          "141"
         ],
-        "output_index": "167",
+        "output_index": "143",
         "constant_names": [
-          "stage1.0.conv1.weight"
+          "stage1.0.conv1.weight",
+          "stage1.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -325,18 +474,18 @@
         "input_channels": 16,
         "output_channels": 24,
         "input_dimensions": [
-          64,
-          64
+          66,
+          66
         ],
         "output_dimensions": [
           32,
           32
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -350,6 +499,10 @@
         "stage1.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -358,11 +511,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "167"
+          "143"
         ],
-        "output_index": "169",
+        "output_index": "145",
         "constant_names": [
-          "168"
+          "144"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -388,7 +541,7 @@
         "prefix": ""
       },
       "Weights": {
-        "168": {
+        "144": {
           "Present": "Yes",
           "Layout": null
         }
@@ -399,11 +552,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "169"
+          "145"
         ],
-        "output_index": "174",
+        "output_index": "150",
         "constant_names": [
-          "170"
+          "146"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -429,7 +582,7 @@
         "prefix": ""
       },
       "Weights": {
-        "170": {
+        "146": {
           "Present": "Yes",
           "Layout": null
         }
@@ -440,9 +593,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "174"
+          "150"
         ],
-        "output_index": "175",
+        "output_index": "151",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -470,18 +623,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "151"
+        ],
+        "output_index": "152",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "175"
+          "152"
         ],
-        "output_index": "176",
+        "output_index": "153",
         "constant_names": [
-          "stage1.0.conv2.weight"
+          "stage1.0.conv2.weight",
+          "stage1.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -520,18 +720,18 @@
         "input_channels": 24,
         "output_channels": 24,
         "input_dimensions": [
-          32,
-          32
+          34,
+          34
         ],
         "output_dimensions": [
           32,
           32
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -545,6 +745,92 @@
         "stage1.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "153"
+        ],
+        "output_index": "155",
+        "constant_names": [
+          "154"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "154": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "140"
+        ],
+        "output_index": "157",
+        "constant_names": [
+          "156"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "156": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -553,10 +839,10 @@
       "DORY_node_parameters": {
         "op_type": "Add",
         "input_indexes": [
-          "176",
-          "161"
+          "155",
+          "157"
         ],
-        "output_index": "180",
+        "output_index": "158",
         "constant_names": [],
         "number_of_input_nodes": 2,
         "number_of_input_constants": 0,
@@ -622,15 +908,15 @@
       "Weights": {}
     },
     {
-      "name": "Mul",
+      "name": "Div",
       "DORY_node_parameters": {
-        "op_type": "Mul",
+        "op_type": "Div",
         "input_indexes": [
-          "180"
+          "158"
         ],
-        "output_index": "182",
+        "output_index": "163",
         "constant_names": [
-          "181"
+          "405"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -656,7 +942,48 @@
         "prefix": ""
       },
       "Weights": {
-        "181": {
+        "405": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "163"
+        ],
+        "output_index": "165",
+        "constant_names": [
+          "164"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "164": {
           "Present": "Yes",
           "Layout": null
         }
@@ -667,11 +994,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "182"
+          "165"
         ],
-        "output_index": "187",
+        "output_index": "170",
         "constant_names": [
-          "183"
+          "166"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -697,7 +1024,7 @@
         "prefix": ""
       },
       "Weights": {
-        "183": {
+        "166": {
           "Present": "Yes",
           "Layout": null
         }
@@ -708,9 +1035,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "187"
+          "170"
         ],
-        "output_index": "188",
+        "output_index": "171",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -738,18 +1065,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "171"
+        ],
+        "output_index": "172",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "188"
+          "172"
         ],
-        "output_index": "192",
+        "output_index": "174",
         "constant_names": [
-          "stage1.1.conv1.weight"
+          "stage1.1.conv1.weight",
+          "stage1.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -788,18 +1162,18 @@
         "input_channels": 24,
         "output_channels": 24,
         "input_dimensions": [
-          32,
-          32
+          34,
+          34
         ],
         "output_dimensions": [
           32,
           32
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -813,6 +1187,10 @@
         "stage1.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage1.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -821,11 +1199,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "192"
+          "174"
         ],
-        "output_index": "194",
+        "output_index": "176",
         "constant_names": [
-          "193"
+          "175"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -851,7 +1229,7 @@
         "prefix": ""
       },
       "Weights": {
-        "193": {
+        "175": {
           "Present": "Yes",
           "Layout": null
         }
@@ -862,9 +1240,410 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
+          "176"
+        ],
+        "output_index": "181",
+        "constant_names": [
+          "177"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "177": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Clip",
+      "DORY_node_parameters": {
+        "op_type": "Clip",
+        "input_indexes": [
+          "181"
+        ],
+        "output_index": "182",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": 0,
+        "max": 255,
+        "prefix": ""
+      },
+      "Weights": {}
+    },
+    {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "182"
+        ],
+        "output_index": "183",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
+      "name": "Convolution",
+      "DORY_node_parameters": {
+        "op_type": "Conv",
+        "input_indexes": [
+          "183"
+        ],
+        "output_index": "184",
+        "constant_names": [
+          "stage1.1.conv2.weight",
+          "stage1.1.conv2.bias"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 2,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Layer_node_parameters": {
+        "kernel_shape": [
+          3,
+          3
+        ],
+        "dilations": [
+          1,
+          1
+        ],
+        "group": 1,
+        "strides": [
+          1,
+          1
+        ],
+        "input_channels": 24,
+        "output_channels": 24,
+        "input_dimensions": [
+          34,
+          34
+        ],
+        "output_dimensions": [
+          32,
+          32
+        ],
+        "pads": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "MACs": null,
+        "weight_memory": null,
+        "bias_memory": null,
+        "constants_memory": null,
+        "input_activation_memory": null,
+        "output_activation_memory": null,
+        "layout": null
+      },
+      "Weights": {
+        "stage1.1.conv2.weight": {
+          "Present": "Yes",
+          "Layout": null
+        },
+        "stage1.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "184"
+        ],
+        "output_index": "186",
+        "constant_names": [
+          "185"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "185": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "171"
+        ],
+        "output_index": "188",
+        "constant_names": [
+          "187"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "187": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Addition",
+      "DORY_node_parameters": {
+        "op_type": "Add",
+        "input_indexes": [
+          "186",
+          "188"
+        ],
+        "output_index": "189",
+        "constant_names": [],
+        "number_of_input_nodes": 2,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Layer_node_parameters": {
+        "kernel_shape": [
+          1,
+          1
+        ],
+        "dilations": [
+          1,
+          1
+        ],
+        "group": 1,
+        "strides": [
+          1,
+          1
+        ],
+        "input_channels": 24,
+        "output_channels": 24,
+        "input_dimensions": [
+          32,
+          32
+        ],
+        "output_dimensions": [
+          32,
+          32
+        ],
+        "pads": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "MACs": null,
+        "weight_memory": null,
+        "bias_memory": null,
+        "constants_memory": null,
+        "input_activation_memory": null,
+        "output_activation_memory": null,
+        "layout": null
+      },
+      "Weights": {}
+    },
+    {
+      "name": "Div",
+      "DORY_node_parameters": {
+        "op_type": "Div",
+        "input_indexes": [
+          "189"
+        ],
+        "output_index": "194",
+        "constant_names": [
+          "406"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "406": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
           "194"
         ],
-        "output_index": "199",
+        "output_index": "196",
         "constant_names": [
           "195"
         ],
@@ -899,13 +1678,54 @@
       }
     },
     {
+      "name": "Div",
+      "DORY_node_parameters": {
+        "op_type": "Div",
+        "input_indexes": [
+          "196"
+        ],
+        "output_index": "201",
+        "constant_names": [
+          "197"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "197": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
       "name": "Clip",
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "199"
+          "201"
         ],
-        "output_index": "200",
+        "output_index": "202",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -933,95 +1753,15 @@
       "Weights": {}
     },
     {
-      "name": "Convolution",
+      "name": "Pad",
       "DORY_node_parameters": {
-        "op_type": "Conv",
+        "op_type": "Pad",
         "input_indexes": [
-          "200"
+          "202"
         ],
-        "output_index": "201",
-        "constant_names": [
-          "stage1.1.conv2.weight"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Layer_node_parameters": {
-        "kernel_shape": [
-          3,
-          3
-        ],
-        "dilations": [
-          1,
-          1
-        ],
-        "group": 1,
-        "strides": [
-          1,
-          1
-        ],
-        "input_channels": 24,
-        "output_channels": 24,
-        "input_dimensions": [
-          32,
-          32
-        ],
-        "output_dimensions": [
-          32,
-          32
-        ],
-        "pads": [
-          1,
-          1,
-          1,
-          1
-        ],
-        "MACs": null,
-        "weight_memory": null,
-        "bias_memory": null,
-        "constants_memory": null,
-        "input_activation_memory": null,
-        "output_activation_memory": null,
-        "layout": null
-      },
-      "Weights": {
-        "stage1.1.conv2.weight": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
-      "name": "Addition",
-      "DORY_node_parameters": {
-        "op_type": "Add",
-        "input_indexes": [
-          "201",
-          "188"
-        ],
-        "output_index": "205",
+        "output_index": "203",
         "constant_names": [],
-        "number_of_input_nodes": 2,
+        "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
         "branch_out": null,
         "branch_in": null,
@@ -1042,161 +1782,19 @@
         "conv1d": null,
         "min": null,
         "max": null,
-        "prefix": ""
-      },
-      "Layer_node_parameters": {
-        "kernel_shape": [
-          1,
-          1
-        ],
-        "dilations": [
-          1,
-          1
-        ],
-        "group": 1,
-        "strides": [
-          1,
-          1
-        ],
-        "input_channels": 24,
-        "output_channels": 24,
-        "input_dimensions": [
-          32,
-          32
-        ],
-        "output_dimensions": [
-          32,
-          32
-        ],
+        "prefix": "",
+        "mode": 0,
         "pads": [
+          0,
+          0,
+          0,
+          0,
           0,
           0,
           0,
           0
         ],
-        "MACs": null,
-        "weight_memory": null,
-        "bias_memory": null,
-        "constants_memory": null,
-        "input_activation_memory": null,
-        "output_activation_memory": null,
-        "layout": null
-      },
-      "Weights": {}
-    },
-    {
-      "name": "Mul",
-      "DORY_node_parameters": {
-        "op_type": "Mul",
-        "input_indexes": [
-          "205"
-        ],
-        "output_index": "207",
-        "constant_names": [
-          "206"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Weights": {
-        "206": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
-      "name": "Div",
-      "DORY_node_parameters": {
-        "op_type": "Div",
-        "input_indexes": [
-          "207"
-        ],
-        "output_index": "212",
-        "constant_names": [
-          "208"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Weights": {
-        "208": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
-      "name": "Clip",
-      "DORY_node_parameters": {
-        "op_type": "Clip",
-        "input_indexes": [
-          "212"
-        ],
-        "output_index": "213",
-        "constant_names": [],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 0,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": 0,
-        "max": 255,
-        "prefix": ""
+        "value": 0
       },
       "Weights": {}
     },
@@ -1205,14 +1803,15 @@
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "213"
+          "203"
         ],
-        "output_index": "214",
+        "output_index": "204",
         "constant_names": [
-          "stage2.0.proj.0.weight"
+          "stage2.0.proj.0.weight",
+          "stage2.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1276,22 +1875,73 @@
         "stage2.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
+    },
+    {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "202"
+        ],
+        "output_index": "205",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
     },
     {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "213"
+          "205"
         ],
-        "output_index": "220",
+        "output_index": "207",
         "constant_names": [
-          "stage2.0.conv1.weight"
+          "stage2.0.conv1.weight",
+          "stage2.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1330,18 +1980,18 @@
         "input_channels": 24,
         "output_channels": 32,
         "input_dimensions": [
-          32,
-          32
+          34,
+          34
         ],
         "output_dimensions": [
           16,
           16
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -1355,6 +2005,10 @@
         "stage2.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -1363,11 +2017,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "220"
+          "207"
         ],
-        "output_index": "222",
+        "output_index": "209",
         "constant_names": [
-          "221"
+          "208"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -1393,7 +2047,7 @@
         "prefix": ""
       },
       "Weights": {
-        "221": {
+        "208": {
           "Present": "Yes",
           "Layout": null
         }
@@ -1404,11 +2058,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "222"
+          "209"
         ],
-        "output_index": "227",
+        "output_index": "214",
         "constant_names": [
-          "223"
+          "210"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -1434,7 +2088,7 @@
         "prefix": ""
       },
       "Weights": {
-        "223": {
+        "210": {
           "Present": "Yes",
           "Layout": null
         }
@@ -1445,9 +2099,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "227"
+          "214"
         ],
-        "output_index": "228",
+        "output_index": "215",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -1475,18 +2129,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "215"
+        ],
+        "output_index": "216",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "228"
+          "216"
         ],
-        "output_index": "229",
+        "output_index": "217",
         "constant_names": [
-          "stage2.0.conv2.weight"
+          "stage2.0.conv2.weight",
+          "stage2.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1525,18 +2226,18 @@
         "input_channels": 32,
         "output_channels": 32,
         "input_dimensions": [
-          16,
-          16
+          18,
+          18
         ],
         "output_dimensions": [
           16,
           16
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -1550,6 +2251,92 @@
         "stage2.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "217"
+        ],
+        "output_index": "219",
+        "constant_names": [
+          "218"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "218": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "204"
+        ],
+        "output_index": "221",
+        "constant_names": [
+          "220"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "220": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -1558,10 +2345,10 @@
       "DORY_node_parameters": {
         "op_type": "Add",
         "input_indexes": [
-          "229",
-          "214"
+          "219",
+          "221"
         ],
-        "output_index": "233",
+        "output_index": "222",
         "constant_names": [],
         "number_of_input_nodes": 2,
         "number_of_input_constants": 0,
@@ -1627,15 +2414,15 @@
       "Weights": {}
     },
     {
-      "name": "Mul",
+      "name": "Div",
       "DORY_node_parameters": {
-        "op_type": "Mul",
+        "op_type": "Div",
         "input_indexes": [
-          "233"
+          "222"
         ],
-        "output_index": "235",
+        "output_index": "227",
         "constant_names": [
-          "234"
+          "407"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -1661,7 +2448,48 @@
         "prefix": ""
       },
       "Weights": {
-        "234": {
+        "407": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "227"
+        ],
+        "output_index": "229",
+        "constant_names": [
+          "228"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "228": {
           "Present": "Yes",
           "Layout": null
         }
@@ -1672,11 +2500,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "235"
+          "229"
         ],
-        "output_index": "240",
+        "output_index": "234",
         "constant_names": [
-          "236"
+          "230"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -1702,7 +2530,7 @@
         "prefix": ""
       },
       "Weights": {
-        "236": {
+        "230": {
           "Present": "Yes",
           "Layout": null
         }
@@ -1713,9 +2541,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "240"
+          "234"
         ],
-        "output_index": "241",
+        "output_index": "235",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -1743,18 +2571,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "235"
+        ],
+        "output_index": "236",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "241"
+          "236"
         ],
-        "output_index": "245",
+        "output_index": "238",
         "constant_names": [
-          "stage2.1.conv1.weight"
+          "stage2.1.conv1.weight",
+          "stage2.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1793,18 +2668,18 @@
         "input_channels": 32,
         "output_channels": 32,
         "input_dimensions": [
-          16,
-          16
+          18,
+          18
         ],
         "output_dimensions": [
           16,
           16
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -1818,6 +2693,10 @@
         "stage2.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -1826,11 +2705,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "245"
+          "238"
         ],
-        "output_index": "247",
+        "output_index": "240",
         "constant_names": [
-          "246"
+          "239"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -1856,7 +2735,7 @@
         "prefix": ""
       },
       "Weights": {
-        "246": {
+        "239": {
           "Present": "Yes",
           "Layout": null
         }
@@ -1867,11 +2746,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "247"
+          "240"
         ],
-        "output_index": "252",
+        "output_index": "245",
         "constant_names": [
-          "248"
+          "241"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -1897,7 +2776,7 @@
         "prefix": ""
       },
       "Weights": {
-        "248": {
+        "241": {
           "Present": "Yes",
           "Layout": null
         }
@@ -1908,9 +2787,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "252"
+          "245"
         ],
-        "output_index": "253",
+        "output_index": "246",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -1938,18 +2817,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "246"
+        ],
+        "output_index": "247",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "253"
+          "247"
         ],
-        "output_index": "254",
+        "output_index": "248",
         "constant_names": [
-          "stage2.1.conv2.weight"
+          "stage2.1.conv2.weight",
+          "stage2.1.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -1988,18 +2914,18 @@
         "input_channels": 32,
         "output_channels": 32,
         "input_dimensions": [
-          16,
-          16
+          18,
+          18
         ],
         "output_dimensions": [
           16,
           16
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -2013,6 +2939,92 @@
         "stage2.1.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage2.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "248"
+        ],
+        "output_index": "250",
+        "constant_names": [
+          "249"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "249": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "235"
+        ],
+        "output_index": "252",
+        "constant_names": [
+          "251"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "251": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -2021,10 +3033,10 @@
       "DORY_node_parameters": {
         "op_type": "Add",
         "input_indexes": [
-          "254",
-          "241"
+          "250",
+          "252"
         ],
-        "output_index": "258",
+        "output_index": "253",
         "constant_names": [],
         "number_of_input_nodes": 2,
         "number_of_input_constants": 0,
@@ -2088,6 +3100,47 @@
         "layout": null
       },
       "Weights": {}
+    },
+    {
+      "name": "Div",
+      "DORY_node_parameters": {
+        "op_type": "Div",
+        "input_indexes": [
+          "253"
+        ],
+        "output_index": "258",
+        "constant_names": [
+          "408"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "408": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
     },
     {
       "name": "Mul",
@@ -2206,18 +3259,65 @@
       "Weights": {}
     },
     {
-      "name": "Convolution",
+      "name": "Pad",
       "DORY_node_parameters": {
-        "op_type": "Conv",
+        "op_type": "Pad",
         "input_indexes": [
           "266"
         ],
         "output_index": "267",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
+      "name": "Convolution",
+      "DORY_node_parameters": {
+        "op_type": "Conv",
+        "input_indexes": [
+          "267"
+        ],
+        "output_index": "268",
         "constant_names": [
-          "stage3.0.proj.0.weight"
+          "stage3.0.proj.0.weight",
+          "stage3.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2254,7 +3354,7 @@
           2
         ],
         "input_channels": 32,
-        "output_channels": 48,
+        "output_channels": 64,
         "input_dimensions": [
           16,
           16
@@ -2281,22 +3381,73 @@
         "stage3.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
+    },
+    {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "266"
+        ],
+        "output_index": "269",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
     },
     {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "266"
+          "269"
         ],
-        "output_index": "273",
+        "output_index": "271",
         "constant_names": [
-          "stage3.0.conv1.weight"
+          "stage3.0.conv1.weight",
+          "stage3.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2333,20 +3484,20 @@
           2
         ],
         "input_channels": 32,
-        "output_channels": 48,
+        "output_channels": 64,
         "input_dimensions": [
-          16,
-          16
+          18,
+          18
         ],
         "output_dimensions": [
           8,
           8
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -2360,6 +3511,10 @@
         "stage3.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -2368,9 +3523,50 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
+          "271"
+        ],
+        "output_index": "273",
+        "constant_names": [
+          "272"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "272": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Div",
+      "DORY_node_parameters": {
+        "op_type": "Div",
+        "input_indexes": [
           "273"
         ],
-        "output_index": "275",
+        "output_index": "278",
         "constant_names": [
           "274"
         ],
@@ -2405,54 +3601,13 @@
       }
     },
     {
-      "name": "Div",
-      "DORY_node_parameters": {
-        "op_type": "Div",
-        "input_indexes": [
-          "275"
-        ],
-        "output_index": "280",
-        "constant_names": [
-          "276"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Weights": {
-        "276": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
       "name": "Clip",
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "280"
+          "278"
         ],
-        "output_index": "281",
+        "output_index": "279",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -2480,18 +3635,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "279"
+        ],
+        "output_index": "280",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "281"
+          "280"
         ],
-        "output_index": "282",
+        "output_index": "281",
         "constant_names": [
-          "stage3.0.conv2.weight"
+          "stage3.0.conv2.weight",
+          "stage3.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2527,21 +3729,21 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
-          8,
-          8
+          10,
+          10
         ],
         "output_dimensions": [
           8,
           8
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -2555,6 +3757,92 @@
         "stage3.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "281"
+        ],
+        "output_index": "283",
+        "constant_names": [
+          "282"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "282": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "268"
+        ],
+        "output_index": "285",
+        "constant_names": [
+          "284"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "284": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -2563,8 +3851,8 @@
       "DORY_node_parameters": {
         "op_type": "Add",
         "input_indexes": [
-          "282",
-          "267"
+          "283",
+          "285"
         ],
         "output_index": "286",
         "constant_names": [],
@@ -2605,8 +3893,8 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
           8,
           8
@@ -2632,15 +3920,15 @@
       "Weights": {}
     },
     {
-      "name": "Mul",
+      "name": "Div",
       "DORY_node_parameters": {
-        "op_type": "Mul",
+        "op_type": "Div",
         "input_indexes": [
           "286"
         ],
-        "output_index": "288",
+        "output_index": "291",
         "constant_names": [
-          "287"
+          "409"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -2666,7 +3954,48 @@
         "prefix": ""
       },
       "Weights": {
-        "287": {
+        "409": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "291"
+        ],
+        "output_index": "293",
+        "constant_names": [
+          "292"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "292": {
           "Present": "Yes",
           "Layout": null
         }
@@ -2677,11 +4006,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "288"
+          "293"
         ],
-        "output_index": "293",
+        "output_index": "298",
         "constant_names": [
-          "289"
+          "294"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -2707,7 +4036,7 @@
         "prefix": ""
       },
       "Weights": {
-        "289": {
+        "294": {
           "Present": "Yes",
           "Layout": null
         }
@@ -2718,9 +4047,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "293"
+          "298"
         ],
-        "output_index": "294",
+        "output_index": "299",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -2748,18 +4077,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "299"
+        ],
+        "output_index": "300",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "294"
+          "300"
         ],
-        "output_index": "298",
+        "output_index": "302",
         "constant_names": [
-          "stage3.1.conv1.weight"
+          "stage3.1.conv1.weight",
+          "stage3.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2795,21 +4171,21 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
-          8,
-          8
+          10,
+          10
         ],
         "output_dimensions": [
           8,
           8
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -2823,6 +4199,10 @@
         "stage3.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -2831,11 +4211,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "298"
+          "302"
         ],
-        "output_index": "300",
+        "output_index": "304",
         "constant_names": [
-          "299"
+          "303"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -2861,7 +4241,7 @@
         "prefix": ""
       },
       "Weights": {
-        "299": {
+        "303": {
           "Present": "Yes",
           "Layout": null
         }
@@ -2872,11 +4252,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "300"
+          "304"
         ],
-        "output_index": "305",
+        "output_index": "309",
         "constant_names": [
-          "301"
+          "305"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -2902,7 +4282,7 @@
         "prefix": ""
       },
       "Weights": {
-        "301": {
+        "305": {
           "Present": "Yes",
           "Layout": null
         }
@@ -2913,9 +4293,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "305"
+          "309"
         ],
-        "output_index": "306",
+        "output_index": "310",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -2943,18 +4323,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "310"
+        ],
+        "output_index": "311",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "306"
+          "311"
         ],
-        "output_index": "307",
+        "output_index": "312",
         "constant_names": [
-          "stage3.1.conv2.weight"
+          "stage3.1.conv2.weight",
+          "stage3.1.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -2990,21 +4417,21 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
-          8,
-          8
+          10,
+          10
         ],
         "output_dimensions": [
           8,
           8
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -3018,6 +4445,92 @@
         "stage3.1.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage3.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "312"
+        ],
+        "output_index": "314",
+        "constant_names": [
+          "313"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "313": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "299"
+        ],
+        "output_index": "316",
+        "constant_names": [
+          "315"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "315": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -3026,10 +4539,10 @@
       "DORY_node_parameters": {
         "op_type": "Add",
         "input_indexes": [
-          "307",
-          "294"
+          "314",
+          "316"
         ],
-        "output_index": "311",
+        "output_index": "317",
         "constant_names": [],
         "number_of_input_nodes": 2,
         "number_of_input_constants": 0,
@@ -3068,8 +4581,8 @@
           1,
           1
         ],
-        "input_channels": 48,
-        "output_channels": 48,
+        "input_channels": 64,
+        "output_channels": 64,
         "input_dimensions": [
           8,
           8
@@ -3095,15 +4608,15 @@
       "Weights": {}
     },
     {
-      "name": "Mul",
+      "name": "Div",
       "DORY_node_parameters": {
-        "op_type": "Mul",
+        "op_type": "Div",
         "input_indexes": [
-          "311"
+          "317"
         ],
-        "output_index": "313",
+        "output_index": "322",
         "constant_names": [
-          "312"
+          "410"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -3129,7 +4642,48 @@
         "prefix": ""
       },
       "Weights": {
-        "312": {
+        "410": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "322"
+        ],
+        "output_index": "324",
+        "constant_names": [
+          "323"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "323": {
           "Present": "Yes",
           "Layout": null
         }
@@ -3140,11 +4694,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "313"
+          "324"
         ],
-        "output_index": "318",
+        "output_index": "329",
         "constant_names": [
-          "314"
+          "325"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -3170,7 +4724,7 @@
         "prefix": ""
       },
       "Weights": {
-        "314": {
+        "325": {
           "Present": "Yes",
           "Layout": null
         }
@@ -3181,9 +4735,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "318"
+          "329"
         ],
-        "output_index": "319",
+        "output_index": "330",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -3211,18 +4765,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "330"
+        ],
+        "output_index": "331",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "319"
+          "331"
         ],
-        "output_index": "320",
+        "output_index": "332",
         "constant_names": [
-          "stage4.0.proj.0.weight"
+          "stage4.0.proj.0.weight",
+          "stage4.0.proj.0.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -3255,18 +4856,18 @@
         ],
         "group": 1,
         "strides": [
-          1,
-          1
+          2,
+          2
         ],
-        "input_channels": 48,
-        "output_channels": 64,
+        "input_channels": 64,
+        "output_channels": 80,
         "input_dimensions": [
           8,
           8
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           0,
@@ -3286,22 +4887,73 @@
         "stage4.0.proj.0.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.0.proj.0.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
+    },
+    {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "330"
+        ],
+        "output_index": "333",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
     },
     {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "319"
+          "333"
         ],
-        "output_index": "326",
+        "output_index": "335",
         "constant_names": [
-          "stage4.0.conv1.weight"
+          "stage4.0.conv1.weight",
+          "stage4.0.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -3334,24 +4986,24 @@
         ],
         "group": 1,
         "strides": [
-          1,
-          1
+          2,
+          2
         ],
-        "input_channels": 48,
-        "output_channels": 64,
+        "input_channels": 64,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          10,
+          10
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -3365,6 +5017,10 @@
         "stage4.0.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.0.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -3373,11 +5029,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "326"
+          "335"
         ],
-        "output_index": "328",
+        "output_index": "337",
         "constant_names": [
-          "327"
+          "336"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -3403,7 +5059,7 @@
         "prefix": ""
       },
       "Weights": {
-        "327": {
+        "336": {
           "Present": "Yes",
           "Layout": null
         }
@@ -3414,11 +5070,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "328"
+          "337"
         ],
-        "output_index": "333",
+        "output_index": "342",
         "constant_names": [
-          "329"
+          "338"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -3444,7 +5100,7 @@
         "prefix": ""
       },
       "Weights": {
-        "329": {
+        "338": {
           "Present": "Yes",
           "Layout": null
         }
@@ -3455,9 +5111,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "333"
+          "342"
         ],
-        "output_index": "334",
+        "output_index": "343",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -3485,18 +5141,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "343"
+        ],
+        "output_index": "344",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "334"
+          "344"
         ],
-        "output_index": "335",
+        "output_index": "345",
         "constant_names": [
-          "stage4.0.conv2.weight"
+          "stage4.0.conv2.weight",
+          "stage4.0.conv2.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -3532,21 +5235,21 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          6,
+          6
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -3560,6 +5263,92 @@
         "stage4.0.conv2.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.0.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "345"
+        ],
+        "output_index": "347",
+        "constant_names": [
+          "346"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "346": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "332"
+        ],
+        "output_index": "349",
+        "constant_names": [
+          "348"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "348": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -3568,10 +5357,10 @@
       "DORY_node_parameters": {
         "op_type": "Add",
         "input_indexes": [
-          "335",
-          "320"
+          "347",
+          "349"
         ],
-        "output_index": "339",
+        "output_index": "350",
         "constant_names": [],
         "number_of_input_nodes": 2,
         "number_of_input_constants": 0,
@@ -3610,15 +5399,15 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
           0,
@@ -3637,15 +5426,15 @@
       "Weights": {}
     },
     {
-      "name": "Mul",
+      "name": "Div",
       "DORY_node_parameters": {
-        "op_type": "Mul",
+        "op_type": "Div",
         "input_indexes": [
-          "339"
+          "350"
         ],
-        "output_index": "341",
+        "output_index": "355",
         "constant_names": [
-          "340"
+          "411"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -3671,7 +5460,48 @@
         "prefix": ""
       },
       "Weights": {
-        "340": {
+        "411": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "355"
+        ],
+        "output_index": "357",
+        "constant_names": [
+          "356"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "356": {
           "Present": "Yes",
           "Layout": null
         }
@@ -3682,11 +5512,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "341"
+          "357"
         ],
-        "output_index": "346",
+        "output_index": "362",
         "constant_names": [
-          "342"
+          "358"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -3712,7 +5542,7 @@
         "prefix": ""
       },
       "Weights": {
-        "342": {
+        "358": {
           "Present": "Yes",
           "Layout": null
         }
@@ -3723,9 +5553,9 @@
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "346"
+          "362"
         ],
-        "output_index": "347",
+        "output_index": "363",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -3753,18 +5583,65 @@
       "Weights": {}
     },
     {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "363"
+        ],
+        "output_index": "364",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
       "name": "Convolution",
       "DORY_node_parameters": {
         "op_type": "Conv",
         "input_indexes": [
-          "347"
+          "364"
         ],
-        "output_index": "351",
+        "output_index": "366",
         "constant_names": [
-          "stage4.1.conv1.weight"
+          "stage4.1.conv1.weight",
+          "stage4.1.conv1.bias"
         ],
         "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
+        "number_of_input_constants": 2,
         "branch_out": null,
         "branch_in": null,
         "branch_change": null,
@@ -3800,21 +5677,21 @@
           1,
           1
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          6,
+          6
         ],
         "output_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "pads": [
-          1,
-          1,
-          1,
-          1
+          0,
+          0,
+          0,
+          0
         ],
         "MACs": null,
         "weight_memory": null,
@@ -3828,6 +5705,10 @@
         "stage4.1.conv1.weight": {
           "Present": "Yes",
           "Layout": null
+        },
+        "stage4.1.conv1.bias": {
+          "Present": "Yes",
+          "Layout": null
         }
       }
     },
@@ -3835,319 +5716,10 @@
       "name": "Mul",
       "DORY_node_parameters": {
         "op_type": "Mul",
-        "input_indexes": [
-          "351"
-        ],
-        "output_index": "353",
-        "constant_names": [
-          "352"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Weights": {
-        "352": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
-      "name": "Div",
-      "DORY_node_parameters": {
-        "op_type": "Div",
-        "input_indexes": [
-          "353"
-        ],
-        "output_index": "358",
-        "constant_names": [
-          "354"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Weights": {
-        "354": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
-      "name": "Clip",
-      "DORY_node_parameters": {
-        "op_type": "Clip",
-        "input_indexes": [
-          "358"
-        ],
-        "output_index": "359",
-        "constant_names": [],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 0,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": 0,
-        "max": 255,
-        "prefix": ""
-      },
-      "Weights": {}
-    },
-    {
-      "name": "Convolution",
-      "DORY_node_parameters": {
-        "op_type": "Conv",
-        "input_indexes": [
-          "359"
-        ],
-        "output_index": "360",
-        "constant_names": [
-          "stage4.1.conv2.weight"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Layer_node_parameters": {
-        "kernel_shape": [
-          3,
-          3
-        ],
-        "dilations": [
-          1,
-          1
-        ],
-        "group": 1,
-        "strides": [
-          1,
-          1
-        ],
-        "input_channels": 64,
-        "output_channels": 64,
-        "input_dimensions": [
-          8,
-          8
-        ],
-        "output_dimensions": [
-          8,
-          8
-        ],
-        "pads": [
-          1,
-          1,
-          1,
-          1
-        ],
-        "MACs": null,
-        "weight_memory": null,
-        "bias_memory": null,
-        "constants_memory": null,
-        "input_activation_memory": null,
-        "output_activation_memory": null,
-        "layout": null
-      },
-      "Weights": {
-        "stage4.1.conv2.weight": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
-      "name": "Addition",
-      "DORY_node_parameters": {
-        "op_type": "Add",
-        "input_indexes": [
-          "360",
-          "347"
-        ],
-        "output_index": "364",
-        "constant_names": [],
-        "number_of_input_nodes": 2,
-        "number_of_input_constants": 0,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Layer_node_parameters": {
-        "kernel_shape": [
-          1,
-          1
-        ],
-        "dilations": [
-          1,
-          1
-        ],
-        "group": 1,
-        "strides": [
-          1,
-          1
-        ],
-        "input_channels": 64,
-        "output_channels": 64,
-        "input_dimensions": [
-          8,
-          8
-        ],
-        "output_dimensions": [
-          8,
-          8
-        ],
-        "pads": [
-          0,
-          0,
-          0,
-          0
-        ],
-        "MACs": null,
-        "weight_memory": null,
-        "bias_memory": null,
-        "constants_memory": null,
-        "input_activation_memory": null,
-        "output_activation_memory": null,
-        "layout": null
-      },
-      "Weights": {}
-    },
-    {
-      "name": "Mul",
-      "DORY_node_parameters": {
-        "op_type": "Mul",
-        "input_indexes": [
-          "364"
-        ],
-        "output_index": "366",
-        "constant_names": [
-          "365"
-        ],
-        "number_of_input_nodes": 1,
-        "number_of_input_constants": 1,
-        "branch_out": null,
-        "branch_in": null,
-        "branch_change": null,
-        "branch_last": null,
-        "constant_bits": null,
-        "weight_bits": null,
-        "bias_bits": null,
-        "output_activation_bits": null,
-        "input_activation_bits": null,
-        "second_input_activation_bits": null,
-        "weight_type": null,
-        "constant_type": null,
-        "output_activation_type": null,
-        "input_activation_type": null,
-        "second_input_activation_type": null,
-        "n_test_inputs": null,
-        "conv1d": null,
-        "min": null,
-        "max": null,
-        "prefix": ""
-      },
-      "Weights": {
-        "365": {
-          "Present": "Yes",
-          "Layout": null
-        }
-      }
-    },
-    {
-      "name": "Div",
-      "DORY_node_parameters": {
-        "op_type": "Div",
         "input_indexes": [
           "366"
         ],
-        "output_index": "371",
+        "output_index": "368",
         "constant_names": [
           "367"
         ],
@@ -4182,13 +5754,496 @@
       }
     },
     {
+      "name": "Div",
+      "DORY_node_parameters": {
+        "op_type": "Div",
+        "input_indexes": [
+          "368"
+        ],
+        "output_index": "373",
+        "constant_names": [
+          "369"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "369": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
       "name": "Clip",
       "DORY_node_parameters": {
         "op_type": "Clip",
         "input_indexes": [
-          "371"
+          "373"
         ],
-        "output_index": "372",
+        "output_index": "374",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": 0,
+        "max": 255,
+        "prefix": ""
+      },
+      "Weights": {}
+    },
+    {
+      "name": "Pad",
+      "DORY_node_parameters": {
+        "op_type": "Pad",
+        "input_indexes": [
+          "374"
+        ],
+        "output_index": "375",
+        "constant_names": [],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": "",
+        "mode": 0,
+        "pads": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ],
+        "value": 0
+      },
+      "Weights": {}
+    },
+    {
+      "name": "Convolution",
+      "DORY_node_parameters": {
+        "op_type": "Conv",
+        "input_indexes": [
+          "375"
+        ],
+        "output_index": "376",
+        "constant_names": [
+          "stage4.1.conv2.weight",
+          "stage4.1.conv2.bias"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 2,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Layer_node_parameters": {
+        "kernel_shape": [
+          3,
+          3
+        ],
+        "dilations": [
+          1,
+          1
+        ],
+        "group": 1,
+        "strides": [
+          1,
+          1
+        ],
+        "input_channels": 80,
+        "output_channels": 80,
+        "input_dimensions": [
+          6,
+          6
+        ],
+        "output_dimensions": [
+          4,
+          4
+        ],
+        "pads": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "MACs": null,
+        "weight_memory": null,
+        "bias_memory": null,
+        "constants_memory": null,
+        "input_activation_memory": null,
+        "output_activation_memory": null,
+        "layout": null
+      },
+      "Weights": {
+        "stage4.1.conv2.weight": {
+          "Present": "Yes",
+          "Layout": null
+        },
+        "stage4.1.conv2.bias": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "376"
+        ],
+        "output_index": "378",
+        "constant_names": [
+          "377"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "377": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "363"
+        ],
+        "output_index": "380",
+        "constant_names": [
+          "379"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "379": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Addition",
+      "DORY_node_parameters": {
+        "op_type": "Add",
+        "input_indexes": [
+          "378",
+          "380"
+        ],
+        "output_index": "381",
+        "constant_names": [],
+        "number_of_input_nodes": 2,
+        "number_of_input_constants": 0,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Layer_node_parameters": {
+        "kernel_shape": [
+          1,
+          1
+        ],
+        "dilations": [
+          1,
+          1
+        ],
+        "group": 1,
+        "strides": [
+          1,
+          1
+        ],
+        "input_channels": 80,
+        "output_channels": 80,
+        "input_dimensions": [
+          4,
+          4
+        ],
+        "output_dimensions": [
+          4,
+          4
+        ],
+        "pads": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "MACs": null,
+        "weight_memory": null,
+        "bias_memory": null,
+        "constants_memory": null,
+        "input_activation_memory": null,
+        "output_activation_memory": null,
+        "layout": null
+      },
+      "Weights": {}
+    },
+    {
+      "name": "Div",
+      "DORY_node_parameters": {
+        "op_type": "Div",
+        "input_indexes": [
+          "381"
+        ],
+        "output_index": "386",
+        "constant_names": [
+          "412"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "412": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Mul",
+      "DORY_node_parameters": {
+        "op_type": "Mul",
+        "input_indexes": [
+          "386"
+        ],
+        "output_index": "388",
+        "constant_names": [
+          "387"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "387": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Div",
+      "DORY_node_parameters": {
+        "op_type": "Div",
+        "input_indexes": [
+          "388"
+        ],
+        "output_index": "393",
+        "constant_names": [
+          "389"
+        ],
+        "number_of_input_nodes": 1,
+        "number_of_input_constants": 1,
+        "branch_out": null,
+        "branch_in": null,
+        "branch_change": null,
+        "branch_last": null,
+        "constant_bits": null,
+        "weight_bits": null,
+        "bias_bits": null,
+        "output_activation_bits": null,
+        "input_activation_bits": null,
+        "second_input_activation_bits": null,
+        "weight_type": null,
+        "constant_type": null,
+        "output_activation_type": null,
+        "input_activation_type": null,
+        "second_input_activation_type": null,
+        "n_test_inputs": null,
+        "conv1d": null,
+        "min": null,
+        "max": null,
+        "prefix": ""
+      },
+      "Weights": {
+        "389": {
+          "Present": "Yes",
+          "Layout": null
+        }
+      }
+    },
+    {
+      "name": "Clip",
+      "DORY_node_parameters": {
+        "op_type": "Clip",
+        "input_indexes": [
+          "393"
+        ],
+        "output_index": "394",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -4220,9 +6275,9 @@
       "DORY_node_parameters": {
         "op_type": "AveragePool",
         "input_indexes": [
-          "372"
+          "394"
         ],
-        "output_index": "373",
+        "output_index": "395",
         "constant_names": [],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 0,
@@ -4249,8 +6304,8 @@
       },
       "Layer_node_parameters": {
         "kernel_shape": [
-          8,
-          8
+          4,
+          4
         ],
         "dilations": [
           1,
@@ -4258,14 +6313,14 @@
         ],
         "group": 1,
         "strides": [
-          8,
-          8
+          4,
+          4
         ],
-        "input_channels": 64,
-        "output_channels": 64,
+        "input_channels": 80,
+        "output_channels": 80,
         "input_dimensions": [
-          8,
-          8
+          4,
+          4
         ],
         "output_dimensions": [
           1,
@@ -4292,11 +6347,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "373"
+          "395"
         ],
-        "output_index": "375",
+        "output_index": "397",
         "constant_names": [
-          "374"
+          "396"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -4322,7 +6377,7 @@
         "prefix": ""
       },
       "Weights": {
-        "374": {
+        "396": {
           "Present": "Yes",
           "Layout": null
         }
@@ -4333,11 +6388,11 @@
       "DORY_node_parameters": {
         "op_type": "Mul",
         "input_indexes": [
-          "375"
+          "397"
         ],
-        "output_index": "377",
+        "output_index": "399",
         "constant_names": [
-          "376"
+          "398"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -4363,7 +6418,7 @@
         "prefix": ""
       },
       "Weights": {
-        "376": {
+        "398": {
           "Present": "Yes",
           "Layout": null
         }
@@ -4374,11 +6429,11 @@
       "DORY_node_parameters": {
         "op_type": "Div",
         "input_indexes": [
-          "377"
+          "399"
         ],
-        "output_index": "381",
+        "output_index": "403",
         "constant_names": [
-          "378"
+          "400"
         ],
         "number_of_input_nodes": 1,
         "number_of_input_constants": 1,
@@ -4404,7 +6459,7 @@
         "prefix": ""
       },
       "Weights": {
-        "378": {
+        "400": {
           "Present": "Yes",
           "Layout": null
         }
@@ -4415,9 +6470,9 @@
       "DORY_node_parameters": {
         "op_type": "Gemm",
         "input_indexes": [
-          "381"
+          "403"
         ],
-        "output_index": "382",
+        "output_index": "404",
         "constant_names": [
           "head.weight",
           "head.bias"
@@ -4459,7 +6514,7 @@
           1,
           1
         ],
-        "input_channels": 64,
+        "input_channels": 80,
         "output_channels": 3,
         "input_dimensions": [
           1,

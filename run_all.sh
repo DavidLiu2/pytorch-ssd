@@ -21,9 +21,9 @@ NEMO_REQ="${PROJECT_ROOT}/requirements_nemoenv.txt"
 MODEL_TYPE="${MODEL_TYPE:-hybrid_follow}"
 if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   DEFAULT_CKPT="training/hybrid_follow/hybrid_follow_best_visibility.pth"
-  DEFAULT_OUT_ONNX="export/hybrid_follow/hybrid_follow_fp.onnx"
-  DEFAULT_SIM_ONNX="export/hybrid_follow/hybrid_follow_fp_sim.onnx"
-  DEFAULT_STAGE="fp"
+  DEFAULT_OUT_ONNX="export/hybrid_follow/hybrid_follow_quant.onnx"
+  DEFAULT_SIM_ONNX="export/hybrid_follow/hybrid_follow_quant_sim.onnx"
+  DEFAULT_STAGE="id"
   DEFAULT_STAGE_REPORT="export/hybrid_follow/hybrid_follow_final_stage.txt"
   DEFAULT_INPUT_HEIGHT="128"
   DEFAULT_INPUT_WIDTH="128"
@@ -36,7 +36,9 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   DEFAULT_DORY_NO_MIN_ONNX="export/hybrid_follow/hybrid_follow_nomin.onnx"
   DEFAULT_DORY_WEIGHTS_TXT_DIR="export/hybrid_follow/weights_txt"
   DEFAULT_DORY_ARTIFACT_MANIFEST="export/hybrid_follow/nemo_dory_artifacts.json"
-  DEFAULT_RUN_DORY="0"
+  DEFAULT_DORY_APP_DIR="${PROJECT_ROOT}/../crazyflie_ssd/generated"
+  DEFAULT_RUN_DORY="1"
+  DEFAULT_SYNC_TO_CRAZYFLIE="1"
 else
   DEFAULT_CKPT="training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth"
   DEFAULT_OUT_ONNX="export/ssd_mbv2_nemo_id.onnx"
@@ -54,7 +56,9 @@ else
   DEFAULT_DORY_NO_MIN_ONNX="export/ssd_mbv2_nomin.onnx"
   DEFAULT_DORY_WEIGHTS_TXT_DIR="export/weights_txt"
   DEFAULT_DORY_ARTIFACT_MANIFEST="export/nemo_dory_artifacts.json"
+  DEFAULT_DORY_APP_DIR="${PROJECT_ROOT}/application"
   DEFAULT_RUN_DORY="1"
+  DEFAULT_SYNC_TO_CRAZYFLIE="0"
 fi
 
 CKPT="${CKPT:-${DEFAULT_CKPT}}"
@@ -71,6 +75,9 @@ INPUT_CHANNELS="${INPUT_CHANNELS:-${DEFAULT_INPUT_CHANNELS}}"
 CALIB_DIR="${CALIB_DIR:-${DEFAULT_CALIB_DIR}}"
 CALIB_BATCHES="${CALIB_BATCHES:-128}"
 RUN_DORY="${RUN_DORY:-${DEFAULT_RUN_DORY}}"
+SYNC_TO_CRAZYFLIE="${SYNC_TO_CRAZYFLIE:-${DEFAULT_SYNC_TO_CRAZYFLIE}}"
+GENERATE_DORY_ARTIFACTS="${GENERATE_DORY_ARTIFACTS:-1}"
+STRICT_DORY_ARTIFACTS="${STRICT_DORY_ARTIFACTS:-0}"
 if [ "${INPUT_CHANNELS}" = "1" ]; then
   DEFAULT_MEAN="0.5"
   DEFAULT_STD="0.5"
@@ -94,10 +101,11 @@ DORY_NO_TRANSPOSE_ONNX="${DORY_NO_TRANSPOSE_ONNX:-${DEFAULT_DORY_NO_TRANSPOSE_ON
 DORY_NO_MIN_ONNX="${DORY_NO_MIN_ONNX:-${DEFAULT_DORY_NO_MIN_ONNX}}"
 DORY_FRONTEND="${DORY_FRONTEND:-NEMO}"
 DORY_TARGET="${DORY_TARGET:-PULP.GAP8}"
-DORY_APP_DIR="${DORY_APP_DIR:-${PROJECT_ROOT}/../dory_examples/application}"
+DORY_APP_DIR="${DORY_APP_DIR:-${DEFAULT_DORY_APP_DIR}}"
 DORY_PREFIX="${DORY_PREFIX:-}"
 DORY_WEIGHTS_TXT_DIR="${DORY_WEIGHTS_TXT_DIR:-${DEFAULT_DORY_WEIGHTS_TXT_DIR}}"
 DORY_ARTIFACT_MANIFEST="${DORY_ARTIFACT_MANIFEST:-${DEFAULT_DORY_ARTIFACT_MANIFEST}}"
+CRAZYFLIE_APP_DIR="${CRAZYFLIE_APP_DIR:-${PROJECT_ROOT}/../crazyflie_ssd}"
 
 ########################################
 # HELPERS
@@ -256,6 +264,81 @@ PY
   printf '%s\n' "${bootstrap_abs}"
 }
 
+dir_has_image_files() {
+  local dir_path="$1"
+  [ -d "${dir_path}" ] || return 1
+  find "${dir_path}" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) -print -quit 2>/dev/null | grep -q .
+}
+
+select_hybrid_follow_calib_dir() {
+  local candidate
+
+  if [ -d "${PROJECT_ROOT}/training/hybrid_follow" ]; then
+    for candidate in $(find "${PROJECT_ROOT}/training/hybrid_follow" -maxdepth 1 -type d -name 'eval_epoch_*' | sort -r); do
+      if dir_has_image_files "${candidate}"; then
+        printf '%s\n' "${candidate}"
+        return 0
+      fi
+    done
+  fi
+
+  if dir_has_image_files "${PROJECT_ROOT}/data/rep_images"; then
+    printf '%s\n' "${PROJECT_ROOT}/data/rep_images"
+    return 0
+  fi
+
+  return 1
+}
+
+sync_dir_clean() {
+  local src_dir="$1"
+  local dst_dir="$2"
+  local label="$3"
+
+  if [ ! -d "${src_dir}" ]; then
+    echo "ERROR: missing ${label} source directory: ${src_dir}"
+    exit 1
+  fi
+
+  mkdir -p "${dst_dir}"
+  find "${dst_dir}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+  cp -a "${src_dir}/." "${dst_dir}/"
+  echo "[run_all] Synced ${label}: ${src_dir} -> ${dst_dir}"
+}
+
+sync_file() {
+  local src_file="$1"
+  local dst_file="$2"
+  local label="$3"
+
+  if [ ! -f "${src_file}" ]; then
+    echo "ERROR: missing ${label} source file: ${src_file}"
+    exit 1
+  fi
+
+  mkdir -p "$(dirname "${dst_file}")"
+  cp "${src_file}" "${dst_file}"
+  echo "[run_all] Synced ${label}: ${src_file} -> ${dst_file}"
+}
+
+sync_crazyflie_bundle() {
+  local generated_dir="$1"
+  local crazyflie_root="$2"
+  local crazyflie_generated_dir="${crazyflie_root}/generated"
+
+  if [ ! -d "${crazyflie_root}" ]; then
+    echo "WARNING: crazyflie app directory not found; skipping sync: ${crazyflie_root}"
+    return 0
+  fi
+
+  if [ "${generated_dir}" != "${crazyflie_generated_dir}" ]; then
+    sync_dir_clean "${generated_dir}" "${crazyflie_generated_dir}" "crazyflie generated bundle"
+  fi
+
+  sync_dir_clean "${crazyflie_generated_dir}/hex" "${crazyflie_root}/hex" "crazyflie readfs hex"
+  sync_file "${crazyflie_generated_dir}/vars.mk" "${crazyflie_root}/vars.mk" "crazyflie vars.mk"
+}
+
 ########################################
 # ENSURE ENVS EXIST
 ########################################
@@ -321,6 +404,15 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
     CKPT="$(bootstrap_hybrid_follow_ckpt "$NEMO_PY")"
     echo "[run_all] Bootstrap checkpoint created: ${CKPT}"
   fi
+
+  if [ -z "${CALIB_DIR}" ]; then
+    if HYBRID_CALIB_DIR="$(select_hybrid_follow_calib_dir)"; then
+      CALIB_DIR="${HYBRID_CALIB_DIR}"
+      echo "[run_all] Using hybrid_follow calibration dir: ${CALIB_DIR}"
+    else
+      echo "[run_all] No hybrid_follow calibration images found; export will fall back to random calibration."
+    fi
+  fi
 fi
 
 NEMO_CMD=(
@@ -336,7 +428,6 @@ NEMO_CMD=(
   --bits "${BITS}"
   --eps-in "${EPS_IN}"
   --calib-batches "${CALIB_BATCHES}"
-  --strict-stage
 )
 
 if [ "${STRICT_STAGE}" = "1" ]; then
@@ -395,9 +486,8 @@ fi
 if [ "${RUN_DORY}" != "1" ]; then
   echo "=== DORY/codegen skipped (RUN_DORY=${RUN_DORY}) ==="
   if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
-    echo "[run_all] hybrid_follow currently defaults to straight FP export."
-    echo "[run_all] SSD-specific cleanup passes are not needed for the FP graph."
-    echo "[run_all] Revisit strip_fake_quant and DORY cleanup after QD/ID export is enabled."
+    echo "[run_all] hybrid_follow uses quantized ID export with a single 3-output head for DORY."
+    echo "[run_all] Re-run with RUN_DORY=1 to regenerate and sync crazyflie_ssd deployment artifacts."
   fi
   echo "[run_all] Final stage: ${FINAL_STAGE^^}"
   echo "[run_all] Exported ONNX: ${OUT_ONNX}"
@@ -487,6 +577,7 @@ DORY_CONFIG_GEN_ABS="$(abspath_with_python "$DORY_PY" "${DORY_CONFIG_GEN}")"
 DORY_APP_DIR_ABS="$(abspath_with_python "$DORY_PY" "${DORY_APP_DIR}")"
 DORY_WEIGHTS_TXT_DIR_ABS="$(abspath_with_python "$DORY_PY" "${DORY_WEIGHTS_TXT_DIR}")"
 DORY_ARTIFACT_MANIFEST_ABS="$(abspath_with_python "$DORY_PY" "${DORY_ARTIFACT_MANIFEST}")"
+CRAZYFLIE_APP_DIR_ABS="$(abspath_with_python "$DORY_PY" "${CRAZYFLIE_APP_DIR}")"
 
 mkdir -p "$(dirname "${DORY_CONFIG_GEN}")"
 mkdir -p "${DORY_APP_DIR}"
@@ -525,16 +616,26 @@ mkdir -p "${DORY_WEIGHTS_TXT_DIR}"
 mkdir -p "$(dirname "${DORY_ARTIFACT_MANIFEST}")"
 
 echo "[run_all] Generating DORY input/output, golden activations, and weight txt files..."
-"$DORY_PY" "${PROJECT_ROOT}/export/generate_dory_io_artifacts.py" \
-  --onnx "${DORY_ONNX_ABS}" \
-  --config "${DORY_CONFIG_GEN_ABS}" \
-  --frontend "${DORY_FRONTEND}" \
-  --target "${DORY_TARGET}" \
-  --prefix "${DORY_PREFIX}" \
-  --fallback-height "${INPUT_HEIGHT}" \
-  --fallback-width "${INPUT_WIDTH}" \
-  --weights-dir "${DORY_WEIGHTS_TXT_DIR_ABS}" \
-  --manifest "${DORY_ARTIFACT_MANIFEST_ABS}"
+if [ "${GENERATE_DORY_ARTIFACTS}" = "1" ]; then
+  if ! "$DORY_PY" "${PROJECT_ROOT}/export/generate_dory_io_artifacts.py" \
+    --onnx "${DORY_ONNX_ABS}" \
+    --config "${DORY_CONFIG_GEN_ABS}" \
+    --frontend "${DORY_FRONTEND}" \
+    --target "${DORY_TARGET}" \
+    --prefix "${DORY_PREFIX}" \
+    --fallback-height "${INPUT_HEIGHT}" \
+    --fallback-width "${INPUT_WIDTH}" \
+    --weights-dir "${DORY_WEIGHTS_TXT_DIR_ABS}" \
+    --manifest "${DORY_ARTIFACT_MANIFEST_ABS}"; then
+    if [ "${STRICT_DORY_ARTIFACTS}" = "1" ]; then
+      echo "ERROR: DORY artifact generation failed and STRICT_DORY_ARTIFACTS=1."
+      exit 1
+    fi
+    echo "[run_all] WARNING: DORY artifact generation failed; continuing to network_generate."
+  fi
+else
+  echo "[run_all] Skipping DORY artifact generation (GENERATE_DORY_ARTIFACTS=${GENERATE_DORY_ARTIFACTS})."
+fi
 
 DORY_CMD=(
   network_generate.py
@@ -562,6 +663,10 @@ if [ ! -f "${DORY_NETWORK_C}" ] || [ ! -f "${DORY_NETWORK_H}" ]; then
   exit 1
 fi
 
+if [ "${SYNC_TO_CRAZYFLIE}" = "1" ]; then
+  sync_crazyflie_bundle "${DORY_APP_DIR_ABS}" "${CRAZYFLIE_APP_DIR_ABS}"
+fi
+
 echo "======================================================="
 echo " DONE: NEMO export + ONNX simplification + DORY export "
 echo "======================================================="
@@ -574,3 +679,6 @@ echo "DORY config: ${DORY_CONFIG_GEN_ABS}"
 echo "DORY application dir: ${DORY_APP_DIR_ABS}"
 echo "DORY weight txt dir: ${DORY_WEIGHTS_TXT_DIR_ABS}"
 echo "DORY artifact manifest: ${DORY_ARTIFACT_MANIFEST_ABS}"
+if [ "${SYNC_TO_CRAZYFLIE}" = "1" ]; then
+  echo "crazyflie sync dir: ${CRAZYFLIE_APP_DIR_ABS}"
+fi

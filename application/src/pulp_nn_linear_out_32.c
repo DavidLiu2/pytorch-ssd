@@ -27,7 +27,7 @@
 
 void pulp_nn_linear_out_32(
   uint8_t *pInBuffer,
-  int8_t *bias,
+  const int32_t *bias,
   int32_t *pOutBuffer,
   int8_t *pWeights,
   uint16_t dim_vec,
@@ -51,7 +51,7 @@ void pulp_nn_linear_out_32(
 
     if (bias != NULL)
     {
-      sum = *(int32_t *)(bias + 4*i);
+      sum = bias[i];
     }
 
     uint8_t *pA = pInBuffer;
