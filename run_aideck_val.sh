@@ -24,13 +24,22 @@ case "$(uname -s)" in
           VERIFY_AFTER_RUN
           EXPECTED_TENSOR_LABEL
           EXPECTED_TENSOR_COUNT
+          RUN_STAGE_DRIFT_DEBUG
           HOST_REPO_ROOT
           HOST_APP_DIR
           HOST_INPUT_HEX
           HOST_VALIDATION_MAIN
           HOST_EXPECTED_OUTPUT
           HOST_RUN_LOG_COPY
+          HOST_FINAL_TENSOR_JSON
+          HOST_STAGE_DRIFT_IMAGE
+          HOST_STAGE_DRIFT_CKPT
+          HOST_STAGE_DRIFT_ONNX
+          HOST_STAGE_DRIFT_OUTPUT_DIR
           COMPARE_SCRIPT
+          STAGE_DRIFT_SCRIPT
+          STAGE_DRIFT_PYTHON
+          STAGE_DRIFT_NEMO_STAGE
           AUTO_REFRESH_APP
           MODEL_SENTINEL
           MODEL_MANIFEST
@@ -88,6 +97,7 @@ USE_VALIDATION_MAIN="${USE_VALIDATION_MAIN:-1}"
 VERIFY_AFTER_RUN="${VERIFY_AFTER_RUN:-1}"
 EXPECTED_TENSOR_LABEL="${EXPECTED_TENSOR_LABEL:-final}"
 EXPECTED_TENSOR_COUNT="${EXPECTED_TENSOR_COUNT:-3}"
+RUN_STAGE_DRIFT_DEBUG="${RUN_STAGE_DRIFT_DEBUG:-1}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOST_REPO_ROOT="${HOST_REPO_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
@@ -97,7 +107,15 @@ HOST_INPUT_HEX="${HOST_INPUT_HEX:-}"
 HOST_VALIDATION_MAIN="${HOST_VALIDATION_MAIN:-$HOST_REPO_ROOT/pytorch_ssd/aideck_val_main_hybrid.c}"
 HOST_EXPECTED_OUTPUT="${HOST_EXPECTED_OUTPUT:-$HOST_REPO_ROOT/pytorch_ssd/export/hybrid_follow/output.txt}"
 HOST_RUN_LOG_COPY="${HOST_RUN_LOG_COPY:-}"
+HOST_FINAL_TENSOR_JSON="${HOST_FINAL_TENSOR_JSON:-}"
+HOST_STAGE_DRIFT_IMAGE="${HOST_STAGE_DRIFT_IMAGE:-}"
+HOST_STAGE_DRIFT_CKPT="${HOST_STAGE_DRIFT_CKPT:-$HOST_REPO_ROOT/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth}"
+HOST_STAGE_DRIFT_ONNX="${HOST_STAGE_DRIFT_ONNX:-$HOST_REPO_ROOT/pytorch_ssd/export/hybrid_follow/hybrid_follow_dory.onnx}"
+HOST_STAGE_DRIFT_OUTPUT_DIR="${HOST_STAGE_DRIFT_OUTPUT_DIR:-}"
 COMPARE_SCRIPT="${COMPARE_SCRIPT:-$HOST_REPO_ROOT/pytorch_ssd/export/compare_gap8_final_tensor.py}"
+STAGE_DRIFT_SCRIPT="${STAGE_DRIFT_SCRIPT:-$HOST_REPO_ROOT/pytorch_ssd/export/compare_hybrid_follow_stages.py}"
+STAGE_DRIFT_PYTHON="${STAGE_DRIFT_PYTHON:-}"
+STAGE_DRIFT_NEMO_STAGE="${STAGE_DRIFT_NEMO_STAGE:-auto}"
 AUTO_REFRESH_APP="${AUTO_REFRESH_APP:-1}"
 MODEL_SENTINEL="${MODEL_SENTINEL:-$HOST_REPO_ROOT/pytorch_ssd/export/hybrid_follow/hybrid_follow_nomin.onnx}"
 MODEL_MANIFEST="${MODEL_MANIFEST:-$HOST_REPO_ROOT/pytorch_ssd/export/hybrid_follow/nemo_dory_artifacts.json}"
@@ -130,6 +148,79 @@ app_dir_has_generated_model() {
 
 model_export_is_available() {
   [[ -f "$MODEL_SENTINEL" ]] && [[ -f "$MODEL_MANIFEST" ]]
+}
+
+select_stage_drift_python() {
+  if [[ -n "$STAGE_DRIFT_PYTHON" ]]; then
+    printf '%s\n' "$STAGE_DRIFT_PYTHON"
+    return 0
+  fi
+  if [[ -x "$HOST_REPO_ROOT/nemoenv/bin/python3" ]]; then
+    printf '%s\n' "$HOST_REPO_ROOT/nemoenv/bin/python3"
+    return 0
+  fi
+  if [[ -f "$HOST_REPO_ROOT/nemoenv/Scripts/python.exe" ]]; then
+    printf '%s\n' "$HOST_REPO_ROOT/nemoenv/Scripts/python.exe"
+    return 0
+  fi
+  printf '%s\n' "python3"
+}
+
+write_final_tensor_json() {
+  local log_path="$1"
+  local json_path="$2"
+  local tensor_label="$3"
+  local tensor_count="$4"
+
+  mkdir -p "$(dirname "$json_path")"
+  python3 - "$log_path" "$json_path" "$tensor_label" "$tensor_count" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+log_path = Path(sys.argv[1])
+json_path = Path(sys.argv[2])
+label = sys.argv[3]
+expected_count = int(sys.argv[4])
+
+begin_re = re.compile(r"^FINAL_TENSOR_I32_BEGIN\s+(\w+)\s+count=(\d+)$")
+line_re = re.compile(r"^FINAL_TENSOR_I32\s+(\w+)(.*)$")
+end_re = re.compile(r"^FINAL_TENSOR_I32_END\s+(\w+)$")
+
+values = []
+count = None
+collecting = False
+for raw_line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+    line = raw_line.strip()
+    begin_match = begin_re.match(line)
+    if begin_match and begin_match.group(1) == label:
+        count = int(begin_match.group(2))
+        values = []
+        collecting = True
+        continue
+    end_match = end_re.match(line)
+    if end_match and end_match.group(1) == label:
+        collecting = False
+        continue
+    line_match = line_re.match(line)
+    if line_match and line_match.group(1) == label and collecting:
+        payload = line_match.group(2).strip()
+        if payload:
+            values.extend(int(token) for token in payload.split())
+
+if count is None:
+    raise RuntimeError(f"No FINAL_TENSOR_I32 block found for label '{label}' in {log_path}")
+if count != expected_count:
+    raise RuntimeError(f"Expected count={expected_count} for '{label}', got {count}")
+if len(values) != count:
+    raise RuntimeError(f"Tensor '{label}' dump size mismatch: expected {count}, got {len(values)}")
+
+json_path.write_text(
+    json.dumps({"label": label, "count": count, "values": values}, indent=2) + "\n",
+    encoding="utf-8",
+)
+PY
 }
 
 app_dir_is_fresh() {
@@ -344,6 +435,13 @@ if [[ "$RUN_AFTER_BUILD" == "1" ]]; then
       mkdir -p "$(dirname "$HOST_RUN_LOG_COPY")"
       cp "$HOST_RUN_LOG" "$HOST_RUN_LOG_COPY"
     fi
+    FINAL_TENSOR_JSON_PATH="${HOST_FINAL_TENSOR_JSON:-}"
+    if [[ -z "$FINAL_TENSOR_JSON_PATH" && "$RUN_STAGE_DRIFT_DEBUG" == "1" && -n "$HOST_STAGE_DRIFT_OUTPUT_DIR" ]]; then
+      FINAL_TENSOR_JSON_PATH="$HOST_STAGE_DRIFT_OUTPUT_DIR/gvsoc_final_tensor.json"
+    fi
+    if [[ -n "$FINAL_TENSOR_JSON_PATH" ]]; then
+      write_final_tensor_json "$HOST_RUN_LOG" "$FINAL_TENSOR_JSON_PATH" "$EXPECTED_TENSOR_LABEL" "$EXPECTED_TENSOR_COUNT"
+    fi
     if [[ "$VERIFY_AFTER_RUN" == "1" ]]; then
       echo "[verify] Comparing GVSOC final tensor against $HOST_EXPECTED_OUTPUT..."
       python3 "$COMPARE_SCRIPT" \
@@ -351,6 +449,32 @@ if [[ "$RUN_AFTER_BUILD" == "1" ]]; then
         --expected-output "$HOST_EXPECTED_OUTPUT" \
         --label "$EXPECTED_TENSOR_LABEL" \
         --count "$EXPECTED_TENSOR_COUNT"
+    fi
+    if [[ "$RUN_STAGE_DRIFT_DEBUG" == "1" ]]; then
+      if [[ -z "$HOST_STAGE_DRIFT_IMAGE" || -z "$HOST_STAGE_DRIFT_OUTPUT_DIR" ]]; then
+        echo "[stage-drift] Skipping because HOST_STAGE_DRIFT_IMAGE or HOST_STAGE_DRIFT_OUTPUT_DIR was not set."
+      elif [[ ! -f "$STAGE_DRIFT_SCRIPT" ]]; then
+        echo "[stage-drift] WARNING: script not found: $STAGE_DRIFT_SCRIPT"
+      else
+        STAGE_DRIFT_PY_BIN="$(select_stage_drift_python)"
+        STAGE_DRIFT_CMD=(
+          "$STAGE_DRIFT_PY_BIN"
+          "$STAGE_DRIFT_SCRIPT"
+          --image "$HOST_STAGE_DRIFT_IMAGE"
+          --ckpt "$HOST_STAGE_DRIFT_CKPT"
+          --onnx "$HOST_STAGE_DRIFT_ONNX"
+          --golden "$HOST_EXPECTED_OUTPUT"
+          --output-dir "$HOST_STAGE_DRIFT_OUTPUT_DIR"
+          --overwrite
+          --nemo-stage "$STAGE_DRIFT_NEMO_STAGE"
+        )
+        if [[ -n "$FINAL_TENSOR_JSON_PATH" && -f "$FINAL_TENSOR_JSON_PATH" ]]; then
+          STAGE_DRIFT_CMD+=(--gvsoc-json "$FINAL_TENSOR_JSON_PATH")
+        fi
+        if ! "${STAGE_DRIFT_CMD[@]}"; then
+          echo "[stage-drift] WARNING: stage-drift comparison failed; continuing."
+        fi
+      fi
     fi
   fi
 fi
@@ -370,4 +494,10 @@ if [[ -n "$HOST_RUN_LOG_COPY" ]]; then
 fi
 if [[ "$VERIFY_AFTER_RUN" == "1" && "$DETACH_RUN" != "1" ]]; then
   echo "Expected output: $HOST_EXPECTED_OUTPUT"
+fi
+if [[ -n "$HOST_FINAL_TENSOR_JSON" ]]; then
+  echo "Final tensor JSON: $HOST_FINAL_TENSOR_JSON"
+fi
+if [[ "$RUN_STAGE_DRIFT_DEBUG" == "1" && -n "$HOST_STAGE_DRIFT_OUTPUT_DIR" ]]; then
+  echo "Stage drift output dir: $HOST_STAGE_DRIFT_OUTPUT_DIR"
 fi

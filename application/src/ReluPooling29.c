@@ -19,7 +19,7 @@
 // first_layer                    0
 // ULTRA_VERBOSE                  False
 // verbose_log                    
-// node                           <dory.Parsers.HW_node.HW_node object at 0x72cae98c4490>
+// node                           <dory.Parsers.HW_node.HW_node object at 0x725d345861c0>
 // sdk                            gap_sdk
 // number_of_clusters             1
 // optional_type                  8bit

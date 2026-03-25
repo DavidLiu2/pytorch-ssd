@@ -200,7 +200,7 @@ void FullyConnected30(
     pi_cl_team_barrier(0);
     asm volatile("": : :"memory");
     pulp_nn_linear_out_32( 
-      x, (const int32_t *) b, y, W,
+      x, b, y, W,
       x_tile_size_nif, y_tile_size_nof
       );
     pi_cl_team_barrier(0);

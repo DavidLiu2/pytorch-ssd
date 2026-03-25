@@ -141,6 +141,12 @@ def _safe_div(numerator: float, denominator: float) -> float:
     return numerator / denominator
 
 
+def _safe_metric_or_inf(total: float, count: int) -> float:
+    if count <= 0:
+        return float("inf")
+    return total / float(count)
+
+
 def save_checkpoint(path: Path, model, args, epoch: int, extra_state=None) -> None:
     state = {
         "epoch": epoch,
@@ -280,6 +286,9 @@ def train_or_eval_epoch(
     running_visibility = 0.0
     visibility_bce_sum = 0.0
     follow_sample_count = 0
+    x_abs_error_sum = 0.0
+    size_abs_error_sum = 0.0
+    visible_target_count = 0
     tp = 0
     fp = 0
     tn = 0
@@ -328,6 +337,23 @@ def train_or_eval_epoch(
                     fp += int((pred_visible & ~target_visible).sum().item())
                     tn += int((~pred_visible & ~target_visible).sum().item())
                     fn += int((~pred_visible & target_visible).sum().item())
+
+                    # Visibility is still a useful diagnostic, but no-person frames do not
+                    # have a meaningful x/size control target. We exclude them from the
+                    # follow metrics so checkpoint selection matches the controller's job.
+                    if torch.any(target_visible):
+                        batch_x_abs_error = torch.abs(
+                            predictions[target_visible, 0] - follow_targets[target_visible, 0]
+                        )
+                        batch_size_abs_error = torch.abs(
+                            predictions[target_visible, 1] - follow_targets[target_visible, 1]
+                        )
+                        visible_count = int(target_visible.sum().item())
+                        x_abs_error_sum += float(batch_x_abs_error.sum().detach().cpu().item())
+                        size_abs_error_sum += float(
+                            batch_size_abs_error.sum().detach().cpu().item()
+                        )
+                        visible_target_count += visible_count
 
                     true_no_person = targets.get("true_no_person")
                     if true_no_person is not None:
@@ -380,6 +406,17 @@ def train_or_eval_epoch(
             stats["no_person_fp_rate"] = _safe_div(float(no_person_fp), float(no_person_total))
             stats["no_person_fp"] = float(no_person_fp)
             stats["no_person_total"] = float(no_person_total)
+            stats["visible_target_count"] = float(visible_target_count)
+            stats["x_mae"] = _safe_metric_or_inf(x_abs_error_sum, visible_target_count)
+            stats["size_mae"] = _safe_metric_or_inf(size_abs_error_sum, visible_target_count)
+            stats["follow_score"] = (
+                stats["x_mae"] + (0.3 * stats["size_mae"])
+                if visible_target_count > 0
+                else float("inf")
+            )
+            # x_offset is the primary control signal downstream, so the dedicated
+            # control score is the visible-only x error and ignores no-person negatives.
+            stats["control_score"] = stats["x_mae"]
     return stats
 
 
@@ -417,8 +454,10 @@ def main():
 
     output_dir = resolve_output_dir(args, repo_root)
     output_dir.mkdir(parents=True, exist_ok=True)
-    best_visibility_bce = float("inf")
-    best_visibility_epoch = 0
+    best_x_mae = float("inf")
+    best_x_epoch = 0
+    best_follow_score = float("inf")
+    best_follow_score_epoch = 0
 
     for epoch in range(1, args.epochs + 1):
         print(f"\nEpoch {epoch}/{args.epochs}")
@@ -452,6 +491,11 @@ def main():
                     **val_stats
                 )
             )
+            print("Val follow metrics:")
+            print(f"  x_mae={val_stats['x_mae']:.4f}")
+            print(f"  size_mae={val_stats['size_mae']:.4f}")
+            print(f"  follow_score={val_stats['follow_score']:.4f}")
+            print(f"  control_score={val_stats['control_score']:.4f}")
             print(
                 "Val visibility @ {thresh:.2f}: bce={bce:.4f}, acc={acc:.4f}, "
                 "precision={precision:.4f}, recall={recall:.4f}, f1={f1:.4f}, "
@@ -485,32 +529,74 @@ def main():
         print(f"Saved checkpoint to {ckpt_path}")
 
         if args.model_type == "hybrid_follow":
-            current_visibility_bce = val_stats["visibility_bce"]
-            if current_visibility_bce < best_visibility_bce:
-                best_visibility_bce = current_visibility_bce
-                best_visibility_epoch = epoch
-                best_ckpt_path = output_dir / "hybrid_follow_best_visibility.pth"
+            # High visibility confidence does not guarantee the drone can steer well.
+            # For person-follow control, horizontal centering error is the primary
+            # selection target, with size acting only as a secondary tie-breaker.
+            current_x_mae = val_stats["x_mae"]
+            if current_x_mae < best_x_mae:
+                best_x_mae = current_x_mae
+                best_x_epoch = epoch
+                best_x_path = output_dir / "hybrid_follow_best_x.pth"
                 save_checkpoint(
-                    best_ckpt_path,
+                    best_x_path,
                     model,
                     args,
                     epoch,
                     extra_state={
                         "train_stats": train_stats,
                         "val_stats": val_stats,
-                        "best_metric": "visibility_bce",
-                        "best_metric_value": current_visibility_bce,
+                        "best_metric": "x_mae",
+                        "best_metric_value": current_x_mae,
+                        "selection_metrics": {
+                            "x_mae": val_stats["x_mae"],
+                            "size_mae": val_stats["size_mae"],
+                            "follow_score": val_stats["follow_score"],
+                            "control_score": val_stats["control_score"],
+                        },
                     },
                 )
                 print(
-                    "Updated best visibility checkpoint: "
-                    f"epoch={epoch}, val_visibility_bce={current_visibility_bce:.4f}, "
-                    f"path={best_ckpt_path}"
+                    "Updated best x-error checkpoint: "
+                    f"epoch={epoch}, val_x_mae={current_x_mae:.4f}, "
+                    f"path={best_x_path}"
+                )
+
+            current_follow_score = val_stats["follow_score"]
+            if current_follow_score < best_follow_score:
+                best_follow_score = current_follow_score
+                best_follow_score_epoch = epoch
+                best_follow_score_path = output_dir / "hybrid_follow_best_follow_score.pth"
+                save_checkpoint(
+                    best_follow_score_path,
+                    model,
+                    args,
+                    epoch,
+                    extra_state={
+                        "train_stats": train_stats,
+                        "val_stats": val_stats,
+                        "best_metric": "follow_score",
+                        "best_metric_value": current_follow_score,
+                        "selection_metrics": {
+                            "x_mae": val_stats["x_mae"],
+                            "size_mae": val_stats["size_mae"],
+                            "follow_score": val_stats["follow_score"],
+                            "control_score": val_stats["control_score"],
+                        },
+                    },
+                )
+                print(
+                    "Updated best follow-score checkpoint: "
+                    f"epoch={epoch}, val_follow_score={current_follow_score:.4f}, "
+                    f"path={best_follow_score_path}"
                 )
 
             print(
-                "Best visibility so far: "
-                f"epoch={best_visibility_epoch}, val_visibility_bce={best_visibility_bce:.4f}"
+                "Best x-error so far: "
+                f"epoch={best_x_epoch}, val_x_mae={best_x_mae:.4f}"
+            )
+            print(
+                "Best follow score so far: "
+                f"epoch={best_follow_score_epoch}, val_follow_score={best_follow_score:.4f}"
             )
 
 

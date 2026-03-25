@@ -1,0 +1,30 @@
+{
+  "image_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/eval_epoch_015/top_fn/01_p0.0114_000000132408.jpg",
+  "output_dir": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/pytorch_checkpoint_eval/best_follow_score_20260324_152203/0001_top_fn_01_p0.0114_000000132408",
+  "metadata_json": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/pytorch_checkpoint_eval/best_follow_score_20260324_152203/0001_top_fn_01_p0.0114_000000132408/metadata.json",
+  "comparison_json": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/pytorch_checkpoint_eval/best_follow_score_20260324_152203/0001_top_fn_01_p0.0114_000000132408/comparison.json",
+  "tensor_json": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/pytorch_checkpoint_eval/best_follow_score_20260324_152203/0001_top_fn_01_p0.0114_000000132408/gvsoc_final_tensor.json",
+  "checkpoint_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+  "output_shape": [
+    1,
+    3
+  ],
+  "quantization_scale": 32768.0,
+  "preprocess": "Center-crop to square, resize to 128x128, convert to grayscale, then torchvision ToTensor() with no extra normalization.",
+  "tensor_source": "pytorch_checkpoint",
+  "raw_float_output": [
+    0.10235044360160828,
+    0.2704586386680603,
+    -3.588391065597534
+  ],
+  "ground_truth": {
+    "image_id": "132408",
+    "file_name": "000000132408.jpg",
+    "target_visible": "1",
+    "target_size_proxy": "0.33386942744255066",
+    "true_no_person": "0",
+    "raw_visibility_logit": "-4.463352680206299",
+    "visibility_confidence": "0.01139238104224205",
+    "pred_visible": "0"
+  }
+}

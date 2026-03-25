@@ -848,6 +848,8 @@ def main():
                         help="Path to a .pt tensor file shaped [N,C,H,W] for calibration.")
     parser.add_argument("--calib-batches", type=int, default=64,
                         help="How many samples to use for activation calibration.")
+    parser.add_argument("--calib-seed", type=int, default=0,
+                        help="Compatibility flag for run_all.sh; the baseline exporter keeps deterministic path ordering.")
     parser.add_argument("--mean", type=str, default=None,
                         help="Optional normalization mean, e.g. '0.5' (C=1) or '0.5,0.5,0.5' (C=3)")
     parser.add_argument("--std", type=str, default=None,

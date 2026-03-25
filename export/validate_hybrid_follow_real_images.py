@@ -13,6 +13,12 @@ import time
 from pathlib import Path
 
 from hybrid_follow_image_artifacts import PREPROCESS_DESCRIPTION, stage_image_artifacts
+from visualize_hybrid_follow_prediction import (
+    DEFAULT_ANN,
+    DEFAULT_Q_SCALE,
+    DEFAULT_VIS_THRESHOLD,
+    generate_overlay_for_sample,
+)
 
 
 FINAL_BEGIN_RE = re.compile(r"^FINAL_TENSOR_I32_BEGIN\s+(\w+)\s+count=(\d+)$")
@@ -67,6 +73,57 @@ def parse_args() -> argparse.Namespace:
         "--stop-on-error",
         action="store_true",
         help="Stop the batch on the first failure instead of continuing.",
+    )
+    parser.add_argument(
+        "--skip-overlays",
+        action="store_true",
+        help="Do not generate annotated prediction overlay images for each sample.",
+    )
+    parser.add_argument(
+        "--overlay-annotations",
+        default=str(DEFAULT_ANN),
+        help="Optional COCO annotations json used for GT person overlays.",
+    )
+    parser.add_argument(
+        "--overlay-q-scale",
+        type=float,
+        default=DEFAULT_Q_SCALE,
+        help="Quantization scale used to decode the 3-value hybrid_follow tensor.",
+    )
+    parser.add_argument(
+        "--overlay-vis-threshold",
+        type=float,
+        default=DEFAULT_VIS_THRESHOLD,
+        help="Visibility threshold used in overlay generation.",
+    )
+    parser.set_defaults(stage_drift=True)
+    parser.add_argument(
+        "--stage-drift",
+        dest="stage_drift",
+        action="store_true",
+        help="Run compare_hybrid_follow_stages.py for each sample after validation.",
+    )
+    parser.add_argument(
+        "--no-stage-drift",
+        dest="stage_drift",
+        action="store_false",
+        help="Disable the per-sample stage-drift comparison.",
+    )
+    parser.add_argument(
+        "--stage-drift-ckpt",
+        default="training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+        help="Checkpoint passed to the stage-drift comparison tool.",
+    )
+    parser.add_argument(
+        "--stage-drift-python",
+        default=None,
+        help="Optional Python interpreter for the stage-drift tool. Defaults to ../nemoenv/bin/python3 when available.",
+    )
+    parser.add_argument(
+        "--stage-drift-nemo-stage",
+        default="skip",
+        choices=["auto", "skip", "fq", "qd", "id"],
+        help="Optional in-memory NEMO stage used by the stage-drift tool.",
     )
     return parser.parse_args()
 
@@ -149,11 +206,69 @@ def run_validation_case(
     env["RUN_LOG_NAME"] = "run_gvsoc.log"
     env["PLATFORM"] = platform
     env["VERIFY_AFTER_RUN"] = "1"
+    shell_script = run_script.name if os.name == "nt" else str(run_script)
 
     return subprocess.run(
-        ["bash", str(run_script)],
+        ["bash", shell_script],
         cwd=str(PROJECT_DIR),
         env=env,
+        capture_output=True,
+        text=True,
+    )
+
+
+def resolve_stage_drift_python(requested: str | None) -> Path:
+    candidates = []
+    if requested:
+        candidates.append(Path(requested).expanduser())
+    candidates.extend(
+        [
+            (PROJECT_DIR.parent / "nemoenv" / "bin" / "python3"),
+            (PROJECT_DIR.parent / "nemoenv" / "Scripts" / "python.exe"),
+            Path(sys.executable),
+        ]
+    )
+    for candidate in candidates:
+        try:
+            if candidate.is_file():
+                return candidate.resolve()
+        except OSError:
+            continue
+    return Path(sys.executable).resolve()
+
+
+def run_stage_drift_case(
+    stage_drift_python: Path,
+    image_path: Path,
+    ckpt_path: Path,
+    onnx_path: Path,
+    golden_output: Path,
+    output_dir: Path,
+    nemo_stage: str,
+    gvsoc_json: Path | None = None,
+) -> subprocess.CompletedProcess[str]:
+    cmd = [
+        str(stage_drift_python),
+        str((PROJECT_DIR / "export" / "compare_hybrid_follow_stages.py").resolve()),
+        "--image",
+        str(image_path),
+        "--ckpt",
+        str(ckpt_path),
+        "--onnx",
+        str(onnx_path),
+        "--golden",
+        str(golden_output),
+        "--output-dir",
+        str(output_dir),
+        "--overwrite",
+        "--nemo-stage",
+        nemo_stage,
+    ]
+    if gvsoc_json is not None and gvsoc_json.is_file():
+        cmd.extend(["--gvsoc-json", str(gvsoc_json)])
+    return subprocess.run(
+        cmd,
+        cwd=str(PROJECT_DIR),
         capture_output=True,
         text=True,
     )
@@ -175,6 +290,12 @@ def write_summary_csv(path: Path, rows: list[dict]) -> None:
         "mismatch",
         "elapsed_seconds",
         "gvsoc_log",
+        "overlay_path",
+        "overlay_status",
+        "overlay_error",
+        "stage_drift_dir",
+        "stage_drift_status",
+        "stage_drift_error",
     ]
     with path.open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -192,6 +313,12 @@ def write_summary_csv(path: Path, rows: list[dict]) -> None:
                     "mismatch": row.get("mismatch", ""),
                     "elapsed_seconds": f"{row['elapsed_seconds']:.3f}",
                     "gvsoc_log": row.get("gvsoc_log", ""),
+                    "overlay_path": row.get("overlay_path", ""),
+                    "overlay_status": row.get("overlay_status", ""),
+                    "overlay_error": row.get("overlay_error", ""),
+                    "stage_drift_dir": row.get("stage_drift_dir", ""),
+                    "stage_drift_status": row.get("stage_drift_status", ""),
+                    "stage_drift_error": row.get("stage_drift_error", ""),
                 }
             )
 
@@ -218,6 +345,8 @@ def main() -> int:
     app_dir = (PROJECT_DIR / args.app_dir).resolve()
     run_script = (PROJECT_DIR / args.run_script).resolve()
     onnx_path = (PROJECT_DIR / args.onnx).resolve()
+    stage_drift_python = resolve_stage_drift_python(args.stage_drift_python) if args.stage_drift else None
+    stage_drift_ckpt = (PROJECT_DIR / args.stage_drift_ckpt).resolve() if args.stage_drift else None
 
     if not app_dir.is_dir():
         raise FileNotFoundError(f"Application directory not found: {app_dir}")
@@ -225,6 +354,8 @@ def main() -> int:
         raise FileNotFoundError(f"Validation script not found: {run_script}")
     if not onnx_path.is_file():
         raise FileNotFoundError(f"DORY ONNX not found: {onnx_path}")
+    if args.stage_drift and stage_drift_ckpt is not None and not stage_drift_ckpt.is_file():
+        raise FileNotFoundError(f"Stage-drift checkpoint not found: {stage_drift_ckpt}")
 
     images = discover_images(images_dir)
     if args.limit is not None:
@@ -265,6 +396,14 @@ def main() -> int:
         actual_tensor: list[int] | None = None
         mismatch = ""
         status = "pass"
+        overlay_path: str | None = None
+        overlay_status = "skipped" if args.skip_overlays else "pending"
+        overlay_error = ""
+        overlay_gt_x_offset: float | None = None
+        overlay_gt_size_proxy: float | None = None
+        stage_drift_dir = sample_dir / "stage_drift"
+        stage_drift_status = "skipped" if args.stage_drift else "disabled"
+        stage_drift_error = ""
 
         if gvsoc_log_path.is_file():
             try:
@@ -311,13 +450,73 @@ def main() -> int:
             "gvsoc_log": str(gvsoc_log_path) if gvsoc_log_path.is_file() else None,
             "runner_log": str(runner_log_path),
             "preprocess": PREPROCESS_DESCRIPTION,
+            "overlay_path": overlay_path,
+            "overlay_status": overlay_status,
+            "overlay_error": overlay_error,
+            "overlay_gt_x_offset": overlay_gt_x_offset,
+            "overlay_gt_size_proxy": overlay_gt_size_proxy,
+            "stage_drift_dir": str(stage_drift_dir) if args.stage_drift else None,
+            "stage_drift_status": stage_drift_status,
+            "stage_drift_error": stage_drift_error,
         }
+
+        write_json(comparison_path, comparison)
+
+        if args.stage_drift:
+            drift_result = run_stage_drift_case(
+                stage_drift_python=stage_drift_python,
+                image_path=image_path,
+                ckpt_path=stage_drift_ckpt,
+                onnx_path=onnx_path,
+                golden_output=Path(artifacts.output_txt),
+                output_dir=stage_drift_dir,
+                nemo_stage=args.stage_drift_nemo_stage,
+                gvsoc_json=actual_tensor_path if actual_tensor_path.is_file() else None,
+            )
+            stage_drift_status = "ok" if drift_result.returncode == 0 else "fail"
+            if drift_result.returncode != 0:
+                stage_drift_error = (drift_result.stdout + drift_result.stderr).strip()
+            stage_drift_log_path = stage_drift_dir / "runner.log"
+            stage_drift_log_path.parent.mkdir(parents=True, exist_ok=True)
+            stage_drift_log_path.write_text(
+                drift_result.stdout + drift_result.stderr,
+                encoding="utf-8",
+            )
+
+        if not args.skip_overlays and actual_tensor is not None:
+            try:
+                overlay_result = generate_overlay_for_sample(
+                    sample_dir=sample_dir,
+                    annotations_path=args.overlay_annotations,
+                    q_scale=args.overlay_q_scale,
+                    vis_threshold=args.overlay_vis_threshold,
+                )
+                overlay_path = overlay_result.overlay_path
+                overlay_status = "ok"
+                overlay_gt_x_offset = overlay_result.gt_x_offset
+                overlay_gt_size_proxy = overlay_result.gt_size_proxy
+            except Exception as exc:
+                overlay_status = "fail"
+                overlay_error = str(exc)
+        elif not args.skip_overlays:
+            overlay_status = "unavailable"
+            overlay_error = "Overlay skipped because actual tensor output was unavailable."
+
+        comparison["overlay_path"] = overlay_path
+        comparison["overlay_status"] = overlay_status
+        comparison["overlay_error"] = overlay_error
+        comparison["overlay_gt_x_offset"] = overlay_gt_x_offset
+        comparison["overlay_gt_size_proxy"] = overlay_gt_size_proxy
+        comparison["stage_drift_dir"] = str(stage_drift_dir) if args.stage_drift else None
+        comparison["stage_drift_status"] = stage_drift_status
+        comparison["stage_drift_error"] = stage_drift_error
         write_json(comparison_path, comparison)
         summary_rows.append(comparison)
 
         print(
             f"[{index}/{len(images)}] {image_path.name}: "
-            f"{status.upper()} expected={expected_tensor} actual={actual_tensor}"
+            f"{status.upper()} expected={expected_tensor} actual={actual_tensor} "
+            f"overlay={overlay_status} stage_drift={stage_drift_status}"
         )
 
         if status != "pass" and args.stop_on_error:
@@ -330,6 +529,8 @@ def main() -> int:
         "app_dir": str(app_dir),
         "onnx": str(onnx_path),
         "platform": args.platform,
+        "overlays_enabled": not args.skip_overlays,
+        "overlay_annotations": str(Path(args.overlay_annotations).expanduser()),
         "count": len(summary_rows),
         "passed": sum(1 for row in summary_rows if row["status"] == "pass"),
         "failed": sum(1 for row in summary_rows if row["status"] != "pass"),

@@ -1,0 +1,11 @@
+{
+  "label": "final",
+  "count": 3,
+  "values": [
+    1909,
+    10128,
+    -247483
+  ],
+  "source": "pytorch_checkpoint",
+  "quantization_scale": 32768.0
+}

@@ -5,6 +5,12 @@ It trains the detector, exports a quantized ONNX with NEMO, cleans the
 graph for DORY, and can emit GAP8 application artifacts that are later
 validated locally from `pytorch_ssd/application`.
 
+For the current `hybrid_follow` deployment path, the important recent fix is
+that the exporter no longer collapses the final `stage4.1` residual requant
+path to zeros before DORY, and the generated GAP8 app is back on the raw
+residual add path. The deployment notes for that are in
+`docs/hybrid_follow_gap8/09-export-runtime-residual-fix.md`.
+
 ## Current Model
 
 - Task: person-only object detection
@@ -39,11 +45,15 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
   and writes the ONNX used by later stages.
 - `run_all.sh`
   End-to-end export script. Runs NEMO export, onnxsim, custom ONNX cleanup,
-  DORY config generation, artifact generation, and `network_generate.py`.
+  DORY config generation, artifact generation, `network_generate.py`, and the
+  hybrid-follow raw-residual GAP8 patch reapply step.
 - `run_aideck_val.sh`
   Single-sample AI-Deck Docker validation for the currently generated app.
 - `run_real_image_val.sh`
-  Batch real-image validation wrapper around the existing AI-Deck flow.
+  Canonical batch real-image validation wrapper around the existing AI-Deck flow.
+  It prefers `../doryenv/bin/python3` automatically when available.
+- `run_real_image_overlay.sh`
+  Compatibility wrapper that forwards to `run_real_image_val.sh --overlay-only`.
 - `export/`
   ONNX files, stripped graphs, DORY configs, manifests, weight text dumps,
   and other export/debug artifacts.
@@ -60,10 +70,14 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
 2. `export_nemo_quant.py` loads a checkpoint and exports a NEMO-quantized ONNX.
 3. `run_all.sh` simplifies and strips unsupported ONNX ops for DORY.
 4. `run_all.sh` generates the DORY app into `pytorch_ssd/application` by default.
+   For `hybrid_follow`, it also reapplies the raw-residual GAP8 runtime patch set.
 5. `run_aideck_val.sh` builds that app in the AI-Deck Docker image and compares
    GVSOC output against Python-side golden tensors.
 6. `run_real_image_val.sh` stages real images into `input.txt` plus `inputs.hex`,
-   runs GVSOC per image, and writes per-image artifacts plus batch summaries.
+   runs GVSOC per image, writes per-image artifacts plus batch summaries, and
+   now also saves a `prediction_overlay.png` for each sample. Use
+   `run_real_image_val.sh --overlay-only` to regenerate overlays without rerunning
+   the app.
 
 ## Important Current Quirks
 
@@ -74,6 +88,9 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
 - There is also channel-history drift.
   Export logs show older checkpoints can carry a 3-channel first conv and are
   adapted to 1-channel grayscale during export when needed.
+- The `hybrid_follow` exporter now has a strict optional drift harness behind
+  `--debug-quant-drift-dir`. It is meant to fail loudly on real residual
+  collapse instead of silently falling back.
 - Training and deployment shapes are not perfectly unified.
   `train.py` defaults to `160 x 160`, while deployment/export is often run at
   `128 x 128`.

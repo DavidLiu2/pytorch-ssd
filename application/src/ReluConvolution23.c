@@ -201,7 +201,7 @@ void ReluConvolution23(
     pi_cl_team_barrier(0);
     pulp_nn_conv_Ho_parallel(
       x, im2col,
-      (const int32_t *) b,
+      b,
       y, W,
       0, 0,
       out_mult, out_shift,

@@ -20,11 +20,12 @@ NEMO_REQ="${PROJECT_ROOT}/requirements_nemoenv.txt"
 
 MODEL_TYPE="${MODEL_TYPE:-hybrid_follow}"
 if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
-  DEFAULT_CKPT="training/hybrid_follow/hybrid_follow_best_visibility.pth"
+  DEFAULT_CKPT="training/hybrid_follow/hybrid_follow_best_x.pth"
   DEFAULT_OUT_ONNX="export/hybrid_follow/hybrid_follow_quant.onnx"
   DEFAULT_SIM_ONNX="export/hybrid_follow/hybrid_follow_quant_sim.onnx"
   DEFAULT_STAGE="id"
   DEFAULT_STAGE_REPORT="export/hybrid_follow/hybrid_follow_final_stage.txt"
+  DEFAULT_STRICT_STAGE="1"
   DEFAULT_INPUT_HEIGHT="128"
   DEFAULT_INPUT_WIDTH="128"
   DEFAULT_INPUT_CHANNELS="1"
@@ -36,15 +37,24 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   DEFAULT_DORY_NO_MIN_ONNX="export/hybrid_follow/hybrid_follow_nomin.onnx"
   DEFAULT_DORY_WEIGHTS_TXT_DIR="export/hybrid_follow/weights_txt"
   DEFAULT_DORY_ARTIFACT_MANIFEST="export/hybrid_follow/nemo_dory_artifacts.json"
+  DEFAULT_COMPAT_PY_REPORT="export/hybrid_follow/model_compat_python.json"
+  DEFAULT_COMPAT_ONNX_REPORT="export/hybrid_follow/model_compat_onnx.json"
   DEFAULT_DORY_APP_DIR="${PROJECT_ROOT}/application"
   DEFAULT_RUN_DORY="1"
   DEFAULT_SYNC_TO_CRAZYFLIE="0"
+  DEFAULT_RUN_STAGE_DRIFT="1"
+  DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="1"
+  DEFAULT_RAW_RESIDUAL_PATCH_REPORT="export/hybrid_follow/gap8_raw_residual_patch_report.json"
+  DEFAULT_STAGE_DRIFT_IMAGE="training/hybrid_follow/eval_epoch_015/top_fn/01_p0.0114_000000132408.jpg"
+  DEFAULT_STAGE_DRIFT_OUTPUT_DIR="export/hybrid_follow/stage_drift/run_all"
+  DEFAULT_STAGE_DRIFT_NEMO_STAGE="auto"
 else
   DEFAULT_CKPT="training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth"
   DEFAULT_OUT_ONNX="export/ssd_mbv2_nemo_id.onnx"
   DEFAULT_SIM_ONNX="export/ssd_mbv2_nemo_id_sim.onnx"
   DEFAULT_STAGE="id"
   DEFAULT_STAGE_REPORT="export/ssd_mbv2_final_stage.txt"
+  DEFAULT_STRICT_STAGE="0"
   DEFAULT_INPUT_HEIGHT="160"
   DEFAULT_INPUT_WIDTH="160"
   DEFAULT_INPUT_CHANNELS="1"
@@ -56,9 +66,17 @@ else
   DEFAULT_DORY_NO_MIN_ONNX="export/ssd_mbv2_nomin.onnx"
   DEFAULT_DORY_WEIGHTS_TXT_DIR="export/weights_txt"
   DEFAULT_DORY_ARTIFACT_MANIFEST="export/nemo_dory_artifacts.json"
+  DEFAULT_COMPAT_PY_REPORT="export/model_compat_python.json"
+  DEFAULT_COMPAT_ONNX_REPORT="export/model_compat_onnx.json"
   DEFAULT_DORY_APP_DIR="${PROJECT_ROOT}/application"
   DEFAULT_RUN_DORY="1"
   DEFAULT_SYNC_TO_CRAZYFLIE="0"
+  DEFAULT_RUN_STAGE_DRIFT="0"
+  DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="0"
+  DEFAULT_RAW_RESIDUAL_PATCH_REPORT="export/gap8_raw_residual_patch_report.json"
+  DEFAULT_STAGE_DRIFT_IMAGE=""
+  DEFAULT_STAGE_DRIFT_OUTPUT_DIR="export/stage_drift/run_all"
+  DEFAULT_STAGE_DRIFT_NEMO_STAGE="skip"
 fi
 
 CKPT="${CKPT:-${DEFAULT_CKPT}}"
@@ -66,7 +84,7 @@ OUT_ONNX="${OUT_ONNX:-${DEFAULT_OUT_ONNX}}"
 SIM_ONNX="${SIM_ONNX:-${DEFAULT_SIM_ONNX}}"
 STAGE="${STAGE:-${DEFAULT_STAGE}}"
 STAGE_REPORT="${STAGE_REPORT:-${DEFAULT_STAGE_REPORT}}"
-STRICT_STAGE="${STRICT_STAGE:-0}"
+STRICT_STAGE="${STRICT_STAGE:-${DEFAULT_STRICT_STAGE}}"
 BITS="${BITS:-8}"
 EPS_IN="${EPS_IN:-$(python3 -c "print(1/255)")}"
 INPUT_HEIGHT="${INPUT_HEIGHT:-${DEFAULT_INPUT_HEIGHT}}"
@@ -74,11 +92,25 @@ INPUT_WIDTH="${INPUT_WIDTH:-${DEFAULT_INPUT_WIDTH}}"
 INPUT_CHANNELS="${INPUT_CHANNELS:-${DEFAULT_INPUT_CHANNELS}}"
 CALIB_DIR="${CALIB_DIR:-${DEFAULT_CALIB_DIR}}"
 CALIB_BATCHES="${CALIB_BATCHES:-128}"
+COMPAT_CALIB_BATCHES="${COMPAT_CALIB_BATCHES:-8}"
 RUN_DORY="${RUN_DORY:-${DEFAULT_RUN_DORY}}"
+RUN_COMPAT_CHECKS="${RUN_COMPAT_CHECKS:-1}"
 SYNC_TO_CRAZYFLIE="${SYNC_TO_CRAZYFLIE:-${DEFAULT_SYNC_TO_CRAZYFLIE}}"
 GENERATE_DORY_ARTIFACTS="${GENERATE_DORY_ARTIFACTS:-1}"
 STRICT_DORY_ARTIFACTS="${STRICT_DORY_ARTIFACTS:-0}"
-if [ "${INPUT_CHANNELS}" = "1" ]; then
+RUN_STAGE_DRIFT="${RUN_STAGE_DRIFT:-${DEFAULT_RUN_STAGE_DRIFT}}"
+REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES:-${DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}}"
+RAW_RESIDUAL_PATCH_REPORT="${RAW_RESIDUAL_PATCH_REPORT:-${DEFAULT_RAW_RESIDUAL_PATCH_REPORT}}"
+STAGE_DRIFT_IMAGE="${STAGE_DRIFT_IMAGE:-${DEFAULT_STAGE_DRIFT_IMAGE}}"
+STAGE_DRIFT_OUTPUT_DIR="${STAGE_DRIFT_OUTPUT_DIR:-${DEFAULT_STAGE_DRIFT_OUTPUT_DIR}}"
+STAGE_DRIFT_NEMO_STAGE="${STAGE_DRIFT_NEMO_STAGE:-${DEFAULT_STAGE_DRIFT_NEMO_STAGE}}"
+STAGE_DRIFT_GOLDEN="${STAGE_DRIFT_GOLDEN:-}"
+STAGE_DRIFT_GVSOC_JSON="${STAGE_DRIFT_GVSOC_JSON:-}"
+STAGE_DRIFT_CALIB_BATCHES="${STAGE_DRIFT_CALIB_BATCHES:-${COMPAT_CALIB_BATCHES}}"
+if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
+  DEFAULT_MEAN=""
+  DEFAULT_STD=""
+elif [ "${INPUT_CHANNELS}" = "1" ]; then
   DEFAULT_MEAN="0.5"
   DEFAULT_STD="0.5"
 else
@@ -87,6 +119,7 @@ else
 fi
 MEAN="${MEAN:-${DEFAULT_MEAN}}"
 STD="${STD:-${DEFAULT_STD}}"
+CALIB_SEED="${CALIB_SEED:-0}"
 
 ########################################
 # DORY CONFIG
@@ -105,6 +138,8 @@ DORY_APP_DIR="${DORY_APP_DIR:-${DEFAULT_DORY_APP_DIR}}"
 DORY_PREFIX="${DORY_PREFIX:-}"
 DORY_WEIGHTS_TXT_DIR="${DORY_WEIGHTS_TXT_DIR:-${DEFAULT_DORY_WEIGHTS_TXT_DIR}}"
 DORY_ARTIFACT_MANIFEST="${DORY_ARTIFACT_MANIFEST:-${DEFAULT_DORY_ARTIFACT_MANIFEST}}"
+COMPAT_PY_REPORT="${COMPAT_PY_REPORT:-${DEFAULT_COMPAT_PY_REPORT}}"
+COMPAT_ONNX_REPORT="${COMPAT_ONNX_REPORT:-${DEFAULT_COMPAT_ONNX_REPORT}}"
 CRAZYFLIE_APP_DIR="${CRAZYFLIE_APP_DIR:-${PROJECT_ROOT}/../crazyflie_ssd}"
 
 ########################################
@@ -211,9 +246,22 @@ select_hybrid_follow_ckpt() {
     return 0
   fi
 
-  local best_vis_ckpt="${PROJECT_ROOT}/training/hybrid_follow/hybrid_follow_best_visibility.pth"
-  if [ -f "${best_vis_ckpt}" ]; then
-    printf '%s\n' "$best_vis_ckpt"
+  # Export should default to the checkpoint with the best horizontal control
+  # error. Visibility-only checkpoints can still be monitored manually via CKPT,
+  # but they should not be selected automatically for deployment.
+  local best_x_ckpt="${PROJECT_ROOT}/training/hybrid_follow/hybrid_follow_best_x.pth"
+  local best_follow_score_ckpt="${PROJECT_ROOT}/training/hybrid_follow/hybrid_follow_best_follow_score.pth"
+  local best_total_loss_ckpt="${PROJECT_ROOT}/training/hybrid_follow/hybrid_follow_best_total_loss.pth"
+  if [ -f "${best_x_ckpt}" ]; then
+    printf '%s\n' "$best_x_ckpt"
+    return 0
+  fi
+  if [ -f "${best_follow_score_ckpt}" ]; then
+    printf '%s\n' "$best_follow_score_ckpt"
+    return 0
+  fi
+  if [ -f "${best_total_loss_ckpt}" ]; then
+    printf '%s\n' "$best_total_loss_ckpt"
     return 0
   fi
 
@@ -273,18 +321,24 @@ dir_has_image_files() {
 select_hybrid_follow_calib_dir() {
   local candidate
 
+  for candidate in \
+    "${PROJECT_ROOT}/data/coco/images/val2017" \
+    "${PROJECT_ROOT}/data/coco/images/train2017" \
+    "${PROJECT_ROOT}/data/rep_images"
+  do
+    if dir_has_image_files "${candidate}"; then
+      printf '%s\n' "${candidate}"
+      return 0
+    fi
+  done
+
   if [ -d "${PROJECT_ROOT}/training/hybrid_follow" ]; then
     for candidate in $(find "${PROJECT_ROOT}/training/hybrid_follow" -maxdepth 1 -type d -name 'eval_epoch_*' | sort -r); do
-      if dir_has_image_files "${candidate}"; then
+      if dir_has_image_files "${candidate}" && find "${candidate}" -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \) -print -quit 2>/dev/null | grep -q .; then
         printf '%s\n' "${candidate}"
         return 0
       fi
     done
-  fi
-
-  if dir_has_image_files "${PROJECT_ROOT}/data/rep_images"; then
-    printf '%s\n' "${PROJECT_ROOT}/data/rep_images"
-    return 0
   fi
 
   return 1
@@ -415,6 +469,41 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   fi
 fi
 
+if [ "${RUN_COMPAT_CHECKS}" = "1" ]; then
+  echo "=== [preflight] Checking model compatibility (PyTorch) ==="
+  COMPAT_CMD=(
+    "${PROJECT_ROOT}/export/check_model_compatibility.py"
+    --mode python
+    --model-type "${MODEL_TYPE}"
+    --ckpt "${CKPT}"
+    --height "${INPUT_HEIGHT}"
+    --width "${INPUT_WIDTH}"
+    --input-channels "${INPUT_CHANNELS}"
+    --stage "${STAGE}"
+    --bits "${BITS}"
+    --eps-in "${EPS_IN}"
+    --calib-batches "${CALIB_BATCHES}"
+    --compat-calib-batches "${COMPAT_CALIB_BATCHES}"
+    --calib-seed "${CALIB_SEED}"
+    --report-json "${COMPAT_PY_REPORT}"
+    --fail-on-errors
+  )
+
+  if [ -n "${CALIB_DIR}" ]; then
+    COMPAT_CMD+=(--calib-dir "${CALIB_DIR}")
+  fi
+
+  if [ -n "${MEAN}" ] || [ -n "${STD}" ]; then
+    if [ -z "${MEAN}" ] || [ -z "${STD}" ]; then
+      echo "ERROR: set both MEAN and STD, or neither."
+      exit 1
+    fi
+    COMPAT_CMD+=(--mean "${MEAN}" --std "${STD}")
+  fi
+
+  CUDA_VISIBLE_DEVICES="" "$NEMO_PY" "${COMPAT_CMD[@]}"
+fi
+
 NEMO_CMD=(
   export_nemo_quant.py
   --model-type "${MODEL_TYPE}"
@@ -428,6 +517,7 @@ NEMO_CMD=(
   --bits "${BITS}"
   --eps-in "${EPS_IN}"
   --calib-batches "${CALIB_BATCHES}"
+  --calib-seed "${CALIB_SEED}"
 )
 
 if [ "${STRICT_STAGE}" = "1" ]; then
@@ -571,6 +661,16 @@ echo "[run_all] Cleaning ID ONNX for DORY frontend compatibility..."
 "$DORY_PY" "${PROJECT_ROOT}/export/strip_min.py" "${DORY_NO_TRANSPOSE_ONNX}" "${DORY_NO_MIN_ONNX}"
 "$DORY_PY" "${PROJECT_ROOT}/export/strip_fake_quant.py" "${DORY_NO_MIN_ONNX}" "${DORY_ONNX}"
 
+if [ "${RUN_COMPAT_CHECKS}" = "1" ]; then
+  echo "[run_all] Checking model compatibility (ONNX) ..."
+  "$DORY_PY" "${PROJECT_ROOT}/export/check_model_compatibility.py" \
+    --mode onnx \
+    --onnx "${OUT_ONNX}" \
+    --dory-onnx "${DORY_ONNX}" \
+    --report-json "${COMPAT_ONNX_REPORT}" \
+    --fail-on-errors
+fi
+
 DORY_ONNX_ABS="$(abspath_with_python "$DORY_PY" "${DORY_ONNX}")"
 DORY_CONFIG_TEMPLATE_ABS="$(abspath_with_python "$DORY_PY" "${DORY_CONFIG_TEMPLATE}")"
 DORY_CONFIG_GEN_ABS="$(abspath_with_python "$DORY_PY" "${DORY_CONFIG_GEN}")"
@@ -578,6 +678,7 @@ DORY_APP_DIR_ABS="$(abspath_with_python "$DORY_PY" "${DORY_APP_DIR}")"
 DORY_WEIGHTS_TXT_DIR_ABS="$(abspath_with_python "$DORY_PY" "${DORY_WEIGHTS_TXT_DIR}")"
 DORY_ARTIFACT_MANIFEST_ABS="$(abspath_with_python "$DORY_PY" "${DORY_ARTIFACT_MANIFEST}")"
 CRAZYFLIE_APP_DIR_ABS="$(abspath_with_python "$DORY_PY" "${CRAZYFLIE_APP_DIR}")"
+RAW_RESIDUAL_PATCH_REPORT_ABS="$(abspath_with_python "$DORY_PY" "${RAW_RESIDUAL_PATCH_REPORT}")"
 
 mkdir -p "$(dirname "${DORY_CONFIG_GEN}")"
 mkdir -p "${DORY_APP_DIR}"
@@ -663,8 +764,52 @@ if [ ! -f "${DORY_NETWORK_C}" ] || [ ! -f "${DORY_NETWORK_H}" ]; then
   exit 1
 fi
 
+if [ "${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}" = "1" ]; then
+  RAW_PATCH_TOOL="${PROJECT_ROOT}/tools/reapply_gap8_raw_residual_patches.py"
+  if [ ! -f "${RAW_PATCH_TOOL}" ]; then
+    echo "ERROR: missing raw-residual patch tool: ${RAW_PATCH_TOOL}"
+    exit 1
+  fi
+  echo "[run_all] Reapplying hybrid_follow GAP8 raw-residual patch set ..."
+  "$DORY_PY" "${RAW_PATCH_TOOL}" \
+    --application-dir "${DORY_APP_DIR_ABS}" \
+    --json-out "${RAW_RESIDUAL_PATCH_REPORT_ABS}"
+fi
+
 if [ "${SYNC_TO_CRAZYFLIE}" = "1" ]; then
   sync_crazyflie_bundle "${DORY_APP_DIR_ABS}" "${CRAZYFLIE_APP_DIR_ABS}"
+fi
+
+STAGE_DRIFT_SUMMARY=""
+if [ "${RUN_STAGE_DRIFT}" = "1" ] && [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
+  echo "[run_all] Running stage-drift comparison ..."
+  STAGE_DRIFT_CMD=(
+    "${NEMO_PY}"
+    "${PROJECT_ROOT}/export/compare_hybrid_follow_stages.py"
+    --image "${STAGE_DRIFT_IMAGE}"
+    --ckpt "${CKPT}"
+    --onnx "${DORY_ONNX}"
+    --output-dir "${STAGE_DRIFT_OUTPUT_DIR}"
+    --overwrite
+    --nemo-stage "${STAGE_DRIFT_NEMO_STAGE}"
+    --nemo-bits "${BITS}"
+    --nemo-eps-in "${EPS_IN}"
+    --nemo-calib-batches "${STAGE_DRIFT_CALIB_BATCHES}"
+  )
+  if [ -n "${CALIB_DIR}" ]; then
+    STAGE_DRIFT_CMD+=(--nemo-calib-dir "${CALIB_DIR}")
+  fi
+  if [ -n "${STAGE_DRIFT_GOLDEN}" ]; then
+    STAGE_DRIFT_CMD+=(--golden "${STAGE_DRIFT_GOLDEN}")
+  fi
+  if [ -n "${STAGE_DRIFT_GVSOC_JSON}" ]; then
+    STAGE_DRIFT_CMD+=(--gvsoc-json "${STAGE_DRIFT_GVSOC_JSON}")
+  fi
+  if ! "${STAGE_DRIFT_CMD[@]}"; then
+    echo "[run_all] WARNING: stage-drift comparison failed; export artifacts are still available."
+  else
+    STAGE_DRIFT_SUMMARY="${STAGE_DRIFT_OUTPUT_DIR}/summary.md"
+  fi
 fi
 
 echo "======================================================="
@@ -679,6 +824,12 @@ echo "DORY config: ${DORY_CONFIG_GEN_ABS}"
 echo "DORY application dir: ${DORY_APP_DIR_ABS}"
 echo "DORY weight txt dir: ${DORY_WEIGHTS_TXT_DIR_ABS}"
 echo "DORY artifact manifest: ${DORY_ARTIFACT_MANIFEST_ABS}"
+if [ "${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}" = "1" ]; then
+  echo "Raw residual patch report: ${RAW_RESIDUAL_PATCH_REPORT_ABS}"
+fi
+if [ -n "${STAGE_DRIFT_SUMMARY}" ]; then
+  echo "Stage drift summary: ${STAGE_DRIFT_SUMMARY}"
+fi
 if [ "${SYNC_TO_CRAZYFLIE}" = "1" ]; then
   echo "crazyflie sync dir: ${CRAZYFLIE_APP_DIR_ABS}"
 fi

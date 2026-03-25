@@ -1,28 +1,31 @@
 # Using `run_all.sh`
 
-`pytorch_ssd/run_all.sh` is the export and codegen pipeline for this project. For `hybrid_follow`, it already defaults to the new deployment flow.
+`pytorch_ssd/run_all.sh` is the export and codegen pipeline for this project. For `hybrid_follow`, it drives the current repo-local deployment flow into `pytorch_ssd/application`.
 
 ## What It Does
 
 For `MODEL_TYPE=hybrid_follow`, the script does all of the following:
 
 1. Ensures the `doryenv` and `nemoenv` virtual environments exist.
-2. Selects the latest useful `hybrid_follow` checkpoint.
-3. Selects a calibration image directory from `training/hybrid_follow/eval_epoch_*` when available.
-4. Exports the model through `export_nemo_quant.py`.
-5. Simplifies and cleans the ONNX for DORY.
-6. Generates DORY IO artifacts and weight text dumps.
-7. Runs `network_generate.py`.
-8. Writes the generated app into `pytorch_ssd/application`.
-9. Leaves the whole pipeline inside `pytorch_ssd` unless `SYNC_TO_CRAZYFLIE=1` is set manually.
+2. Selects the best available `hybrid_follow` checkpoint for deployment.
+3. Selects a representative calibration image directory, preferring COCO validation images over diagnostic `top_fn` or `top_fp` folders.
+4. Runs a PyTorch compatibility preflight before export starts.
+5. Exports the model through `export_nemo_quant.py`.
+6. Simplifies and cleans the ONNX for DORY.
+7. Runs an ONNX compatibility check on both the raw and DORY-clean graphs.
+8. Generates DORY IO artifacts and weight text dumps.
+9. Runs `network_generate.py`.
+10. Writes the generated app into `pytorch_ssd/application`.
+11. Leaves the whole pipeline inside `pytorch_ssd` unless `SYNC_TO_CRAZYFLIE=1` is set manually.
 
 ## Default Hybrid-Follow Settings
 
 Important defaults for the hybrid model:
 
 - `MODEL_TYPE=hybrid_follow`
-- checkpoint default: `training/hybrid_follow/hybrid_follow_best_visibility.pth`
+- checkpoint selection prefers `training/hybrid_follow/hybrid_follow_best_x.pth`, then `hybrid_follow_best_follow_score.pth`, then `hybrid_follow_best_total_loss.pth`
 - final export stage: `id`
+- strict stage conversion: enabled
 - output app dir: `application`
 - `RUN_DORY=1`
 - `SYNC_TO_CRAZYFLIE=0`
@@ -77,6 +80,30 @@ SYNC_TO_CRAZYFLIE=1 CRAZYFLIE_APP_DIR=../crazyflie_ssd ./run_all.sh
 RUN_DORY=0 ./run_all.sh
 ```
 
+### Skip the compatibility checker
+
+```bash
+RUN_COMPAT_CHECKS=0 ./run_all.sh
+```
+
+### Reproduce the restored March 20, 2026 exporter baseline
+
+```bash
+CKPT=training/hybrid_follow/hybrid_follow_best_follow_score.pth \
+CALIB_DIR=data/coco/images/val2017 \
+CALIB_BATCHES=8 \
+RUN_COMPAT_CHECKS=0 \
+RUN_STAGE_DRIFT=0 \
+SYNC_TO_CRAZYFLIE=0 \
+./run_all.sh
+```
+
+### Make the preflight dry-run cheaper
+
+```bash
+COMPAT_CALIB_BATCHES=4 ./run_all.sh
+```
+
 ## Important Outputs
 
 The hybrid export pipeline writes the main artifacts here:
@@ -84,6 +111,8 @@ The hybrid export pipeline writes the main artifacts here:
 - ONNX export: `pytorch_ssd/export/hybrid_follow/hybrid_follow_quant.onnx`
 - simplified ONNX: `pytorch_ssd/export/hybrid_follow/hybrid_follow_quant_sim.onnx`
 - DORY-ready ONNX: `pytorch_ssd/export/hybrid_follow/hybrid_follow_dory.onnx`
+- PyTorch compatibility report: `pytorch_ssd/export/hybrid_follow/model_compat_python.json`
+- ONNX compatibility report: `pytorch_ssd/export/hybrid_follow/model_compat_onnx.json`
 - generated DORY app: `pytorch_ssd/application`
 - DORY weights text: `pytorch_ssd/export/hybrid_follow/weights_txt`
 - DORY manifest: `pytorch_ssd/export/hybrid_follow/nemo_dory_artifacts.json`
@@ -104,7 +133,9 @@ That staged sample is useful for a quick smoke test, but it is not a real image.
 
 For `hybrid_follow`, the script first tries to use:
 
-- `training/hybrid_follow/hybrid_follow_best_visibility.pth`
+- `training/hybrid_follow/hybrid_follow_best_x.pth`
+- `training/hybrid_follow/hybrid_follow_best_follow_score.pth`
+- `training/hybrid_follow/hybrid_follow_best_total_loss.pth`
 
 If that file does not exist, it tries the latest `hybrid_follow_epoch_*.pth`.
 
@@ -114,15 +145,32 @@ If no checkpoint exists at all, it can create a bootstrap random-init checkpoint
 
 If `CALIB_DIR` is not provided, the script scans:
 
-- `training/hybrid_follow/eval_epoch_*`
+- `pytorch_ssd/data/coco/images/val2017`
+- `pytorch_ssd/data/coco/images/train2017`
+- `pytorch_ssd/data/rep_images`
 
-and chooses the newest directory that exists. If no calibration images exist, the export falls back to random calibration tensors.
+The automatic path intentionally avoids `training/hybrid_follow/eval_epoch_*` as a first choice because those folders often contain `top_fn` and `top_fp` diagnostic slices rather than representative deployment data.
+
+If no representative calibration images exist, the export falls back to random calibration tensors.
+
+## Hybrid-Follow Export Notes
+
+The currently restored exporter baseline is the `906c1aa` path documented in [10-baseline-restoration.md](10-baseline-restoration.md).
+
+Important consequences:
+
+- hybrid-follow export is back on the older best-effort `qd_stage()` fallback plus `id_stage(eps_in=dict)` path
+- ONNX Conv/Gemm weight initializers are clipped back into signed int8 range during export
+- the later PyTorch compatibility checker expects helper functions from the newer exporter rewrite, so baseline reproduction currently uses `RUN_COMPAT_CHECKS=0`
+- the later strict graph-repair rewrite described in [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md) is now historical context rather than the active baseline
 
 ## What Success Looks Like
 
 A successful run ends with output like this conceptually:
 
 - final quant stage is reported
+- the PyTorch compatibility preflight status is printed
+- the ONNX compatibility status is printed
 - DORY config path is printed
 - DORY application dir is printed
 - DORY weight text dir is printed
