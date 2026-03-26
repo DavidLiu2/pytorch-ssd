@@ -1,0 +1,16 @@
+{
+  "key": "nemo",
+  "label": "NEMO ID (in-memory)",
+  "status": "ok",
+  "decoded": {
+    "x_offset": 0.18389892578125,
+    "size_proxy": 0.567962646484375,
+    "visibility_logit": 1.779510498046875,
+    "visibility_confidence": 0.855636411811068
+  },
+  "representation": "fixed-point-int32",
+  "stage_tag": "id",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+  "notes": [],
+  "error": null
+}

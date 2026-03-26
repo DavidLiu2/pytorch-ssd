@@ -1,0 +1,479 @@
+{
+  "points": [
+    {
+      "point": "stage4.1.conv2 output",
+      "fp_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.6477502584457397,
+        "max": 1.3251889944076538,
+        "mean": -0.12507568123655802,
+        "std": 0.38688197723846257,
+        "abs_max": 1.6477502584457397,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "fq_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.6521904468536377,
+        "max": 1.277620553970337,
+        "mean": -0.1269485022952722,
+        "std": 0.3790309864548921,
+        "abs_max": 1.6521904468536377,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "id_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -2.720148130065354,
+        "max": 2.1057928443769924,
+        "mean": 0.03433785953714619,
+        "std": 0.6269438801333244,
+        "abs_max": 2.720148130065354,
+        "nonzero_count": 1280,
+        "unique_count": 1278
+      },
+      "fp_vs_fq": {
+        "max_abs_diff": 0.1150895357131958,
+        "mean_abs_diff": 0.020613387823323136,
+        "sum_abs_diff": 26.385136413853616
+      },
+      "fq_vs_id": {
+        "max_abs_diff": 2.9067015522305155,
+        "mean_abs_diff": 0.5888103907174923,
+        "sum_abs_diff": 753.6773001183901
+      },
+      "fp_vs_id": {
+        "max_abs_diff": 2.8886264177453995,
+        "mean_abs_diff": 0.5881608606475368,
+        "sum_abs_diff": 752.8459016288471
+      }
+    },
+    {
+      "point": "stage4.1 residual skip input",
+      "fp_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": 0.0,
+        "max": 2.322035312652588,
+        "mean": 0.19995359486492817,
+        "std": 0.3450369179997292,
+        "abs_max": 2.322035312652588,
+        "nonzero_count": 533,
+        "unique_count": 534
+      },
+      "fq_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": 0.0,
+        "max": 2.235374927520752,
+        "mean": 0.19697667024447582,
+        "std": 0.33736995984904544,
+        "abs_max": 2.235374927520752,
+        "nonzero_count": 535,
+        "unique_count": 138
+      },
+      "id_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": 0.0,
+        "max": 2.336150030605495,
+        "mean": 0.9793006370637158,
+        "std": 1.1514359667148464,
+        "abs_max": 2.336150030605495,
+        "nonzero_count": 539,
+        "unique_count": 6
+      },
+      "fp_vs_fq": {
+        "max_abs_diff": 0.2140805423259735,
+        "mean_abs_diff": 0.01525758277857676,
+        "sum_abs_diff": 19.529705956578255
+      },
+      "fq_vs_id": {
+        "max_abs_diff": 2.336150030605495,
+        "mean_abs_diff": 0.999634590230562,
+        "sum_abs_diff": 1279.5322754951194
+      },
+      "fp_vs_id": {
+        "max_abs_diff": 2.336150030605495,
+        "mean_abs_diff": 0.9992797298829827,
+        "sum_abs_diff": 1279.078054250218
+      }
+    },
+    {
+      "point": "stage4.1.add pre-requant",
+      "fp_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.3716404438018799,
+        "max": 3.213449239730835,
+        "mean": 0.07487791345793085,
+        "std": 0.5644099526920049,
+        "abs_max": 3.213449239730835,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "fq_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.340727686882019,
+        "max": 3.1383750438690186,
+        "mean": 0.07002816787453411,
+        "std": 0.5521758136332874,
+        "abs_max": 3.1383750438690186,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "id_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -2.618561756609722,
+        "max": 4.1326558457312785,
+        "mean": 1.0133667609380463,
+        "std": 1.2491292724984098,
+        "abs_max": 4.1326558457312785,
+        "nonzero_count": 1280,
+        "unique_count": 1278
+      },
+      "fp_vs_fq": {
+        "max_abs_diff": 0.24064084887504578,
+        "mean_abs_diff": 0.02952221397745234,
+        "sum_abs_diff": 37.78843389113899
+      },
+      "fq_vs_id": {
+        "max_abs_diff": 4.070345284706718,
+        "mean_abs_diff": 1.3011435150779025,
+        "sum_abs_diff": 1665.4636992997152
+      },
+      "fp_vs_id": {
+        "max_abs_diff": 4.069001021153099,
+        "mean_abs_diff": 1.3026219450646408,
+        "sum_abs_diff": 1667.3560896827403
+      }
+    },
+    {
+      "point": "stage4.1.add post-requant",
+      "fp_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.3716404438018799,
+        "max": 3.213449239730835,
+        "mean": 0.07487791345793085,
+        "std": 0.5644099526920049,
+        "abs_max": 3.213449239730835,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "fq_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -1.340727686882019,
+        "max": 3.1383750438690186,
+        "mean": 0.07002816787453411,
+        "std": 0.5521758136332874,
+        "abs_max": 3.1383750438690186,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "id_stats": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float64",
+        "min": -2.620152583345771,
+        "max": 4.1226177010685205,
+        "mean": 1.0044299960019998,
+        "std": 1.2490329240691695,
+        "abs_max": 4.1226177010685205,
+        "nonzero_count": 1271,
+        "unique_count": 260
+      },
+      "fp_vs_fq": {
+        "max_abs_diff": 0.24064084887504578,
+        "mean_abs_diff": 0.02952221397745234,
+        "sum_abs_diff": 37.78843389113899
+      },
+      "fq_vs_id": {
+        "max_abs_diff": 4.062997845932841,
+        "mean_abs_diff": 1.2969220902455163,
+        "sum_abs_diff": 1660.0602755142609
+      },
+      "fp_vs_id": {
+        "max_abs_diff": 4.061653582379222,
+        "mean_abs_diff": 1.2984919446547791,
+        "sum_abs_diff": 1662.0696891581174
+      }
+    },
+    {
+      "point": "global pool output",
+      "fp_stats": {
+        "shape": [
+          1,
+          80,
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "min": 0.01835871860384941,
+        "max": 1.0582472085952759,
+        "mean": 0.2338055544998497,
+        "std": 0.2089158455159667,
+        "abs_max": 1.0582472085952759,
+        "nonzero_count": 80,
+        "unique_count": 80
+      },
+      "fq_stats": {
+        "shape": [
+          1,
+          80,
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "min": 0.010408569127321243,
+        "max": 1.0384548902511597,
+        "mean": 0.22472501578740775,
+        "std": 0.20230083428386172,
+        "abs_max": 1.0384548902511597,
+        "nonzero_count": 80,
+        "unique_count": 75
+      },
+      "id_stats": {
+        "shape": [
+          1,
+          80,
+          1,
+          1
+        ],
+        "dtype": "float64",
+        "min": 0.012810546904802322,
+        "max": 2.7286464907228947,
+        "mean": 1.1061907252296805,
+        "std": 0.7481954379164302,
+        "abs_max": 2.7286464907228947,
+        "nonzero_count": 80,
+        "unique_count": 66
+      },
+      "fp_vs_fq": {
+        "max_abs_diff": 0.052388131618499756,
+        "mean_abs_diff": 0.010893793404102325,
+        "sum_abs_diff": 0.871503472328186
+      },
+      "fq_vs_id": {
+        "max_abs_diff": 2.663793098181486,
+        "mean_abs_diff": 0.9248614396434277,
+        "sum_abs_diff": 73.98891517147422
+      },
+      "fp_vs_id": {
+        "max_abs_diff": 2.6671731658279896,
+        "mean_abs_diff": 0.9186669410672039,
+        "sum_abs_diff": 73.49335528537631
+      }
+    },
+    {
+      "point": "head input",
+      "fp_stats": {
+        "shape": [
+          1,
+          80
+        ],
+        "dtype": "float64",
+        "min": 0.01835871860384941,
+        "max": 1.0582472085952759,
+        "mean": 0.2338055544998497,
+        "std": 0.2089158455159667,
+        "abs_max": 1.0582472085952759,
+        "nonzero_count": 80,
+        "unique_count": 80
+      },
+      "fq_stats": {
+        "shape": [
+          1,
+          80
+        ],
+        "dtype": "float64",
+        "min": 0.010408569127321243,
+        "max": 1.0384548902511597,
+        "mean": 0.22472501578740775,
+        "std": 0.20230083428386172,
+        "abs_max": 1.0384548902511597,
+        "nonzero_count": 80,
+        "unique_count": 75
+      },
+      "id_stats": {
+        "shape": [
+          1,
+          80
+        ],
+        "dtype": "float64",
+        "min": 0.012810546904802322,
+        "max": 2.7286464907228947,
+        "mean": 1.1061907252296805,
+        "std": 0.7481954379164302,
+        "abs_max": 2.7286464907228947,
+        "nonzero_count": 80,
+        "unique_count": 66
+      },
+      "fp_vs_fq": {
+        "max_abs_diff": 0.052388131618499756,
+        "mean_abs_diff": 0.010893793404102325,
+        "sum_abs_diff": 0.871503472328186
+      },
+      "fq_vs_id": {
+        "max_abs_diff": 2.663793098181486,
+        "mean_abs_diff": 0.9248614396434277,
+        "sum_abs_diff": 73.98891517147422
+      },
+      "fp_vs_id": {
+        "max_abs_diff": 2.6671731658279896,
+        "mean_abs_diff": 0.9186669410672039,
+        "sum_abs_diff": 73.49335528537631
+      }
+    }
+  ],
+  "largest_fq_to_id_drift_point": "stage4.1.add pre-requant",
+  "largest_fq_to_id_drift_mean_abs_diff": 1.3011435150779025,
+  "stage4_1_add_pre_vs_post_requant": {
+    "max_abs_diff": 0.01828751789190619,
+    "mean_abs_diff": 0.00893676493604656,
+    "sum_abs_diff": 11.439059118139596
+  },
+  "stage4_1_add_scale_selection": {
+    "precision_bits": 8,
+    "deployment": 1,
+    "integerized": 1,
+    "requantization_factor": 32,
+    "eps_in_list": [
+      1.3808839867124334e-05,
+      0.009161372669041157
+    ],
+    "eps_out": 0.018322745338082314,
+    "alpha_out": 255.0,
+    "D": 65536,
+    "shift": 16,
+    "forward_uses_requantization": 1,
+    "forward_clamps_output": 0,
+    "mul": [
+      49,
+      32768
+    ],
+    "mul_ideal": [
+      49.39085889334183,
+      32768.0
+    ],
+    "output_lsb_per_input_lsb": [
+      0.0007476806640625,
+      0.5
+    ],
+    "input_lsb_per_output_lsb": [
+      1337.469387755102,
+      2.0
+    ],
+    "branch_eps_ratio": 663.4426032307229,
+    "output_dynamic_range_semantic": 4.67230006121099,
+    "clip_bounds_semantic_equivalent": {
+      "min": 0.0,
+      "max": 4.67230006121099
+    },
+    "dynamic_range_margin_factor": 1.1333333333333333
+  },
+  "stage4_1_add_code_path": {
+    "deploy_qd_stage": {
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/transf/deploy.py",
+      "start_line": 118,
+      "end_line": 160
+    },
+    "deploy_set_eps_in": {
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/transf/deploy.py",
+      "start_line": 90,
+      "end_line": 116
+    },
+    "integerize_pact": {
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/transform.py",
+      "start_line": 358,
+      "end_line": 380
+    },
+    "hier_integerizer": {
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/transform.py",
+      "start_line": 202,
+      "end_line": 225
+    },
+    "pact_integer_add_get_output_eps": {
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py",
+      "start_line": 478,
+      "end_line": 486
+    },
+    "pact_integer_add_forward": {
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py",
+      "start_line": 488,
+      "end_line": 499
+    },
+    "pact_integer_requantize_add": {
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/quant/pact.py",
+      "start_line": 59,
+      "end_line": 70
+    }
+  },
+  "head_input_eps_in": 0.012810546904802322,
+  "diagnosis": "Largest inspected FQ->ID drift is at 'stage4.1.add pre-requant' with mean_abs_diff=1.301144. The stage4.1.add requant step alone changes the semantic tensor by mean_abs_diff=0.008937. Branch output LSB per input LSB is [0.0007476806640625, 0.5] with input LSB per output LSB [1337.469387755102, 2.0]."
+}

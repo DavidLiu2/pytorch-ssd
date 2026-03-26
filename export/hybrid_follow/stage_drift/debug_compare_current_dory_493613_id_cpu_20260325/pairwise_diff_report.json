@@ -1,0 +1,134 @@
+{
+  "pytorch_vs_quantized": {
+    "left_stage": "pytorch",
+    "left_label": "PyTorch checkpoint",
+    "right_stage": "nemo",
+    "right_label": "NEMO ID (in-memory)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_logit": 4.479574203491211
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_logit": 0.7156915774586683
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_confidence": 0.14245424479731394
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_confidence": 0.14272675919178385
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.112076 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.166048 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.142454 exceeds 0.100000"
+    ]
+  },
+  "quantized_vs_onnx": {
+    "left_stage": "nemo",
+    "left_label": "NEMO ID (in-memory)",
+    "right_stage": "onnx",
+    "right_label": "Exported ONNX (ID)",
+    "status": "ok",
+    "raw_head_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "warnings": []
+  },
+  "pytorch_vs_onnx": {
+    "left_stage": "pytorch",
+    "left_label": "PyTorch checkpoint",
+    "right_stage": "onnx",
+    "right_label": "Exported ONNX (ID)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_logit": 4.479574203491211
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_logit": 0.7156915774586683
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_confidence": 0.14245424479731394
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_confidence": 0.14272675919178385
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.112076 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.166048 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.142454 exceeds 0.100000"
+    ]
+  },
+  "onnx_vs_golden": {
+    "left_stage": "onnx",
+    "left_label": "Exported ONNX (ID)",
+    "right_stage": "golden",
+    "right_label": "Golden output artifact",
+    "status": "ok",
+    "raw_head_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "warnings": []
+  },
+  "golden_vs_gvsoc": {
+    "left_stage": "golden",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  },
+  "pytorch_vs_gvsoc": {
+    "left_stage": "pytorch",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  }
+}

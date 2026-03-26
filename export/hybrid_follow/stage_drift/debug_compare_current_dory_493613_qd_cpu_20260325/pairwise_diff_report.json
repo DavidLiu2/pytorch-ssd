@@ -1,0 +1,138 @@
+{
+  "pytorch_vs_quantized": {
+    "left_stage": "pytorch",
+    "left_label": "PyTorch checkpoint",
+    "right_stage": "nemo",
+    "right_label": "NEMO QD (in-memory)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.07182320207357407,
+      "size_proxy": 0.4019148349761963,
+      "visibility_logit": 6.259328842163086
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 1.0,
+      "size_proxy": 1.0,
+      "visibility_logit": 1.0000390058030273
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.07182320207357407,
+      "size_proxy": 0.4019148349761963,
+      "visibility_confidence": 0.4981516917643288
+    },
+    "decoded_relative_diff": {
+      "x_offset": 1.0,
+      "size_proxy": 1.0,
+      "visibility_confidence": 0.4991046539370493
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.071823 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.401915 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.498152 exceeds 0.100000"
+    ]
+  },
+  "quantized_vs_onnx": {
+    "left_stage": "nemo",
+    "left_label": "NEMO QD (in-memory)",
+    "right_stage": "onnx",
+    "right_label": "Exported ONNX (ID)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.18389892578125,
+      "size_proxy": 0.567962646484375,
+      "visibility_logit": 1.779754638671875
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 1.0,
+      "size_proxy": 1.0,
+      "visibility_logit": 1.0001371953833753
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.18389892578125,
+      "size_proxy": 0.567962646484375,
+      "visibility_confidence": 0.35569744696701483
+    },
+    "decoded_relative_diff": {
+      "x_offset": 1.0,
+      "size_proxy": 1.0,
+      "visibility_confidence": 0.4157109749620566
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.183899 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.567963 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.355697 exceeds 0.100000"
+    ]
+  },
+  "pytorch_vs_onnx": {
+    "left_stage": "pytorch",
+    "left_label": "PyTorch checkpoint",
+    "right_stage": "onnx",
+    "right_label": "Exported ONNX (ID)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_logit": 4.479574203491211
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_logit": 0.7156915774586683
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_confidence": 0.14245424479731394
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_confidence": 0.14272675919178385
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.112076 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.166048 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.142454 exceeds 0.100000"
+    ]
+  },
+  "onnx_vs_golden": {
+    "left_stage": "onnx",
+    "left_label": "Exported ONNX (ID)",
+    "right_stage": "golden",
+    "right_label": "Golden output artifact",
+    "status": "ok",
+    "raw_head_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "warnings": []
+  },
+  "golden_vs_gvsoc": {
+    "left_stage": "golden",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  },
+  "pytorch_vs_gvsoc": {
+    "left_stage": "pytorch",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  }
+}

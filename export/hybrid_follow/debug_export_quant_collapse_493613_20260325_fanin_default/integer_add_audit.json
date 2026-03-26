@@ -1,0 +1,1366 @@
+{
+  "post_qd": {
+    "stage4.0.add": {
+      "module_class": "PACT_IntegerAdd",
+      "scale_selection": {
+        "precision_bits": 8,
+        "deployment": 1,
+        "integerized": 0,
+        "requantization_factor": 32,
+        "eps_in_list": [
+          1.165186313301092e-05,
+          3.091901453444734e-05
+        ],
+        "eps_out": 6.183802906889468e-05,
+        "alpha_out": 255.0,
+        "D": 256,
+        "shift": 8,
+        "forward_uses_requantization": 0,
+        "forward_clamps_output": 0,
+        "mul": [
+          48,
+          128
+        ],
+        "mul_ideal": [
+          48.23693456865398,
+          128.0
+        ],
+        "output_lsb_per_input_lsb": [
+          0.1875,
+          0.5
+        ],
+        "input_lsb_per_output_lsb": [
+          5.333333333333333,
+          2.0
+        ],
+        "branch_eps_ratio": 2.653568290452246,
+        "output_dynamic_range_semantic": 0.015768697412568145,
+        "clip_bounds_semantic_equivalent": {
+          "min": 0.0,
+          "max": 0.015768697412568145
+        },
+        "dynamic_range_margin_factor": 255.0
+      },
+      "branch_inputs": {
+        "main": {
+          "eps_in": 1.165186313301092e-05,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": -1.8168058395385742,
+            "max": 2.0076611042022705,
+            "mean": -0.027225082740187645,
+            "std": 0.5424503087997437,
+            "abs_max": 2.0076611042022705,
+            "nonzero_count": 1280,
+            "unique_count": 1280
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": -2.0,
+            "max": 2.0,
+            "mean": -0.02265625,
+            "std": 0.618934927384081,
+            "abs_max": 2.0,
+            "nonzero_count": 467,
+            "unique_count": 5
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": -2.330372626602184e-05,
+            "max": 2.330372626602184e-05,
+            "mean": -2.6398752410727867e-07,
+            "std": 7.211745062119363e-06,
+            "abs_max": 2.330372626602184e-05,
+            "nonzero_count": 467,
+            "unique_count": 5
+          }
+        },
+        "skip": {
+          "eps_in": 3.091901453444734e-05,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": -1.246174931526184,
+            "max": 1.1059857606887817,
+            "mean": 0.010816387832164764,
+            "std": 0.40559902787208557,
+            "abs_max": 1.246174931526184,
+            "nonzero_count": 1280,
+            "unique_count": 1280
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": -1.0,
+            "max": 1.0,
+            "mean": 0.02109375,
+            "std": 0.4763389588422697,
+            "abs_max": 1.0,
+            "nonzero_count": 291,
+            "unique_count": 3
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": -3.091901453444734e-05,
+            "max": 3.091901453444734e-05,
+            "mean": 6.521979628359986e-07,
+            "std": 1.4727931191767651e-05,
+            "abs_max": 3.091901453444734e-05,
+            "nonzero_count": 291,
+            "unique_count": 3
+          }
+        }
+      },
+      "pre_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -176.0,
+          "max": 176.0,
+          "mean": 1.6125,
+          "std": 65.49198304945423,
+          "abs_max": 176.0,
+          "nonzero_count": 649,
+          "unique_count": 11
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -4.2513644984865095e-05,
+          "max": 4.2513644984865095e-05,
+          "mean": 3.895071166937214e-07,
+          "std": 1.581990293590511e-05,
+          "abs_max": 4.2513644984865095e-05,
+          "nonzero_count": 649,
+          "unique_count": 11
+        }
+      },
+      "post_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -1.0,
+          "max": 0.0,
+          "mean": -0.265625,
+          "std": 0.4416654382844553,
+          "abs_max": 1.0,
+          "nonzero_count": 340,
+          "unique_count": 2
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -6.183802906889468e-05,
+          "max": 0.0,
+          "mean": -1.642572647142515e-05,
+          "std": 2.7311720211360263e-05,
+          "abs_max": 6.183802906889468e-05,
+          "nonzero_count": 340,
+          "unique_count": 2
+        }
+      },
+      "actual_output": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -1.9946163892745972,
+          "max": 2.350324869155884,
+          "mean": -0.01640869490802288,
+          "std": 0.6495885848999023,
+          "abs_max": 2.350324869155884,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "rounded_int_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -2.0,
+          "max": 2.0,
+          "mean": -0.025,
+          "std": 0.7187228255732526,
+          "abs_max": 2.0,
+          "nonzero_count": 584,
+          "unique_count": 5
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.00012367605813778937,
+          "max": 0.00012367605813778937,
+          "mean": -1.5459507267223672e-06,
+          "std": 4.444440298027692e-05,
+          "abs_max": 0.00012367605813778937,
+          "nonzero_count": 584,
+          "unique_count": 5
+        },
+        "predicted_post_requant_raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -1.0,
+          "max": 0.0,
+          "mean": -0.265625,
+          "std": 0.4416654382844553,
+          "abs_max": 1.0,
+          "nonzero_count": 340,
+          "unique_count": 2
+        },
+        "predicted_post_requant_semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -6.183802906889468e-05,
+          "max": 0.0,
+          "mean": -1.642572647142515e-05,
+          "std": 2.7311720211360263e-05,
+          "abs_max": 6.183802906889468e-05,
+          "nonzero_count": 340,
+          "unique_count": 2
+        },
+        "actual_vs_predicted_post_requant_raw": {
+          "max_abs_diff": 2.0,
+          "mean_abs_diff": 0.38125,
+          "sum_abs_diff": 488.0
+        },
+        "matches_predicted_post_requant_raw": 0
+      },
+      "module_name": "stage4.0.add",
+      "code_path": {
+        "deploy_qd_stage": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 113,
+          "end_line": 155
+        },
+        "deploy_set_eps_in": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 90,
+          "end_line": 111
+        },
+        "integerize_pact": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 354,
+          "end_line": 376
+        },
+        "hier_integerizer": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 201,
+          "end_line": 221
+        },
+        "pact_integer_add_get_output_eps": {
+          "path": "C:\\Users\\yxl21\\Documents\\School\\DroneRS\\pytorch_ssd\\export_nemo_quant.py",
+          "start_line": 180,
+          "end_line": 193
+        },
+        "pact_integer_add_forward": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 485,
+          "end_line": 496
+        },
+        "pact_integer_requantize_add": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 57,
+          "end_line": 67
+        }
+      }
+    },
+    "stage4.1.add": {
+      "module_class": "PACT_IntegerAdd",
+      "scale_selection": {
+        "precision_bits": 8,
+        "deployment": 1,
+        "integerized": 0,
+        "requantization_factor": 32,
+        "eps_in_list": [
+          1.3808839867124334e-05,
+          0.009161373600363731
+        ],
+        "eps_out": 0.018322747200727463,
+        "alpha_out": 255.0,
+        "D": 65536,
+        "shift": 16,
+        "forward_uses_requantization": 0,
+        "forward_clamps_output": 0,
+        "mul": [
+          49,
+          32768
+        ],
+        "mul_ideal": [
+          49.39085387238931,
+          32768.0
+        ],
+        "output_lsb_per_input_lsb": [
+          0.0007476806640625,
+          0.5
+        ],
+        "input_lsb_per_output_lsb": [
+          1337.469387755102,
+          2.0
+        ],
+        "branch_eps_ratio": 663.4426706746633,
+        "output_dynamic_range_semantic": 4.672300536185503,
+        "clip_bounds_semantic_equivalent": {
+          "min": 0.0,
+          "max": 4.672300536185503
+        },
+        "dynamic_range_margin_factor": 255.0
+      },
+      "branch_inputs": {
+        "main": {
+          "eps_in": 1.3808839867124334e-05,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": -1.8269047737121582,
+            "max": 1.1294326782226562,
+            "mean": 0.012384424917399883,
+            "std": 0.3232120871543884,
+            "abs_max": 1.8269047737121582,
+            "nonzero_count": 1280,
+            "unique_count": 1280
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": -2.0,
+            "max": 1.0,
+            "mean": 0.02578125,
+            "std": 0.35592004319571197,
+            "abs_max": 2.0,
+            "nonzero_count": 160,
+            "unique_count": 4
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": -2.7617679734248668e-05,
+            "max": 1.3808839867124334e-05,
+            "mean": 3.5600915282429924e-07,
+            "std": 4.914842881989563e-06,
+            "abs_max": 2.7617679734248668e-05,
+            "nonzero_count": 160,
+            "unique_count": 4
+          }
+        },
+        "skip": {
+          "eps_in": 0.009161373600363731,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": 0.0,
+            "max": 2.3361501693725586,
+            "mean": 0.25018423795700073,
+            "std": 0.3979140520095825,
+            "abs_max": 2.3361501693725586,
+            "nonzero_count": 575,
+            "unique_count": 163
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": 0.0,
+            "max": 2.0,
+            "mean": 0.22421875,
+            "std": 0.44778030567281263,
+            "abs_max": 2.0,
+            "nonzero_count": 270,
+            "unique_count": 3
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": 0.0,
+            "max": 0.018322747200727463,
+            "mean": 0.0020541517369565554,
+            "std": 0.004102282671153708,
+            "abs_max": 0.018322747200727463,
+            "nonzero_count": 270,
+            "unique_count": 3
+          }
+        }
+      },
+      "pre_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -49.0,
+          "max": 65585.0,
+          "mean": 7348.46328125,
+          "std": 14672.242840018165,
+          "abs_max": 65585.0,
+          "nonzero_count": 368,
+          "unique_count": 10
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -1.3699563794489222e-05,
+          "max": 0.018336446764521952,
+          "mean": 0.002054504928835632,
+          "std": 0.004102108710103399,
+          "abs_max": 0.018336446764521952,
+          "nonzero_count": 368,
+          "unique_count": 10
+        }
+      },
+      "post_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -1.0,
+          "max": 1.0,
+          "mean": -0.01640625,
+          "std": 0.19091774396566052,
+          "abs_max": 1.0,
+          "nonzero_count": 47,
+          "unique_count": 3
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.018322747200727463,
+          "max": 0.018322747200727463,
+          "mean": -0.00030060757126193494,
+          "std": 0.003498137558816009,
+          "abs_max": 0.018322747200727463,
+          "nonzero_count": 47,
+          "unique_count": 3
+        }
+      },
+      "actual_output": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -1.0756821632385254,
+          "max": 2.5314948558807373,
+          "mean": 0.2625686526298523,
+          "std": 0.5259793996810913,
+          "abs_max": 2.5314948558807373,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "rounded_int_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -1.0,
+          "max": 3.0,
+          "mean": 0.271875,
+          "std": 0.5682948041069881,
+          "abs_max": 3.0,
+          "nonzero_count": 344,
+          "unique_count": 5
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.018322747200727463,
+          "max": 0.05496824160218239,
+          "mean": 0.004981496895197779,
+          "std": 0.01041272203113928,
+          "abs_max": 0.05496824160218239,
+          "nonzero_count": 344,
+          "unique_count": 5
+        },
+        "predicted_post_requant_raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -1.0,
+          "max": 1.0,
+          "mean": -0.01640625,
+          "std": 0.19091774396566052,
+          "abs_max": 1.0,
+          "nonzero_count": 47,
+          "unique_count": 3
+        },
+        "predicted_post_requant_semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.018322747200727463,
+          "max": 0.018322747200727463,
+          "mean": -0.00030060757126193494,
+          "std": 0.003498137558816009,
+          "abs_max": 0.018322747200727463,
+          "nonzero_count": 47,
+          "unique_count": 3
+        },
+        "actual_vs_predicted_post_requant_raw": {
+          "max_abs_diff": 2.0,
+          "mean_abs_diff": 0.28828125,
+          "sum_abs_diff": 369.0
+        },
+        "matches_predicted_post_requant_raw": 0
+      },
+      "module_name": "stage4.1.add",
+      "code_path": {
+        "deploy_qd_stage": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 113,
+          "end_line": 155
+        },
+        "deploy_set_eps_in": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 90,
+          "end_line": 111
+        },
+        "integerize_pact": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 354,
+          "end_line": 376
+        },
+        "hier_integerizer": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 201,
+          "end_line": 221
+        },
+        "pact_integer_add_get_output_eps": {
+          "path": "C:\\Users\\yxl21\\Documents\\School\\DroneRS\\pytorch_ssd\\export_nemo_quant.py",
+          "start_line": 180,
+          "end_line": 193
+        },
+        "pact_integer_add_forward": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 485,
+          "end_line": 496
+        },
+        "pact_integer_requantize_add": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 57,
+          "end_line": 67
+        }
+      }
+    }
+  },
+  "post_id": {
+    "stage4.0.add": {
+      "module_class": "PACT_IntegerAdd",
+      "scale_selection": {
+        "precision_bits": 8,
+        "deployment": 1,
+        "integerized": 1,
+        "requantization_factor": 32,
+        "eps_in_list": [
+          1.165186313301092e-05,
+          3.091901453444734e-05
+        ],
+        "eps_out": 6.183802906889468e-05,
+        "alpha_out": 255.0,
+        "D": 256,
+        "shift": 8,
+        "forward_uses_requantization": 1,
+        "forward_clamps_output": 0,
+        "mul": [
+          48,
+          128
+        ],
+        "mul_ideal": [
+          48.23693456865398,
+          128.0
+        ],
+        "output_lsb_per_input_lsb": [
+          0.1875,
+          0.5
+        ],
+        "input_lsb_per_output_lsb": [
+          5.333333333333333,
+          2.0
+        ],
+        "branch_eps_ratio": 2.653568290452246,
+        "output_dynamic_range_semantic": 0.015768697412568145,
+        "clip_bounds_semantic_equivalent": {
+          "min": 0.0,
+          "max": 0.015768697412568145
+        },
+        "dynamic_range_margin_factor": 0.0351288056206089
+      },
+      "branch_inputs": {
+        "main": {
+          "eps_in": 1.165186313301092e-05,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": -22532.9453125,
+            "max": 19046.01953125,
+            "mean": -842.3690185546875,
+            "std": 5687.74853515625,
+            "abs_max": 22532.9453125,
+            "nonzero_count": 1280,
+            "unique_count": 1279
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": -22533.0,
+            "max": 19046.0,
+            "mean": -842.42734375,
+            "std": 5687.796133996767,
+            "abs_max": 22533.0,
+            "nonzero_count": 1280,
+            "unique_count": 1239
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": -0.26255143197613506,
+            "max": 0.22192138523132598,
+            "mean": -0.009815848108880943,
+            "std": 0.06627342208179897,
+            "abs_max": 0.26255143197613506,
+            "nonzero_count": 1280,
+            "unique_count": 1239
+          }
+        },
+        "skip": {
+          "eps_in": 3.091901453444734e-05,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": -10091.6337890625,
+            "max": 9881.1728515625,
+            "mean": -280.1918029785156,
+            "std": 2277.06396484375,
+            "abs_max": 10091.6337890625,
+            "nonzero_count": 1280,
+            "unique_count": 1280
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": -10092.0,
+            "max": 9881.0,
+            "mean": -280.15859375,
+            "std": 2277.0828824955565,
+            "abs_max": 10092.0,
+            "nonzero_count": 1279,
+            "unique_count": 1186
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": -0.3120346946816426,
+            "max": 0.3055107826148742,
+            "mean": -0.008662227632106579,
+            "std": 0.07040515874002136,
+            "abs_max": 0.3120346946816426,
+            "nonzero_count": 1279,
+            "unique_count": 1186
+          }
+        }
+      },
+      "pre_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -1858208.0,
+          "max": 1493920.0,
+          "mean": -76296.8125,
+          "std": 396837.62666176184,
+          "abs_max": 1858208.0,
+          "nonzero_count": 1280,
+          "unique_count": 1265
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.4488590637502057,
+          "max": 0.36086354838516854,
+          "mean": -0.018429861364214872,
+          "std": 0.09585803395758283,
+          "abs_max": 0.4488590637502057,
+          "nonzero_count": 1280,
+          "unique_count": 1265
+        }
+      },
+      "post_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -7259.0,
+          "max": 5835.0,
+          "mean": -298.50234375,
+          "std": 1550.142769128704,
+          "abs_max": 7259.0,
+          "nonzero_count": 1280,
+          "unique_count": 1136
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.4488822530111065,
+          "max": 0.3608248996170005,
+          "mean": -0.018458796609945694,
+          "std": 0.09585777361831771,
+          "abs_max": 0.4488822530111065,
+          "nonzero_count": 1280,
+          "unique_count": 1136
+        }
+      },
+      "actual_output": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -7259.0,
+          "max": 5835.0,
+          "mean": -298.53436279296875,
+          "std": 1550.12890625,
+          "abs_max": 7259.0,
+          "nonzero_count": 1280,
+          "unique_count": 1127
+        },
+        "rounded_int_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -7259.0,
+          "max": 5835.0,
+          "mean": -298.534375,
+          "std": 1550.1289247005745,
+          "abs_max": 7259.0,
+          "nonzero_count": 1280,
+          "unique_count": 1127
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.4488822530111065,
+          "max": 0.3608248996170005,
+          "mean": -0.018460777359314305,
+          "std": 0.09585691750616859,
+          "abs_max": 0.4488822530111065,
+          "nonzero_count": 1280,
+          "unique_count": 1127
+        },
+        "predicted_post_requant_raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -7259.0,
+          "max": 5835.0,
+          "mean": -298.50234375,
+          "std": 1550.142769128704,
+          "abs_max": 7259.0,
+          "nonzero_count": 1280,
+          "unique_count": 1136
+        },
+        "predicted_post_requant_semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.4488822530111065,
+          "max": 0.3608248996170005,
+          "mean": -0.018458796609945694,
+          "std": 0.09585777361831771,
+          "abs_max": 0.4488822530111065,
+          "nonzero_count": 1280,
+          "unique_count": 1136
+        },
+        "actual_vs_predicted_post_requant_raw": {
+          "max_abs_diff": 1.0,
+          "mean_abs_diff": 0.12421875,
+          "sum_abs_diff": 159.0
+        },
+        "matches_predicted_post_requant_raw": 0
+      },
+      "module_name": "stage4.0.add",
+      "code_path": {
+        "deploy_qd_stage": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 113,
+          "end_line": 155
+        },
+        "deploy_set_eps_in": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 90,
+          "end_line": 111
+        },
+        "integerize_pact": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 354,
+          "end_line": 376
+        },
+        "hier_integerizer": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 201,
+          "end_line": 221
+        },
+        "pact_integer_add_get_output_eps": {
+          "path": "C:\\Users\\yxl21\\Documents\\School\\DroneRS\\pytorch_ssd\\export_nemo_quant.py",
+          "start_line": 180,
+          "end_line": 193
+        },
+        "pact_integer_add_forward": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 485,
+          "end_line": 496
+        },
+        "pact_integer_requantize_add": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 57,
+          "end_line": 67
+        }
+      }
+    },
+    "stage4.1.add": {
+      "module_class": "PACT_IntegerAdd",
+      "scale_selection": {
+        "precision_bits": 8,
+        "deployment": 1,
+        "integerized": 1,
+        "requantization_factor": 32,
+        "eps_in_list": [
+          1.3808839867124334e-05,
+          0.009161373600363731
+        ],
+        "eps_out": 0.018322747200727463,
+        "alpha_out": 255.0,
+        "D": 65536,
+        "shift": 16,
+        "forward_uses_requantization": 1,
+        "forward_clamps_output": 0,
+        "mul": [
+          49,
+          32768
+        ],
+        "mul_ideal": [
+          49.39085387238931,
+          32768.0
+        ],
+        "output_lsb_per_input_lsb": [
+          0.0007476806640625,
+          0.5
+        ],
+        "input_lsb_per_output_lsb": [
+          1337.469387755102,
+          2.0
+        ],
+        "branch_eps_ratio": 663.4426706746633,
+        "output_dynamic_range_semantic": 4.672300536185503,
+        "clip_bounds_semantic_equivalent": {
+          "min": 0.0,
+          "max": 4.672300536185503
+        },
+        "dynamic_range_margin_factor": 13.421052631578947
+      },
+      "branch_inputs": {
+        "main": {
+          "eps_in": 1.3808839867124334e-05,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": -9879.9140625,
+            "max": 8560.12109375,
+            "mean": 404.6596374511719,
+            "std": 2460.5224609375,
+            "abs_max": 9879.9140625,
+            "nonzero_count": 1280,
+            "unique_count": 1280
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": -9880.0,
+            "max": 8560.0,
+            "mean": 404.70859375,
+            "std": 2460.5227427167074,
+            "abs_max": 9880.0,
+            "nonzero_count": 1279,
+            "unique_count": 1191
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": -0.13643133788718842,
+            "max": 0.1182036692625843,
+            "mean": 0.005588556163942826,
+            "std": 0.03397696454359258,
+            "abs_max": 0.13643133788718842,
+            "nonzero_count": 1279,
+            "unique_count": 1191
+          }
+        },
+        "skip": {
+          "eps_in": 0.009161373600363731,
+          "raw_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float32",
+            "min": 0.0,
+            "max": 39.0,
+            "mean": 2.844531297683716,
+            "std": 5.289292335510254,
+            "abs_max": 39.0,
+            "nonzero_count": 492,
+            "unique_count": 31
+          },
+          "rounded_int_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "int64",
+            "min": 0.0,
+            "max": 39.0,
+            "mean": 2.84453125,
+            "std": 5.289292080966359,
+            "abs_max": 39.0,
+            "nonzero_count": 492,
+            "unique_count": 31
+          },
+          "semantic_stats": {
+            "shape": [
+              1,
+              80,
+              4,
+              4
+            ],
+            "dtype": "float64",
+            "min": 0.0,
+            "max": 0.3572935704141855,
+            "mean": 0.026059813499159645,
+            "std": 0.048457180835178144,
+            "abs_max": 0.3572935704141855,
+            "nonzero_count": 492,
+            "unique_count": 31
+          }
+        }
+      },
+      "pre_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -399889.0,
+          "max": 1256418.0,
+          "mean": 113040.32109375,
+          "std": 218600.30944193603,
+          "abs_max": 1256418.0,
+          "nonzero_count": 1279,
+          "unique_count": 1233
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.11180214012682654,
+          "max": 0.3512730315009094,
+          "mean": 0.03160414469741579,
+          "std": 0.061116916014181365,
+          "abs_max": 0.3512730315009094,
+          "nonzero_count": 1279,
+          "unique_count": 1233
+        }
+      },
+      "post_requant": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -7.0,
+          "max": 19.0,
+          "mean": 1.22265625,
+          "std": 3.3524178504977478,
+          "abs_max": 19.0,
+          "nonzero_count": 1026,
+          "unique_count": 27
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.12825923040509224,
+          "max": 0.3481321968138218,
+          "mean": 0.022402421382139437,
+          "std": 0.061425504785876384,
+          "abs_max": 0.3481321968138218,
+          "nonzero_count": 1026,
+          "unique_count": 27
+        }
+      },
+      "actual_output": {
+        "raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -7.0,
+          "max": 19.0,
+          "mean": 1.22265625,
+          "std": 3.3524179458618164,
+          "abs_max": 19.0,
+          "nonzero_count": 1026,
+          "unique_count": 27
+        },
+        "rounded_int_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -7.0,
+          "max": 19.0,
+          "mean": 1.22265625,
+          "std": 3.3524178504977478,
+          "abs_max": 19.0,
+          "nonzero_count": 1026,
+          "unique_count": 27
+        },
+        "semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.12825923040509224,
+          "max": 0.3481321968138218,
+          "mean": 0.022402421382139437,
+          "std": 0.061425504785876384,
+          "abs_max": 0.3481321968138218,
+          "nonzero_count": 1026,
+          "unique_count": 27
+        },
+        "predicted_post_requant_raw_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "int64",
+          "min": -7.0,
+          "max": 19.0,
+          "mean": 1.22265625,
+          "std": 3.3524178504977478,
+          "abs_max": 19.0,
+          "nonzero_count": 1026,
+          "unique_count": 27
+        },
+        "predicted_post_requant_semantic_stats": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float64",
+          "min": -0.12825923040509224,
+          "max": 0.3481321968138218,
+          "mean": 0.022402421382139437,
+          "std": 0.061425504785876384,
+          "abs_max": 0.3481321968138218,
+          "nonzero_count": 1026,
+          "unique_count": 27
+        },
+        "actual_vs_predicted_post_requant_raw": {
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "sum_abs_diff": 0.0
+        },
+        "matches_predicted_post_requant_raw": 1
+      },
+      "module_name": "stage4.1.add",
+      "code_path": {
+        "deploy_qd_stage": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 113,
+          "end_line": 155
+        },
+        "deploy_set_eps_in": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transf\\deploy.py",
+          "start_line": 90,
+          "end_line": 111
+        },
+        "integerize_pact": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 354,
+          "end_line": 376
+        },
+        "hier_integerizer": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\transform.py",
+          "start_line": 201,
+          "end_line": 221
+        },
+        "pact_integer_add_get_output_eps": {
+          "path": "C:\\Users\\yxl21\\Documents\\School\\DroneRS\\pytorch_ssd\\export_nemo_quant.py",
+          "start_line": 180,
+          "end_line": 193
+        },
+        "pact_integer_add_forward": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 485,
+          "end_line": 496
+        },
+        "pact_integer_requantize_add": {
+          "path": "C:\\Users\\yxl21\\AppData\\Roaming\\Python\\Python313\\site-packages\\nemo\\quant\\pact.py",
+          "start_line": 57,
+          "end_line": 67
+        }
+      }
+    }
+  }
+}

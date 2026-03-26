@@ -1,0 +1,17 @@
+{
+  "key": "onnx",
+  "label": "Exported ONNX",
+  "status": "skipped",
+  "source": "export/hybrid_follow/debug_export_quant_collapse_493613_20260325_scale_patch/hybrid_follow_debug.onnx",
+  "stage_tag": null,
+  "representation": null,
+  "input_mode": null,
+  "raw_native": null,
+  "raw_semantic": null,
+  "decoded": null,
+  "notes": [
+    "ONNX stage skipped because the model file was not found."
+  ],
+  "error": "ONNX file not found: export/hybrid_follow/debug_export_quant_collapse_493613_20260325_scale_patch/hybrid_follow_debug.onnx",
+  "metadata": {}
+}

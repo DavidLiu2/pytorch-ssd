@@ -1,0 +1,40 @@
+{
+  "key": "nemo",
+  "label": "NEMO QD (in-memory)",
+  "status": "ok",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+  "stage_tag": "qd",
+  "representation": "fixed-point-int32",
+  "input_mode": "staged_0_255",
+  "raw_native": [
+    0,
+    0,
+    -8
+  ],
+  "raw_semantic": [
+    0.0,
+    0.0,
+    -0.000244140625
+  ],
+  "decoded": {
+    "x_offset": 0.0,
+    "size_proxy": 0.0,
+    "visibility_logit": -0.000244140625,
+    "visibility_confidence": 0.49993896484405315
+  },
+  "notes": [],
+  "error": null,
+  "metadata": {
+    "shape": [
+      1,
+      3
+    ],
+    "dtype": "torch.float32",
+    "bits": 8,
+    "eps_in": 0.00392156862745098,
+    "eps_out": null,
+    "calib_dir": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/data/coco/images/val2017",
+    "calib_tensor": null,
+    "calib_batches": 8
+  }
+}

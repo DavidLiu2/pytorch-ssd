@@ -1,0 +1,18 @@
+{
+  "key": "pytorch",
+  "label": "PyTorch checkpoint",
+  "status": "ok",
+  "decoded": {
+    "x_offset": 0.07182320207357407,
+    "size_proxy": 0.4019148349761963,
+    "visibility_logit": 6.259084701538086,
+    "visibility_confidence": 0.9980906566083819
+  },
+  "representation": "float",
+  "stage_tag": "fp",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+  "notes": [
+    "Original checkpoint path before NEMO export wrapping."
+  ],
+  "error": null
+}

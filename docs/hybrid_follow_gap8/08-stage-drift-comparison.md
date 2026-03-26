@@ -35,7 +35,7 @@ For fixed-point deployment outputs, it decodes with the current repository defau
 cd /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd
 
 python export/compare_hybrid_follow_stages.py \
-  --image training/hybrid_follow/eval_epoch_015/top_fn/01_p0.0114_000000132408.jpg \
+  --image data/coco/images/val2017/000000493613.jpg \
   --ckpt training/hybrid_follow/hybrid_follow_best_follow_score.pth \
   --onnx export/hybrid_follow/hybrid_follow_dory.onnx \
   --output-dir export/hybrid_follow/stage_drift/manual_example \
@@ -63,7 +63,7 @@ python export/compare_hybrid_follow_stages.py \
 Useful env vars:
 
 - `RUN_STAGE_DRIFT=1`
-- `STAGE_DRIFT_IMAGE=training/hybrid_follow/eval_epoch_015/top_fn/01_p0.0114_000000132408.jpg`
+- `STAGE_DRIFT_IMAGE=data/coco/images/val2017/000000493613.jpg`
 - `STAGE_DRIFT_OUTPUT_DIR=export/hybrid_follow/stage_drift/run_all`
 - `STAGE_DRIFT_NEMO_STAGE=auto`
 
@@ -113,7 +113,7 @@ Healthy result:
 Concerning result:
 
 - the first large warning appears before runtime
-- for example, PyTorch and NEMO are close, but ONNX collapses or shifts sharply
+- for example, FQ and ID already drift materially while ONNX still matches the in-memory deploy graph
 
 The default warnings are:
 
@@ -122,3 +122,13 @@ The default warnings are:
 - `visibility_confidence` abs diff `> 0.10`
 
 When that happens, the summary calls out the first adjacent pair where those thresholds trip so it is obvious where semantic drift begins.
+
+## Current Hybrid-Follow Reminder
+
+On the current known sample, stage drift is most useful for separating:
+
+- PyTorch checkpoint -> FakeQuantized
+- FakeQuantized -> IntegerDeployable
+- IntegerDeployable -> ONNX
+
+The current active issue is in the FQ -> ID transition around residual adds, not a generic ONNX collapse.

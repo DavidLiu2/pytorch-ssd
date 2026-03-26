@@ -1,0 +1,18 @@
+{
+  "key": "onnx",
+  "label": "Exported ONNX (ID)",
+  "status": "ok",
+  "decoded": {
+    "x_offset": 0.154998779296875,
+    "size_proxy": 0.617401123046875,
+    "visibility_logit": 1.823699951171875,
+    "visibility_confidence": 0.861009499831807
+  },
+  "representation": "fixed-point-int32",
+  "stage_tag": "id",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260325_scale_patch/hybrid_follow_debug.onnx",
+  "notes": [
+    "Resolved ONNX stage heuristically from filename: id"
+  ],
+  "error": null
+}

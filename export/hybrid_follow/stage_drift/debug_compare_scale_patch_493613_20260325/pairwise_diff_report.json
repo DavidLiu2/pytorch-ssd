@@ -1,0 +1,64 @@
+{
+  "pytorch_vs_quantized": {
+    "left_stage": "pytorch",
+    "left_label": "PyTorch checkpoint",
+    "right_stage": "nemo",
+    "right_label": "NEMO ID (in-memory)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.08317557722330093,
+      "size_proxy": 0.2154862880706787,
+      "visibility_logit": 4.435384750366211
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.5366208534067975,
+      "size_proxy": 0.34902153563837673,
+      "visibility_logit": 0.7086315271107091
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.08317557722330093,
+      "size_proxy": 0.2154862880706787,
+      "visibility_confidence": 0.13708115677657495
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.5366208534067975,
+      "size_proxy": 0.34902153563837673,
+      "visibility_confidence": 0.13734339247538022
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.083176 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.215486 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.137081 exceeds 0.100000"
+    ]
+  },
+  "quantized_vs_onnx": {
+    "left_stage": "nemo",
+    "right_stage": "onnx",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  },
+  "pytorch_vs_onnx": {
+    "left_stage": "pytorch",
+    "right_stage": "onnx",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  },
+  "onnx_vs_golden": {
+    "left_stage": "onnx",
+    "right_stage": "golden",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  },
+  "golden_vs_gvsoc": {
+    "left_stage": "golden",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  },
+  "pytorch_vs_gvsoc": {
+    "left_stage": "pytorch",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  }
+}

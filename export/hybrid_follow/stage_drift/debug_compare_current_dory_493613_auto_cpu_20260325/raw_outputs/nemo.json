@@ -1,0 +1,42 @@
+{
+  "key": "nemo",
+  "label": "NEMO FQ (in-memory)",
+  "status": "ok",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+  "stage_tag": "fq",
+  "representation": "float",
+  "input_mode": "float_0_1",
+  "raw_native": [
+    0.05636116862297058,
+    0.3977496325969696,
+    6.019847869873047
+  ],
+  "raw_semantic": [
+    0.05636116862297058,
+    0.3977496325969696,
+    6.019847869873047
+  ],
+  "decoded": {
+    "x_offset": 0.05636116862297058,
+    "size_proxy": 0.3977496325969696,
+    "visibility_logit": 6.019847869873047,
+    "visibility_confidence": 0.9975758515268497
+  },
+  "notes": [
+    "Auto mode chose FQ because it is the cleanest portable in-memory quantized checkpoint."
+  ],
+  "error": null,
+  "metadata": {
+    "shape": [
+      1,
+      3
+    ],
+    "dtype": "torch.float32",
+    "bits": 8,
+    "eps_in": 0.00392156862745098,
+    "eps_out": null,
+    "calib_dir": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/data/coco/images/val2017",
+    "calib_tensor": null,
+    "calib_batches": 8
+  }
+}

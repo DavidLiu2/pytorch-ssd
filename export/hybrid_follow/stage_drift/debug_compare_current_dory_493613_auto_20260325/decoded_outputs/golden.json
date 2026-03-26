@@ -1,0 +1,19 @@
+{
+  "key": "golden",
+  "label": "Golden output artifact",
+  "status": "ok",
+  "decoded": {
+    "x_offset": 0.18389892578125,
+    "size_proxy": 0.567962646484375,
+    "visibility_logit": 1.779510498046875,
+    "visibility_confidence": 0.855636411811068
+  },
+  "representation": "fixed-point-int32",
+  "stage_tag": "id",
+  "source": "export/hybrid_follow/stage_drift/debug_compare_current_dory_493613_auto_20260325/generated_golden_output.txt",
+  "notes": [
+    "Loaded from the export-side text/json artifact.",
+    "This golden artifact was generated from the ONNX result during this run."
+  ],
+  "error": null
+}

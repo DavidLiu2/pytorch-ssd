@@ -1,0 +1,30 @@
+[pytorch_fp]
+stage4_0_add_input0: shape=[1, 80, 4, 4] dtype=float32 min=-1.74147 max=1.72641 mean=-0.014253 std=0.490918 abs_max=1.74147 nonzero=1280 unique=1280
+stage4_0_add_input1: shape=[1, 80, 4, 4] dtype=float32 min=-1.67902 max=1.42919 mean=-0.0263705 std=0.385958 abs_max=1.67902 nonzero=1280 unique=1280
+stage4_0_add: shape=[1, 80, 4, 4] dtype=float32 min=-1.84707 max=2.06816 mean=-0.0406235 std=0.618419 abs_max=2.06816 nonzero=1280 unique=1280
+stage4_0_out_relu: shape=[1, 80, 4, 4] dtype=float32 min=0 max=2.06816 mean=0.224073 std=0.367578 abs_max=2.06816 nonzero=587 unique=588
+stage4_1_conv2: shape=[1, 80, 4, 4] dtype=float32 min=-2.00816 max=1.47339 mean=-0.141464 std=0.454567 abs_max=2.00816 nonzero=1280 unique=1280
+stage4_1_add_input0: shape=[1, 80, 4, 4] dtype=float32 min=-2.00816 max=1.47339 mean=-0.141464 std=0.454567 abs_max=2.00816 nonzero=1280 unique=1280
+stage4_1_add_input1: shape=[1, 80, 4, 4] dtype=float32 min=0 max=2.06816 mean=0.224073 std=0.367578 abs_max=2.06816 nonzero=587 unique=588
+stage4_1_add: shape=[1, 80, 4, 4] dtype=float32 min=-1.25355 max=2.91529 mean=0.0826086 std=0.621031 abs_max=2.91529 nonzero=1280 unique=1280
+stage4_1_out_relu: shape=[1, 80, 4, 4] dtype=float32 min=0 max=2.91529 mean=0.263431 std=0.477303 abs_max=2.91529 nonzero=617 unique=618
+global_pool_post_requant: shape=[1, 80, 1, 1] dtype=float32 min=0.0141446 max=0.914651 mean=0.263431 std=0.219165 abs_max=0.914651 nonzero=80 unique=80
+head_input: shape=[1, 80] dtype=float32 min=0.0141446 max=0.914651 mean=0.263431 std=0.219165 abs_max=0.914651 nonzero=80 unique=80
+model_output: shape=[1, 3] dtype=float32 min=0.25411 max=7.23611 mean=2.72461 std=3.19492 abs_max=7.23611 nonzero=3 unique=3
+
+[pytorch_quantized]
+stage4_0_add_input0: shape=[1, 80, 4, 4] dtype=float32 min=-230156 max=175117 mean=-14122.5 std=61117.8 abs_max=230156 nonzero=1280 unique=1280
+stage4_0_add_input1: shape=[1, 80, 4, 4] dtype=float32 min=-162219 max=100809 mean=-8187.48 std=35347.8 abs_max=162219 nonzero=1280 unique=1280
+stage4_0_add: shape=[1, 80, 4, 4] dtype=float32 min=-81057 max=50344 mean=-4105.01 std=17669.4 abs_max=81057 nonzero=1280 unique=1273
+stage4_0_out_relu: shape=[1, 80, 4, 4] dtype=float32 min=0 max=255 mean=100.206 std=124.305 abs_max=255 nonzero=506 unique=8
+stage4_1_conv2: shape=[1, 80, 4, 4] dtype=float32 min=-191969 max=168730 mean=1064.06 std=53357.6 abs_max=191969 nonzero=1280 unique=1280
+stage4_1_add_input0: shape=[1, 80, 4, 4] dtype=float32 min=-191969 max=168730 mean=1064.06 std=53357.6 abs_max=191969 nonzero=1280 unique=1280
+stage4_1_add_input1: shape=[1, 80, 4, 4] dtype=float32 min=0 max=255 mean=100.206 std=124.305 abs_max=255 nonzero=506 unique=8
+stage4_1_add: shape=[1, 80, 4, 4] dtype=float32 min=-103 max=222 mean=50.2055 std=66.0199 abs_max=222 nonzero=1266 unique=259
+stage4_1_out_relu: shape=[1, 80, 4, 4] dtype=float32 min=0 max=255 mean=98.493 std=101.625 abs_max=255 nonzero=930 unique=136
+global_pool_post_requant: shape=[1, 80, 1, 1] dtype=float32 min=1 max=249 mean=98.05 std=73.2656 abs_max=249 nonzero=80 unique=68
+head_input: shape=[1, 80] dtype=float32 min=1 max=249 mean=98.05 std=73.2656 abs_max=249 nonzero=80 unique=68
+model_output: shape=[1, 3] dtype=float32 min=9958.97 max=58582.9 mean=29932.3 std=20777.3 abs_max=58582.9 nonzero=3 unique=3
+
+[onnx]
+model_output: shape=[1, 3] dtype=float32 min=9958.97 max=58582.9 mean=29932.3 std=20777.3 abs_max=58582.9 nonzero=3 unique=3

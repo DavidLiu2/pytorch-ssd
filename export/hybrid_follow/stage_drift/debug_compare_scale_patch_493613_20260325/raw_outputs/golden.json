@@ -1,0 +1,17 @@
+{
+  "key": "golden",
+  "label": "Golden output artifact",
+  "status": "skipped",
+  "source": null,
+  "stage_tag": null,
+  "representation": null,
+  "input_mode": null,
+  "raw_native": null,
+  "raw_semantic": null,
+  "decoded": null,
+  "notes": [
+    "Golden stage skipped because no compatible artifact path was provided."
+  ],
+  "error": null,
+  "metadata": {}
+}

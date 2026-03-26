@@ -1,0 +1,238 @@
+{
+  "image_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/data/coco/images/val2017/000000493613.jpg",
+  "output_dir": "export/hybrid_follow/stage_drift/debug_compare_scale_patch_493613_20260325",
+  "preprocess": "Center-crop to square, resize to 128x128, convert to grayscale, then torchvision ToTensor() with no extra normalization.",
+  "integer_output_scale": 32768.0,
+  "thresholds": {
+    "x_abs_diff": 0.05,
+    "size_abs_diff": 0.05,
+    "vis_conf_abs_diff": 0.1
+  },
+  "preprocessed_input": {
+    "preprocess": "Center-crop to square, resize to 128x128, convert to grayscale, then torchvision ToTensor() with no extra normalization.",
+    "float_shape": [
+      1,
+      1,
+      128,
+      128
+    ],
+    "uint8_shape": [
+      1,
+      1,
+      128,
+      128
+    ],
+    "float_min": 0.0784313753247261,
+    "float_max": 1.0,
+    "uint8_min": 20,
+    "uint8_max": 255,
+    "preview_path": "export/hybrid_follow/stage_drift/debug_compare_scale_patch_493613_20260325/preprocessed_input_preview.png",
+    "float_dump_path": "export/hybrid_follow/stage_drift/debug_compare_scale_patch_493613_20260325/preprocessed_tensor_float.npy",
+    "uint8_dump_path": "export/hybrid_follow/stage_drift/debug_compare_scale_patch_493613_20260325/preprocessed_tensor_uint8.npy",
+    "metadata_path": "export/hybrid_follow/stage_drift/debug_compare_scale_patch_493613_20260325/preprocessed_input.json"
+  },
+  "stages": {
+    "pytorch": {
+      "key": "pytorch",
+      "label": "PyTorch checkpoint",
+      "status": "ok",
+      "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+      "stage_tag": "fp",
+      "representation": "float",
+      "input_mode": "float_0_1",
+      "raw_native": [
+        0.07182320207357407,
+        0.4019148349761963,
+        6.259084701538086
+      ],
+      "raw_semantic": [
+        0.07182320207357407,
+        0.4019148349761963,
+        6.259084701538086
+      ],
+      "decoded": {
+        "x_offset": 0.07182320207357407,
+        "size_proxy": 0.4019148349761963,
+        "visibility_logit": 6.259084701538086,
+        "visibility_confidence": 0.9980906566083819
+      },
+      "notes": [
+        "Original checkpoint path before NEMO export wrapping."
+      ],
+      "error": null,
+      "metadata": {
+        "shape": [
+          1,
+          3
+        ],
+        "dtype": "torch.float32"
+      }
+    },
+    "nemo": {
+      "key": "nemo",
+      "label": "NEMO ID (in-memory)",
+      "status": "ok",
+      "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+      "stage_tag": "id",
+      "representation": "fixed-point-int32",
+      "input_mode": "staged_0_255",
+      "raw_native": [
+        5079,
+        20231,
+        59759
+      ],
+      "raw_semantic": [
+        0.154998779296875,
+        0.617401123046875,
+        1.823699951171875
+      ],
+      "decoded": {
+        "x_offset": 0.154998779296875,
+        "size_proxy": 0.617401123046875,
+        "visibility_logit": 1.823699951171875,
+        "visibility_confidence": 0.861009499831807
+      },
+      "notes": [],
+      "error": null,
+      "metadata": {
+        "shape": [
+          1,
+          3
+        ],
+        "dtype": "torch.float32",
+        "bits": 8,
+        "eps_in": 0.00392156862745098,
+        "eps_out": null,
+        "calib_dir": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260325/input",
+        "calib_tensor": null,
+        "calib_batches": 1
+      }
+    },
+    "onnx": {
+      "key": "onnx",
+      "label": "Exported ONNX",
+      "status": "skipped",
+      "source": "export/hybrid_follow/debug_export_quant_collapse_493613_20260325_scale_patch/hybrid_follow_debug.onnx",
+      "stage_tag": null,
+      "representation": null,
+      "input_mode": null,
+      "raw_native": null,
+      "raw_semantic": null,
+      "decoded": null,
+      "notes": [
+        "ONNX stage skipped because the model file was not found."
+      ],
+      "error": "ONNX file not found: export/hybrid_follow/debug_export_quant_collapse_493613_20260325_scale_patch/hybrid_follow_debug.onnx",
+      "metadata": {}
+    },
+    "golden": {
+      "key": "golden",
+      "label": "Golden output artifact",
+      "status": "skipped",
+      "source": null,
+      "stage_tag": null,
+      "representation": null,
+      "input_mode": null,
+      "raw_native": null,
+      "raw_semantic": null,
+      "decoded": null,
+      "notes": [
+        "Golden stage skipped because no compatible artifact path was provided."
+      ],
+      "error": null,
+      "metadata": {}
+    },
+    "gvsoc": {
+      "key": "gvsoc",
+      "label": "GVSOC final tensor",
+      "status": "skipped",
+      "source": null,
+      "stage_tag": null,
+      "representation": null,
+      "input_mode": null,
+      "raw_native": null,
+      "raw_semantic": null,
+      "decoded": null,
+      "notes": [
+        "GVSOC stage skipped because no gvsoc_final_tensor.json path was provided."
+      ],
+      "error": null,
+      "metadata": {}
+    }
+  },
+  "pairwise": {
+    "pytorch_vs_quantized": {
+      "left_stage": "pytorch",
+      "left_label": "PyTorch checkpoint",
+      "right_stage": "nemo",
+      "right_label": "NEMO ID (in-memory)",
+      "status": "warn",
+      "raw_head_abs_diff": {
+        "x_offset": 0.08317557722330093,
+        "size_proxy": 0.2154862880706787,
+        "visibility_logit": 4.435384750366211
+      },
+      "raw_head_relative_diff": {
+        "x_offset": 0.5366208534067975,
+        "size_proxy": 0.34902153563837673,
+        "visibility_logit": 0.7086315271107091
+      },
+      "decoded_abs_diff": {
+        "x_offset": 0.08317557722330093,
+        "size_proxy": 0.2154862880706787,
+        "visibility_confidence": 0.13708115677657495
+      },
+      "decoded_relative_diff": {
+        "x_offset": 0.5366208534067975,
+        "size_proxy": 0.34902153563837673,
+        "visibility_confidence": 0.13734339247538022
+      },
+      "warnings": [
+        "WARNING: x_offset abs diff 0.083176 exceeds 0.050000",
+        "WARNING: size_proxy abs diff 0.215486 exceeds 0.050000",
+        "WARNING: visibility_confidence abs diff 0.137081 exceeds 0.100000"
+      ]
+    },
+    "quantized_vs_onnx": {
+      "left_stage": "nemo",
+      "right_stage": "onnx",
+      "status": "skipped",
+      "reason": "One or both stages did not complete successfully."
+    },
+    "pytorch_vs_onnx": {
+      "left_stage": "pytorch",
+      "right_stage": "onnx",
+      "status": "skipped",
+      "reason": "One or both stages did not complete successfully."
+    },
+    "onnx_vs_golden": {
+      "left_stage": "onnx",
+      "right_stage": "golden",
+      "status": "skipped",
+      "reason": "One or both stages did not complete successfully."
+    },
+    "golden_vs_gvsoc": {
+      "left_stage": "golden",
+      "right_stage": "gvsoc",
+      "status": "skipped",
+      "reason": "One or both stages did not complete successfully."
+    },
+    "pytorch_vs_gvsoc": {
+      "left_stage": "pytorch",
+      "right_stage": "gvsoc",
+      "status": "skipped",
+      "reason": "One or both stages did not complete successfully."
+    }
+  },
+  "drift_onset": {
+    "status": "warn",
+    "left_stage": "pytorch",
+    "right_stage": "nemo",
+    "message": "Configured drift thresholds first trip between PyTorch checkpoint and NEMO ID (in-memory).",
+    "warnings": [
+      "WARNING: x_offset abs diff 0.083176 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.215486 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.137081 exceeds 0.100000"
+    ]
+  }
+}

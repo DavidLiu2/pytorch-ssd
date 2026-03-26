@@ -2,6 +2,12 @@
 
 This note records the residual-branch investigation, because the final fix was slightly different from the original hypothesis.
 
+Current note as of March 25, 2026:
+
+- this document is still accurate for the raw-runtime branch debugging that led to the GAP8 patch set
+- it is not the full story for the current known-sample mismatch
+- the current active issue is earlier, in the NEMO FQ -> ID residual-add scale transition documented in [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md)
+
 ## Starting Symptom
 
 After the early fixes were in place:

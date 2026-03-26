@@ -1,0 +1,16 @@
+{
+  "key": "nemo",
+  "label": "NEMO QD (in-memory)",
+  "status": "ok",
+  "decoded": {
+    "x_offset": 0.0,
+    "size_proxy": 0.0,
+    "visibility_logit": -0.000244140625,
+    "visibility_confidence": 0.49993896484405315
+  },
+  "representation": "fixed-point-int32",
+  "stage_tag": "qd",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/training/hybrid_follow/hybrid_follow_best_follow_score.pth",
+  "notes": [],
+  "error": null
+}

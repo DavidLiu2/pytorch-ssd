@@ -86,14 +86,16 @@ RUN_DORY=0 ./run_all.sh
 RUN_COMPAT_CHECKS=0 ./run_all.sh
 ```
 
-### Reproduce the restored March 20, 2026 exporter baseline
+### Reproduce the current known-sample residual debug run
 
 ```bash
 CKPT=training/hybrid_follow/hybrid_follow_best_follow_score.pth \
-CALIB_DIR=data/coco/images/val2017 \
-CALIB_BATCHES=8 \
-RUN_COMPAT_CHECKS=0 \
-RUN_STAGE_DRIFT=0 \
+CALIB_DIR=export/hybrid_follow/debug_export_quant_collapse_493613_20260325/input \
+CALIB_BATCHES=1 \
+RUN_COMPAT_CHECKS=1 \
+RUN_STAGE_DRIFT=1 \
+STAGE_DRIFT_IMAGE=data/coco/images/val2017/000000493613.jpg \
+STAGE_DRIFT_NEMO_STAGE=auto \
 SYNC_TO_CRAZYFLIE=0 \
 ./run_all.sh
 ```
@@ -155,14 +157,15 @@ If no representative calibration images exist, the export falls back to random c
 
 ## Hybrid-Follow Export Notes
 
-The currently restored exporter baseline is the `906c1aa` path documented in [10-baseline-restoration.md](10-baseline-restoration.md).
+The current repo-local export path is the one implemented in `export_nemo_quant.py` today.
 
 Important consequences:
 
-- hybrid-follow export is back on the older best-effort `qd_stage()` fallback plus `id_stage(eps_in=dict)` path
-- ONNX Conv/Gemm weight initializers are clipped back into signed int8 range during export
-- the later PyTorch compatibility checker expects helper functions from the newer exporter rewrite, so baseline reproduction currently uses `RUN_COMPAT_CHECKS=0`
-- the later strict graph-repair rewrite described in [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md) is now historical context rather than the active baseline
+- hybrid-follow export stays on the strict direct `qd_stage(eps_in=1/255)` then `id_stage()` path
+- the PyTorch and ONNX compatibility checks are part of the normal flow
+- raw ONNX Conv/Gemm initializer range issues are treated as diagnostics, not silent export-time clipping
+- the exporter now includes residual-stage drift reporting and an integer-add policy sweep for the known sample
+- the current default residual-add scale policy is documented in [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md)
 
 ## What Success Looks Like
 

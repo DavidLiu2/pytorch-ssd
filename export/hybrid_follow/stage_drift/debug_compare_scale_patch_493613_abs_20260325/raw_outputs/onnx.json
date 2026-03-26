@@ -1,0 +1,45 @@
+{
+  "key": "onnx",
+  "label": "Exported ONNX (ID)",
+  "status": "ok",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260325_scale_patch/hybrid_follow_debug.onnx",
+  "stage_tag": "id",
+  "representation": "fixed-point-int32",
+  "input_mode": "staged_0_255",
+  "raw_native": [
+    5079,
+    20231,
+    59759
+  ],
+  "raw_semantic": [
+    0.154998779296875,
+    0.617401123046875,
+    1.823699951171875
+  ],
+  "decoded": {
+    "x_offset": 0.154998779296875,
+    "size_proxy": 0.617401123046875,
+    "visibility_logit": 1.823699951171875,
+    "visibility_confidence": 0.861009499831807
+  },
+  "notes": [
+    "Resolved ONNX stage heuristically from filename: id"
+  ],
+  "error": null,
+  "metadata": {
+    "input_name": "input.1",
+    "input_shape": [
+      1,
+      1,
+      128,
+      128
+    ],
+    "input_dtype": "tensor(float)",
+    "output_name": "404",
+    "output_shape": [
+      1,
+      3
+    ],
+    "output_dtype": "float32"
+  }
+}

@@ -1,0 +1,134 @@
+{
+  "pytorch_vs_quantized": {
+    "left_stage": "pytorch",
+    "left_label": "PyTorch checkpoint",
+    "right_stage": "nemo",
+    "right_label": "NEMO FQ (in-memory)",
+    "status": "ok",
+    "raw_head_abs_diff": {
+      "x_offset": 0.015462033450603485,
+      "size_proxy": 0.004165202379226685,
+      "visibility_logit": 0.23923683166503906
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.21527908815266308,
+      "size_proxy": 0.010363395467782054,
+      "visibility_logit": 0.03822233490565319
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.015462033450603485,
+      "size_proxy": 0.004165202379226685,
+      "visibility_confidence": 0.0005148050815322325
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.21527908815266308,
+      "size_proxy": 0.010363395467782054,
+      "visibility_confidence": 0.0005157899015722628
+    },
+    "warnings": []
+  },
+  "quantized_vs_onnx": {
+    "left_stage": "nemo",
+    "left_label": "NEMO FQ (in-memory)",
+    "right_stage": "onnx",
+    "right_label": "Exported ONNX (ID)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.12753775715827942,
+      "size_proxy": 0.1702130138874054,
+      "visibility_logit": 4.240337371826172
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.6935209469901261,
+      "size_proxy": 0.29969050771385203,
+      "visibility_logit": 0.7043927792672935
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.12753775715827942,
+      "size_proxy": 0.1702130138874054,
+      "visibility_confidence": 0.1419394397157817
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.6935209469901261,
+      "size_proxy": 0.29969050771385203,
+      "visibility_confidence": 0.14228435812528428
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.127538 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.170213 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.141939 exceeds 0.100000"
+    ]
+  },
+  "pytorch_vs_onnx": {
+    "left_stage": "pytorch",
+    "left_label": "PyTorch checkpoint",
+    "right_stage": "onnx",
+    "right_label": "Exported ONNX (ID)",
+    "status": "warn",
+    "raw_head_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_logit": 4.479574203491211
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_logit": 0.7156915774586683
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.11207572370767593,
+      "size_proxy": 0.1660478115081787,
+      "visibility_confidence": 0.14245424479731394
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.6094419705365292,
+      "size_proxy": 0.29235692265326957,
+      "visibility_confidence": 0.14272675919178385
+    },
+    "warnings": [
+      "WARNING: x_offset abs diff 0.112076 exceeds 0.050000",
+      "WARNING: size_proxy abs diff 0.166048 exceeds 0.050000",
+      "WARNING: visibility_confidence abs diff 0.142454 exceeds 0.100000"
+    ]
+  },
+  "onnx_vs_golden": {
+    "left_stage": "onnx",
+    "left_label": "Exported ONNX (ID)",
+    "right_stage": "golden",
+    "right_label": "Golden output artifact",
+    "status": "ok",
+    "raw_head_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "raw_head_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_logit": 0.0
+    },
+    "decoded_abs_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "decoded_relative_diff": {
+      "x_offset": 0.0,
+      "size_proxy": 0.0,
+      "visibility_confidence": 0.0
+    },
+    "warnings": []
+  },
+  "golden_vs_gvsoc": {
+    "left_stage": "golden",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  },
+  "pytorch_vs_gvsoc": {
+    "left_stage": "pytorch",
+    "right_stage": "gvsoc",
+    "status": "skipped",
+    "reason": "One or both stages did not complete successfully."
+  }
+}

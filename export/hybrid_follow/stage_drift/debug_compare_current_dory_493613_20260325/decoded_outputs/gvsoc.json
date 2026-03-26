@@ -1,0 +1,13 @@
+{
+  "key": "gvsoc",
+  "label": "GVSOC final tensor",
+  "status": "skipped",
+  "decoded": null,
+  "representation": null,
+  "stage_tag": null,
+  "source": null,
+  "notes": [
+    "GVSOC stage skipped because no gvsoc_final_tensor.json path was provided."
+  ],
+  "error": null
+}

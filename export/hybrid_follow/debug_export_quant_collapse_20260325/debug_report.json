@@ -1,0 +1,2233 @@
+{
+  "requested_stage": "id",
+  "exported_stage": "id",
+  "selected_input": {
+    "source": "data/coco/images/val2017/000000323496.jpg",
+    "float_stats": {
+      "shape": [
+        1,
+        1,
+        128,
+        128
+      ],
+      "dtype": "float32",
+      "min": 0.09019608050584793,
+      "max": 0.9686274528503418,
+      "mean": 0.5446969270706177,
+      "std": 0.1314508616924286,
+      "abs_max": 0.9686274528503418,
+      "nonzero_count": 16384,
+      "unique_count": 220
+    },
+    "staged_stats": {
+      "shape": [
+        1,
+        1,
+        128,
+        128
+      ],
+      "dtype": "float32",
+      "min": 23.0,
+      "max": 247.0,
+      "mean": 138.897705078125,
+      "std": 33.51996994018555,
+      "abs_max": 247.0,
+      "nonzero_count": 16384,
+      "unique_count": 220
+    }
+  },
+  "first_bad_location": null,
+  "tensor_stats": {
+    "pytorch_fp": {
+      "stage4_0_add_input0": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -1.7414721250534058,
+        "max": 1.7264068126678467,
+        "mean": -0.014252987690269947,
+        "std": 0.4909181296825409,
+        "abs_max": 1.7414721250534058,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_0_add_input1": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -1.6790179014205933,
+        "max": 1.4291867017745972,
+        "mean": -0.026370543986558914,
+        "std": 0.3859577476978302,
+        "abs_max": 1.6790179014205933,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_0_add": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -1.8470652103424072,
+        "max": 2.068164110183716,
+        "mean": -0.040623534470796585,
+        "std": 0.6184192895889282,
+        "abs_max": 2.068164110183716,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_0_out_relu": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 2.068164110183716,
+        "mean": 0.22407305240631104,
+        "std": 0.3675782084465027,
+        "abs_max": 2.068164110183716,
+        "nonzero_count": 587,
+        "unique_count": 588
+      },
+      "stage4_1_conv2": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -2.008157253265381,
+        "max": 1.4733891487121582,
+        "mean": -0.14146442711353302,
+        "std": 0.45456719398498535,
+        "abs_max": 2.008157253265381,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_1_add_input0": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -2.008157253265381,
+        "max": 1.4733891487121582,
+        "mean": -0.14146442711353302,
+        "std": 0.45456719398498535,
+        "abs_max": 2.008157253265381,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_1_add_input1": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 2.068164110183716,
+        "mean": 0.22407305240631104,
+        "std": 0.3675782084465027,
+        "abs_max": 2.068164110183716,
+        "nonzero_count": 587,
+        "unique_count": 588
+      },
+      "stage4_1_add": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -1.2535507678985596,
+        "max": 2.915287494659424,
+        "mean": 0.08260864019393921,
+        "std": 0.6210312843322754,
+        "abs_max": 2.915287494659424,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_1_out_relu": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 2.915287494659424,
+        "mean": 0.26343053579330444,
+        "std": 0.4773033559322357,
+        "abs_max": 2.915287494659424,
+        "nonzero_count": 617,
+        "unique_count": 618
+      },
+      "global_pool_post_requant": {
+        "shape": [
+          1,
+          80,
+          1,
+          1
+        ],
+        "dtype": "float32",
+        "min": 0.014144616201519966,
+        "max": 0.9146509170532227,
+        "mean": 0.26343053579330444,
+        "std": 0.21916455030441284,
+        "abs_max": 0.9146509170532227,
+        "nonzero_count": 80,
+        "unique_count": 80
+      },
+      "head_input": {
+        "shape": [
+          1,
+          80
+        ],
+        "dtype": "float32",
+        "min": 0.014144616201519966,
+        "max": 0.9146509170532227,
+        "mean": 0.26343053579330444,
+        "std": 0.21916455030441284,
+        "abs_max": 0.9146509170532227,
+        "nonzero_count": 80,
+        "unique_count": 80
+      },
+      "model_output": {
+        "shape": [
+          1,
+          3
+        ],
+        "dtype": "float32",
+        "min": 0.2541100084781647,
+        "max": 7.236105442047119,
+        "mean": 2.7246148586273193,
+        "std": 3.1949212551116943,
+        "abs_max": 7.236105442047119,
+        "nonzero_count": 3,
+        "unique_count": 3
+      }
+    },
+    "pytorch_quantized": {
+      "stage4_0_add_input0": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -230156.4375,
+        "max": 175117.46875,
+        "mean": -14122.46875,
+        "std": 61117.81640625,
+        "abs_max": 230156.4375,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_0_add_input1": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -162219.0625,
+        "max": 100808.828125,
+        "mean": -8187.47509765625,
+        "std": 35347.80078125,
+        "abs_max": 162219.0625,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_0_add": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -81057.0,
+        "max": 50344.0,
+        "mean": -4105.0146484375,
+        "std": 17669.37109375,
+        "abs_max": 81057.0,
+        "nonzero_count": 1280,
+        "unique_count": 1273
+      },
+      "stage4_0_out_relu": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 100.20625305175781,
+        "std": 124.30500793457031,
+        "abs_max": 255.0,
+        "nonzero_count": 506,
+        "unique_count": 8
+      },
+      "stage4_1_conv2": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -191968.828125,
+        "max": 168729.8125,
+        "mean": 1064.062744140625,
+        "std": 53357.56640625,
+        "abs_max": 191968.828125,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_1_add_input0": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -191968.828125,
+        "max": 168729.8125,
+        "mean": 1064.062744140625,
+        "std": 53357.56640625,
+        "abs_max": 191968.828125,
+        "nonzero_count": 1280,
+        "unique_count": 1280
+      },
+      "stage4_1_add_input1": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 100.20625305175781,
+        "std": 124.30500793457031,
+        "abs_max": 255.0,
+        "nonzero_count": 506,
+        "unique_count": 8
+      },
+      "stage4_1_add": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": -103.0,
+        "max": 222.0,
+        "mean": 50.205467224121094,
+        "std": 66.01986694335938,
+        "abs_max": 222.0,
+        "nonzero_count": 1266,
+        "unique_count": 259
+      },
+      "stage4_1_out_relu": {
+        "shape": [
+          1,
+          80,
+          4,
+          4
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 98.49296569824219,
+        "std": 101.62523651123047,
+        "abs_max": 255.0,
+        "nonzero_count": 930,
+        "unique_count": 136
+      },
+      "global_pool_post_requant": {
+        "shape": [
+          1,
+          80,
+          1,
+          1
+        ],
+        "dtype": "float32",
+        "min": 1.0,
+        "max": 249.0,
+        "mean": 98.05000305175781,
+        "std": 73.26559448242188,
+        "abs_max": 249.0,
+        "nonzero_count": 80,
+        "unique_count": 68
+      },
+      "head_input": {
+        "shape": [
+          1,
+          80
+        ],
+        "dtype": "float32",
+        "min": 1.0,
+        "max": 249.0,
+        "mean": 98.05000305175781,
+        "std": 73.26559448242188,
+        "abs_max": 249.0,
+        "nonzero_count": 80,
+        "unique_count": 68
+      },
+      "model_output": {
+        "shape": [
+          1,
+          3
+        ],
+        "dtype": "float32",
+        "min": 9958.9736328125,
+        "max": 58582.875,
+        "mean": 29932.326171875,
+        "std": 20777.251953125,
+        "abs_max": 58582.875,
+        "nonzero_count": 3,
+        "unique_count": 3
+      }
+    },
+    "onnx": {
+      "model_output": {
+        "shape": [
+          1,
+          3
+        ],
+        "dtype": "float32",
+        "min": 9958.9736328125,
+        "max": 58582.875,
+        "mean": 29932.326171875,
+        "std": 20777.251953125,
+        "abs_max": 58582.875,
+        "nonzero_count": 3,
+        "unique_count": 3
+      }
+    }
+  },
+  "suspect_scale_metadata": [
+    {
+      "stage": "post_qd",
+      "module": "stage4.1.add",
+      "issue": "large_divisor",
+      "values": [
+        65536.0
+      ],
+      "shift": [
+        16
+      ]
+    },
+    {
+      "stage": "post_qd",
+      "module": "stage4.1.add",
+      "issue": "branch_eps_mismatch",
+      "eps_in": [
+        1.9442792108748108e-05,
+        0.017219290137290955
+      ],
+      "ratio": 885.6387519333342
+    },
+    {
+      "stage": "post_id",
+      "module": "stage4.1.add",
+      "issue": "large_divisor",
+      "values": [
+        65536.0
+      ],
+      "shift": [
+        16
+      ]
+    },
+    {
+      "stage": "post_id",
+      "module": "stage4.1.add",
+      "issue": "branch_eps_mismatch",
+      "eps_in": [
+        1.9442792108748108e-05,
+        0.017219290137290955
+      ],
+      "ratio": 885.6387519333342
+    }
+  ],
+  "fusion_head_collapse_effect": "no_collapse_in_completed_variants;errors=variant_b_unfused_single_head",
+  "clamp_changed_result": null,
+  "round_export_params": false,
+  "metadata_snapshots": {
+    "pre_qd": {
+      "stage4.0.proj.0": {
+        "class_name": "PACT_Conv2d",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.35620278120040894
+          ]
+        },
+        "deployment": 0,
+        "integerized": 0
+      },
+      "stage4.0.proj.1": {
+        "class_name": "Identity"
+      },
+      "stage4.0.conv1": {
+        "class_name": "PACT_Conv2d",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.1407192051410675
+          ]
+        },
+        "deployment": 0,
+        "integerized": 0
+      },
+      "stage4.0.bn1": {
+        "class_name": "Identity"
+      },
+      "stage4.0.relu1": {
+        "class_name": "PACT_Act",
+        "eps_in": null,
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8221670389175415
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 0
+      },
+      "stage4.0.conv2": {
+        "class_name": "PACT_Conv2d",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.32464030385017395
+          ]
+        },
+        "deployment": 0,
+        "integerized": 0
+      },
+      "stage4.0.bn2": {
+        "class_name": "Identity"
+      },
+      "stage4.0.add": {
+        "class_name": "PACT_IntegerAdd",
+        "eps_in_list": [],
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 0,
+        "integerized": 0
+      },
+      "stage4.0.out_relu": {
+        "class_name": "PACT_Act",
+        "eps_in": null,
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.390919208526611
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 0
+      },
+      "stage4.1.conv1": {
+        "class_name": "PACT_Conv2d",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.11977290362119675
+          ]
+        },
+        "deployment": 0,
+        "integerized": 0
+      },
+      "stage4.1.bn1": {
+        "class_name": "Identity"
+      },
+      "stage4.1.relu1": {
+        "class_name": "PACT_Act",
+        "eps_in": null,
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8141523599624634
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 0
+      },
+      "stage4.1.conv2": {
+        "class_name": "PACT_Conv2d",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.3685859143733978
+          ]
+        },
+        "deployment": 0,
+        "integerized": 0
+      },
+      "stage4.1.bn2": {
+        "class_name": "Identity"
+      },
+      "stage4.1.add": {
+        "class_name": "PACT_IntegerAdd",
+        "eps_in_list": [],
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 0,
+        "integerized": 0
+      },
+      "stage4.1.out_relu": {
+        "class_name": "PACT_Act",
+        "eps_in": null,
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.749165058135986
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 0
+      },
+      "global_pool": {
+        "class_name": "AvgPool2d"
+      },
+      "head": {
+        "class_name": "PACT_Linear",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.7712752223014832
+          ]
+        },
+        "deployment": 0
+      }
+    },
+    "post_qd": {
+      "stage4.0.proj.0": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0031681552063673735
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.35620278120040894
+          ]
+        },
+        "deployment": 1,
+        "integerized": 0
+      },
+      "stage4.0.proj.1": {
+        "class_name": "Identity"
+      },
+      "stage4.0.conv1": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0011299316538497806
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.1407192051410675
+          ]
+        },
+        "deployment": 1,
+        "integerized": 0
+      },
+      "stage4.0.bn1": {
+        "class_name": "Identity"
+      },
+      "stage4.0.relu1": {
+        "class_name": "PACT_Act",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.412642450304702e-05
+          ]
+        },
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.007145753130316734
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8221670389175415
+          ]
+        },
+        "alpha_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8221670389175415
+          ]
+        },
+        "D": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            16384.0
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1
+      },
+      "stage4.0.conv2": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0026758862659335136
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.32464030385017395
+          ]
+        },
+        "deployment": 1,
+        "integerized": 0
+      },
+      "stage4.0.bn2": {
+        "class_name": "Identity"
+      },
+      "stage4.0.add": {
+        "class_name": "PACT_IntegerAdd",
+        "eps_in_list": [
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              1.9121222067042254e-05
+            ]
+          },
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              0.012502016499638557
+            ]
+          }
+        ],
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.025004032999277115
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [],
+          "values": [
+            65536
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1,
+        "integerized": 0
+      },
+      "stage4.0.out_relu": {
+        "class_name": "PACT_Act",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.025004032999277115
+          ]
+        },
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.017219290137290955
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.390919208526611
+          ]
+        },
+        "alpha_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.390919208526611
+          ]
+        },
+        "D": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            32.0
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1
+      },
+      "stage4.1.conv1": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.000995172536931932
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.11977290362119675
+          ]
+        },
+        "deployment": 1,
+        "integerized": 0
+      },
+      "stage4.1.bn1": {
+        "class_name": "Identity"
+      },
+      "stage4.1.relu1": {
+        "class_name": "PACT_Act",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.713616438792087e-05
+          ]
+        },
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.007114322856068611
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8141523599624634
+          ]
+        },
+        "alpha_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8141523599624634
+          ]
+        },
+        "D": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            16384.0
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1
+      },
+      "stage4.1.conv2": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0027329083532094955
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.3685859143733978
+          ]
+        },
+        "deployment": 1,
+        "integerized": 0
+      },
+      "stage4.1.bn2": {
+        "class_name": "Identity"
+      },
+      "stage4.1.add": {
+        "class_name": "PACT_IntegerAdd",
+        "eps_in_list": [
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              1.9442792108748108e-05
+            ]
+          },
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              0.017219290137290955
+            ]
+          }
+        ],
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.03443858027458191
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [],
+          "values": [
+            65536
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1,
+        "integerized": 0
+      },
+      "stage4.1.out_relu": {
+        "class_name": "PACT_Act",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.03443858027458191
+          ]
+        },
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.01862417720258236
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.749165058135986
+          ]
+        },
+        "alpha_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.749165058135986
+          ]
+        },
+        "D": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            32.0
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1
+      },
+      "global_pool": {
+        "class_name": "AvgPool2d"
+      },
+      "head": {
+        "class_name": "PACT_Linear",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.7723766565322876
+          ]
+        },
+        "deployment": 1
+      }
+    },
+    "post_id": {
+      "stage4.0.proj.0": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0031681552063673735
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.35620278120040894
+          ]
+        },
+        "deployment": 1,
+        "integerized": 1
+      },
+      "stage4.0.proj.1": {
+        "class_name": "Identity"
+      },
+      "stage4.0.conv1": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0011299316538497806
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.1407192051410675
+          ]
+        },
+        "deployment": 1,
+        "integerized": 1
+      },
+      "stage4.0.bn1": {
+        "class_name": "Identity"
+      },
+      "stage4.0.relu1": {
+        "class_name": "PACT_IntegerAct",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.412642450304702e-05
+          ]
+        },
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.007145753130316734
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8221670389175415
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [
+            1
+          ],
+          "values": [
+            16384
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        }
+      },
+      "stage4.0.conv2": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0026758862659335136
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.32464030385017395
+          ]
+        },
+        "deployment": 1,
+        "integerized": 1
+      },
+      "stage4.0.bn2": {
+        "class_name": "Identity"
+      },
+      "stage4.0.add": {
+        "class_name": "PACT_IntegerAdd",
+        "eps_in_list": [
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              1.9121222067042254e-05
+            ]
+          },
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              0.012502016499638557
+            ]
+          }
+        ],
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.025004032999277115
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [],
+          "values": [
+            65536
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1,
+        "integerized": 1
+      },
+      "stage4.0.out_relu": {
+        "class_name": "PACT_IntegerAct",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.025004032999277115
+          ]
+        },
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.017219290137290955
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.390919208526611
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [
+            1
+          ],
+          "values": [
+            32
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        }
+      },
+      "stage4.1.conv1": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.000995172536931932
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.11977290362119675
+          ]
+        },
+        "deployment": 1,
+        "integerized": 1
+      },
+      "stage4.1.bn1": {
+        "class_name": "Identity"
+      },
+      "stage4.1.relu1": {
+        "class_name": "PACT_IntegerAct",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.713616438792087e-05
+          ]
+        },
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.007114322856068611
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            1.8141523599624634
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [
+            1
+          ],
+          "values": [
+            16384
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        }
+      },
+      "stage4.1.conv2": {
+        "class_name": "PACT_Conv2d",
+        "eps_static": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.0027329083532094955
+          ]
+        },
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.3685859143733978
+          ]
+        },
+        "deployment": 1,
+        "integerized": 1
+      },
+      "stage4.1.bn2": {
+        "class_name": "Identity"
+      },
+      "stage4.1.add": {
+        "class_name": "PACT_IntegerAdd",
+        "eps_in_list": [
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              1.9442792108748108e-05
+            ]
+          },
+          {
+            "type": "tensor",
+            "dtype": "float32",
+            "shape": [],
+            "values": [
+              0.017219290137290955
+            ]
+          }
+        ],
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.03443858027458191
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [],
+          "values": [
+            65536
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        },
+        "deployment": 1,
+        "integerized": 1
+      },
+      "stage4.1.out_relu": {
+        "class_name": "PACT_IntegerAct",
+        "eps_in": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            0.03443858027458191
+          ]
+        },
+        "eps_out": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.01862417720258236
+          ]
+        },
+        "alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            4.749165058135986
+          ]
+        },
+        "alpha_out": 255.0,
+        "D": {
+          "type": "tensor",
+          "dtype": "int64",
+          "shape": [
+            1
+          ],
+          "values": [
+            32
+          ]
+        },
+        "requantization_factor": 32,
+        "precision": {
+          "type": "precision",
+          "bits": 8
+        }
+      },
+      "global_pool": {
+        "class_name": "PACT_IntegerAvgPool2d",
+        "D": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [],
+          "values": [
+            512.0
+          ]
+        },
+        "requantization_factor": 32
+      },
+      "head": {
+        "class_name": "PACT_Linear",
+        "W_alpha": {
+          "type": "tensor",
+          "dtype": "float32",
+          "shape": [
+            1
+          ],
+          "values": [
+            0.7723766565322876
+          ]
+        },
+        "deployment": 1
+      }
+    }
+  },
+  "variant_results": {
+    "variant_a_current_fused_single_head": {
+      "variant": "variant_a_current_fused_single_head",
+      "fusion_enabled": true,
+      "head_collapse_enabled": true,
+      "status": "ok",
+      "exported_stage": "id",
+      "drift": {
+        "fp_vs_quantized": {
+          "max_abs_diff": 5.44829797744751,
+          "mean_abs_diff": 1.8443617622057598,
+          "sum_abs_diff": 5.533085286617279
+        },
+        "quantized_vs_onnx_raw": {
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "sum_abs_diff": 0.0
+        },
+        "quantized_vs_onnx_semantic": {
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "sum_abs_diff": 0.0
+        }
+      },
+      "first_bad_location": null,
+      "quantized_stats": {
+        "stage4_0_add_input0": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -230156.4375,
+          "max": 175117.46875,
+          "mean": -14122.46875,
+          "std": 61117.81640625,
+          "abs_max": 230156.4375,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_0_add_input1": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -162219.0625,
+          "max": 100808.828125,
+          "mean": -8187.47509765625,
+          "std": 35347.80078125,
+          "abs_max": 162219.0625,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_0_add": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -81057.0,
+          "max": 50344.0,
+          "mean": -4105.0146484375,
+          "std": 17669.37109375,
+          "abs_max": 81057.0,
+          "nonzero_count": 1280,
+          "unique_count": 1273
+        },
+        "stage4_0_out_relu": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": 0.0,
+          "max": 255.0,
+          "mean": 100.20625305175781,
+          "std": 124.30500793457031,
+          "abs_max": 255.0,
+          "nonzero_count": 506,
+          "unique_count": 8
+        },
+        "stage4_1_conv2": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -191968.828125,
+          "max": 168729.8125,
+          "mean": 1064.062744140625,
+          "std": 53357.56640625,
+          "abs_max": 191968.828125,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_1_add_input0": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -191968.828125,
+          "max": 168729.8125,
+          "mean": 1064.062744140625,
+          "std": 53357.56640625,
+          "abs_max": 191968.828125,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_1_add_input1": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": 0.0,
+          "max": 255.0,
+          "mean": 100.20625305175781,
+          "std": 124.30500793457031,
+          "abs_max": 255.0,
+          "nonzero_count": 506,
+          "unique_count": 8
+        },
+        "stage4_1_add": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -103.0,
+          "max": 222.0,
+          "mean": 50.205467224121094,
+          "std": 66.01986694335938,
+          "abs_max": 222.0,
+          "nonzero_count": 1266,
+          "unique_count": 259
+        },
+        "stage4_1_out_relu": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": 0.0,
+          "max": 255.0,
+          "mean": 98.49296569824219,
+          "std": 101.62523651123047,
+          "abs_max": 255.0,
+          "nonzero_count": 930,
+          "unique_count": 136
+        },
+        "global_pool_post_requant": {
+          "shape": [
+            1,
+            80,
+            1,
+            1
+          ],
+          "dtype": "float32",
+          "min": 1.0,
+          "max": 249.0,
+          "mean": 98.05000305175781,
+          "std": 73.26559448242188,
+          "abs_max": 249.0,
+          "nonzero_count": 80,
+          "unique_count": 68
+        },
+        "head_input": {
+          "shape": [
+            1,
+            80
+          ],
+          "dtype": "float32",
+          "min": 1.0,
+          "max": 249.0,
+          "mean": 98.05000305175781,
+          "std": 73.26559448242188,
+          "abs_max": 249.0,
+          "nonzero_count": 80,
+          "unique_count": 68
+        },
+        "model_output": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "float32",
+          "min": 9958.9736328125,
+          "max": 58582.875,
+          "mean": 29932.326171875,
+          "std": 20777.251953125,
+          "abs_max": 58582.875,
+          "nonzero_count": 3,
+          "unique_count": 3
+        }
+      },
+      "onnx_stats": {
+        "model_output": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "float32",
+          "min": 9958.9736328125,
+          "max": 58582.875,
+          "mean": 29932.326171875,
+          "std": 20777.251953125,
+          "abs_max": 58582.875,
+          "nonzero_count": 3,
+          "unique_count": 3
+        }
+      },
+      "onnx_path": "export/hybrid_follow/debug_export_quant_collapse_20260325/variants/variant_a_current_fused_single_head/variant_a_current_fused_single_head.onnx"
+    },
+    "variant_b_unfused_single_head": {
+      "variant": "variant_b_unfused_single_head",
+      "fusion_enabled": false,
+      "head_collapse_enabled": true,
+      "status": "error",
+      "error": "KeyError: 'stem.1'"
+    },
+    "variant_c_fused_three_heads": {
+      "variant": "variant_c_fused_three_heads",
+      "fusion_enabled": true,
+      "head_collapse_enabled": false,
+      "status": "ok",
+      "exported_stage": "id",
+      "drift": {
+        "fp_vs_quantized": {
+          "max_abs_diff": 5.44829797744751,
+          "mean_abs_diff": 2.4137177169322968,
+          "sum_abs_diff": 7.24115315079689
+        },
+        "quantized_vs_onnx_raw": {
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "sum_abs_diff": 0.0
+        },
+        "quantized_vs_onnx_semantic": {
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0,
+          "sum_abs_diff": 0.0
+        }
+      },
+      "first_bad_location": null,
+      "quantized_stats": {
+        "stage4_0_add_input0": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -230156.4375,
+          "max": 175117.46875,
+          "mean": -14122.46875,
+          "std": 61117.81640625,
+          "abs_max": 230156.4375,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_0_add_input1": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -162219.0625,
+          "max": 100808.828125,
+          "mean": -8187.47509765625,
+          "std": 35347.80078125,
+          "abs_max": 162219.0625,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_0_add": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -81057.0,
+          "max": 50344.0,
+          "mean": -4105.0146484375,
+          "std": 17669.37109375,
+          "abs_max": 81057.0,
+          "nonzero_count": 1280,
+          "unique_count": 1273
+        },
+        "stage4_0_out_relu": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": 0.0,
+          "max": 255.0,
+          "mean": 100.20625305175781,
+          "std": 124.30500793457031,
+          "abs_max": 255.0,
+          "nonzero_count": 506,
+          "unique_count": 8
+        },
+        "stage4_1_conv2": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -191968.828125,
+          "max": 168729.8125,
+          "mean": 1064.062744140625,
+          "std": 53357.56640625,
+          "abs_max": 191968.828125,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_1_add_input0": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -191968.828125,
+          "max": 168729.8125,
+          "mean": 1064.062744140625,
+          "std": 53357.56640625,
+          "abs_max": 191968.828125,
+          "nonzero_count": 1280,
+          "unique_count": 1280
+        },
+        "stage4_1_add_input1": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": 0.0,
+          "max": 255.0,
+          "mean": 100.20625305175781,
+          "std": 124.30500793457031,
+          "abs_max": 255.0,
+          "nonzero_count": 506,
+          "unique_count": 8
+        },
+        "stage4_1_add": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": -103.0,
+          "max": 222.0,
+          "mean": 50.205467224121094,
+          "std": 66.01986694335938,
+          "abs_max": 222.0,
+          "nonzero_count": 1266,
+          "unique_count": 259
+        },
+        "stage4_1_out_relu": {
+          "shape": [
+            1,
+            80,
+            4,
+            4
+          ],
+          "dtype": "float32",
+          "min": 0.0,
+          "max": 255.0,
+          "mean": 98.49296569824219,
+          "std": 101.62523651123047,
+          "abs_max": 255.0,
+          "nonzero_count": 930,
+          "unique_count": 136
+        },
+        "global_pool_post_requant": {
+          "shape": [
+            1,
+            80,
+            1,
+            1
+          ],
+          "dtype": "float32",
+          "min": 1.0,
+          "max": 249.0,
+          "mean": 98.05000305175781,
+          "std": 73.26559448242188,
+          "abs_max": 249.0,
+          "nonzero_count": 80,
+          "unique_count": 68
+        },
+        "head_input": {
+          "shape": [
+            1,
+            80
+          ],
+          "dtype": "float32",
+          "min": 1.0,
+          "max": 249.0,
+          "mean": 98.05000305175781,
+          "std": 73.26559448242188,
+          "abs_max": 249.0,
+          "nonzero_count": 80,
+          "unique_count": 68
+        },
+        "model_output": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "float32",
+          "min": 21010.97265625,
+          "max": 68465.125,
+          "mean": 49352.98828125,
+          "std": 20442.8828125,
+          "abs_max": 68465.125,
+          "nonzero_count": 3,
+          "unique_count": 3
+        }
+      },
+      "onnx_stats": {
+        "model_output": {
+          "shape": [
+            1,
+            3
+          ],
+          "dtype": "float32",
+          "min": 21010.97265625,
+          "max": 68465.125,
+          "mean": 49352.98828125,
+          "std": 20442.8828125,
+          "abs_max": 68465.125,
+          "nonzero_count": 3,
+          "unique_count": 3
+        }
+      },
+      "onnx_path": "export/hybrid_follow/debug_export_quant_collapse_20260325/variants/variant_c_fused_three_heads/variant_c_fused_three_heads.onnx"
+    }
+  },
+  "weight_initializer_audit": {
+    "unclamped": [
+      {
+        "name": "stem.0.weight",
+        "count": 1,
+        "min": -131.0,
+        "max": 124.0
+      },
+      {
+        "name": "stage1.0.conv1.weight",
+        "count": 3,
+        "min": -156.0,
+        "max": 98.99999237060547
+      },
+      {
+        "name": "stage1.0.conv2.weight",
+        "count": 1,
+        "min": -116.0,
+        "max": 139.0
+      },
+      {
+        "name": "stage1.0.proj.0.weight",
+        "count": 1,
+        "min": -121.0,
+        "max": 134.0
+      },
+      {
+        "name": "stage1.1.conv1.weight",
+        "count": 1,
+        "min": -105.0,
+        "max": 150.0
+      },
+      {
+        "name": "stage1.1.conv2.weight",
+        "count": 1,
+        "min": -129.0,
+        "max": 126.0
+      },
+      {
+        "name": "stage2.0.conv1.weight",
+        "count": 1,
+        "min": -137.0,
+        "max": 117.99999237060547
+      },
+      {
+        "name": "stage2.0.conv2.weight",
+        "count": 1,
+        "min": -130.0,
+        "max": 125.0
+      },
+      {
+        "name": "stage2.0.proj.0.weight",
+        "count": 1,
+        "min": -105.0,
+        "max": 150.0
+      },
+      {
+        "name": "stage2.1.conv1.weight",
+        "count": 1,
+        "min": -123.0,
+        "max": 132.0
+      },
+      {
+        "name": "stage2.1.conv2.weight",
+        "count": 1,
+        "min": -114.0,
+        "max": 141.0
+      },
+      {
+        "name": "stage3.0.conv1.weight",
+        "count": 1,
+        "min": -133.0,
+        "max": 122.0
+      },
+      {
+        "name": "stage3.0.conv2.weight",
+        "count": 1,
+        "min": -110.0,
+        "max": 145.0
+      },
+      {
+        "name": "stage3.0.proj.0.weight",
+        "count": 1,
+        "min": -117.0,
+        "max": 138.0
+      },
+      {
+        "name": "stage3.1.conv2.weight",
+        "count": 1,
+        "min": -131.0,
+        "max": 124.0
+      },
+      {
+        "name": "stage4.0.conv1.weight",
+        "count": 2,
+        "min": -125.0,
+        "max": 130.0
+      },
+      {
+        "name": "stage4.0.conv2.weight",
+        "count": 1,
+        "min": -121.0,
+        "max": 134.0
+      },
+      {
+        "name": "stage4.0.proj.0.weight",
+        "count": 2,
+        "min": -112.0,
+        "max": 143.0
+      },
+      {
+        "name": "stage4.1.conv1.weight",
+        "count": 2,
+        "min": -120.0,
+        "max": 135.0
+      },
+      {
+        "name": "stage4.1.conv2.weight",
+        "count": 2,
+        "min": -135.0,
+        "max": 119.99999237060547
+      },
+      {
+        "name": "head.weight",
+        "count": 2,
+        "min": -126.0,
+        "max": 129.0
+      }
+    ],
+    "clamped": null
+  }
+}

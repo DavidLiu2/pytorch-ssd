@@ -3,38 +3,42 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 from pathlib import Path
 
 
-TRACKED_PATCH_FILES = (
-    "application/inc/pulp_nn_kernels.h",
-    "application/src/network.c",
-    "application/src/pulp_nn_add.c",
-    "application/src/pulp_nn_conv_Ho_parallel.c",
-    "application/src/pulp_nn_linear_out_32.c",
-    "application/src/pulp_nn_matmul.c",
-    "application/src/pulp_nn_utils.c",
-    "application/src/Convolution1.c",
-    "application/src/Convolution3.c",
-    "application/src/Convolution6.c",
-    "application/src/Convolution8.c",
-    "application/src/Convolution10.c",
-    "application/src/Convolution13.c",
-    "application/src/Convolution15.c",
-    "application/src/Convolution17.c",
-    "application/src/Convolution20.c",
-    "application/src/Convolution22.c",
-    "application/src/Convolution24.c",
-    "application/src/Convolution27.c",
-    "application/src/ReluQAddition4.c",
-    "application/src/ReluQAddition7.c",
-    "application/src/ReluQAddition11.c",
-    "application/src/ReluQAddition14.c",
-    "application/src/ReluQAddition18.c",
-    "application/src/ReluQAddition21.c",
-    "application/src/ReluQAddition25.c",
-    "application/src/ReluQAddition28.c",
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = SCRIPT_DIR.parent
+DEFAULT_TEMPLATE_APPLICATION_DIR = PROJECT_DIR / "application"
+
+
+PATCH_TEMPLATE_FILES = (
+    "inc/pulp_nn_kernels.h",
+    "src/network.c",
+    "src/pulp_nn_add.c",
+    "src/pulp_nn_conv_Ho_parallel.c",
+    "src/pulp_nn_linear_out_32.c",
+    "src/pulp_nn_matmul.c",
+    "src/pulp_nn_utils.c",
+    "src/Convolution1.c",
+    "src/Convolution3.c",
+    "src/Convolution6.c",
+    "src/Convolution8.c",
+    "src/Convolution10.c",
+    "src/Convolution13.c",
+    "src/Convolution15.c",
+    "src/Convolution17.c",
+    "src/Convolution20.c",
+    "src/Convolution22.c",
+    "src/Convolution24.c",
+    "src/Convolution27.c",
+    "src/ReluQAddition4.c",
+    "src/ReluQAddition7.c",
+    "src/ReluQAddition11.c",
+    "src/ReluQAddition14.c",
+    "src/ReluQAddition18.c",
+    "src/ReluQAddition21.c",
+    "src/ReluQAddition25.c",
+    "src/ReluQAddition28.c",
 )
 
 
@@ -74,36 +78,22 @@ def wrapper_source(layer_id: int, helper_name: str, x2_type: str, num_elements: 
     )
 
 
-def repo_root_from_application_dir(app_dir: Path) -> Path:
-    repo_root = app_dir.parent.resolve()
-    if not (repo_root / ".git").exists():
-        raise FileNotFoundError(f"Could not locate repo root from application dir: {app_dir}")
-    return repo_root
-
-
-def _git_show_head(repo_root: Path, rel_path: str) -> str:
-    result = subprocess.run(
-        ["git", "show", f"HEAD:{rel_path}"],
-        cwd=repo_root,
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    return result.stdout
-
-
-def restore_tracked_patch_files(app_dir: Path) -> list[str]:
-    repo_root = repo_root_from_application_dir(app_dir)
+def restore_template_patch_files(app_dir: Path, template_app_dir: Path) -> list[str]:
+    if not template_app_dir.is_dir():
+        raise FileNotFoundError(f"Template application directory not found: {template_app_dir}")
     changed = []
-    for rel_path in TRACKED_PATCH_FILES:
-        path = repo_root / rel_path
-        expected = _git_show_head(repo_root, rel_path)
-        if not path.exists():
-            raise FileNotFoundError(f"Missing generated runtime file: {path}")
-        current = path.read_text(encoding="utf-8")
+    for rel_path in PATCH_TEMPLATE_FILES:
+        source_path = template_app_dir / rel_path
+        target_path = app_dir / rel_path
+        if not source_path.exists():
+            raise FileNotFoundError(f"Missing template runtime file: {source_path}")
+        if not target_path.exists():
+            raise FileNotFoundError(f"Missing generated runtime file: {target_path}")
+        expected = source_path.read_bytes()
+        current = target_path.read_bytes()
         if current != expected:
-            path.write_text(expected, encoding="utf-8")
-            changed.append(str(path))
+            target_path.write_bytes(expected)
+            changed.append(str(target_path))
     return changed
 
 
@@ -222,6 +212,12 @@ def main() -> int:
         help="Generated application directory to patch and verify.",
     )
     parser.add_argument(
+        "--template-application-dir",
+        type=Path,
+        default=DEFAULT_TEMPLATE_APPLICATION_DIR,
+        help="Patched application directory used as the source template for runtime files.",
+    )
+    parser.add_argument(
         "--check-only",
         action="store_true",
         help="Only verify the raw-residual patch set without rewriting the ReluQAddition wrappers.",
@@ -235,14 +231,16 @@ def main() -> int:
     args = parser.parse_args()
 
     app_dir = args.application_dir.resolve()
+    template_app_dir = args.template_application_dir.resolve()
     changed_files: list[str] = []
     if not args.check_only:
-        changed_files.extend(restore_tracked_patch_files(app_dir))
+        changed_files.extend(restore_template_patch_files(app_dir, template_app_dir))
         changed_files.extend(rewrite_add_wrappers(app_dir))
         changed_files = sorted(set(changed_files))
 
     report = verify_runtime_patch_set(app_dir)
     report["changed_files"] = changed_files
+    report["template_application_dir"] = str(template_app_dir)
 
     if args.json_out is not None:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)

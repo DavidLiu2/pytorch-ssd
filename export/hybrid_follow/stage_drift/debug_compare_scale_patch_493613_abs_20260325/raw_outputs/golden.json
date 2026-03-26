@@ -1,0 +1,33 @@
+{
+  "key": "golden",
+  "label": "Golden output artifact",
+  "status": "ok",
+  "source": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/stage_drift/debug_compare_scale_patch_493613_abs_20260325/generated_golden_output.txt",
+  "stage_tag": "id",
+  "representation": "fixed-point-int32",
+  "input_mode": "staged_0_255",
+  "raw_native": [
+    5079,
+    20231,
+    59759
+  ],
+  "raw_semantic": [
+    0.154998779296875,
+    0.617401123046875,
+    1.823699951171875
+  ],
+  "decoded": {
+    "x_offset": 0.154998779296875,
+    "size_proxy": 0.617401123046875,
+    "visibility_logit": 1.823699951171875,
+    "visibility_confidence": 0.861009499831807
+  },
+  "notes": [
+    "Loaded from the export-side text/json artifact.",
+    "This golden artifact was generated from the ONNX result during this run."
+  ],
+  "error": null,
+  "metadata": {
+    "decode_scale": 32768.0
+  }
+}

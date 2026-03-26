@@ -1,0 +1,27 @@
+{
+  "image_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/data/coco/images/val2017/000000493613.jpg",
+  "output_dir": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_stage_image_artifacts_493613_20260325",
+  "input_txt": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_stage_image_artifacts_493613_20260325/input.txt",
+  "input_hex": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_stage_image_artifacts_493613_20260325/inputs.hex",
+  "output_txt": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_stage_image_artifacts_493613_20260325/output.txt",
+  "metadata_json": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_stage_image_artifacts_493613_20260325/metadata.json",
+  "output_name": "404",
+  "input_shape": [
+    1,
+    1,
+    128,
+    128
+  ],
+  "output_shape": [
+    1,
+    3
+  ],
+  "expected_tensor": [
+    6026,
+    18611,
+    58311
+  ],
+  "preprocess": "Center-crop to square, resize to 128x128, convert to grayscale, then torchvision ToTensor() with no extra normalization.",
+  "app_input_hex": null,
+  "onnx_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/hybrid_follow_dory.onnx"
+}

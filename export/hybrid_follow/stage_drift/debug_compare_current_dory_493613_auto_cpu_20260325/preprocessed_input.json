@@ -1,0 +1,23 @@
+{
+  "preprocess": "Center-crop to square, resize to 128x128, convert to grayscale, then torchvision ToTensor() with no extra normalization.",
+  "float_shape": [
+    1,
+    1,
+    128,
+    128
+  ],
+  "uint8_shape": [
+    1,
+    1,
+    128,
+    128
+  ],
+  "float_min": 0.0784313753247261,
+  "float_max": 1.0,
+  "uint8_min": 20,
+  "uint8_max": 255,
+  "preview_path": "export/hybrid_follow/stage_drift/debug_compare_current_dory_493613_auto_cpu_20260325/preprocessed_input_preview.png",
+  "float_dump_path": "export/hybrid_follow/stage_drift/debug_compare_current_dory_493613_auto_cpu_20260325/preprocessed_tensor_float.npy",
+  "uint8_dump_path": "export/hybrid_follow/stage_drift/debug_compare_current_dory_493613_auto_cpu_20260325/preprocessed_tensor_uint8.npy",
+  "metadata_path": "export/hybrid_follow/stage_drift/debug_compare_current_dory_493613_auto_cpu_20260325/preprocessed_input.json"
+}

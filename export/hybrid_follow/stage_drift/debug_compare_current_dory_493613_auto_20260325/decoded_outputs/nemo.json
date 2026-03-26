@@ -1,0 +1,13 @@
+{
+  "key": "nemo",
+  "label": "nemo",
+  "status": "error",
+  "decoded": null,
+  "representation": null,
+  "stage_tag": null,
+  "source": null,
+  "notes": [
+    "Traceback (most recent call last):\n  File \"export/compare_hybrid_follow_stages.py\", line 601, in safe_run_stage\n    return runner()\n  File \"export/compare_hybrid_follow_stages.py\", line 852, in <lambda>\n    stages[\"nemo\"] = safe_run_stage(\"nemo\", lambda: run_nemo_stage(ckpt_path, x_float, x_uint8, args))\n  File \"export/compare_hybrid_follow_stages.py\", line 453, in run_nemo_stage\n    model_q = nemo.transform.quantize_pact(deepcopy(model_fp), dummy_input=dummy_input)\n  File \"/mnt/c/Users/yxl21/Documents/School/DroneRS/nemoenv/lib/python3.8/site-packages/nemo/transform.py\", line 100, in quantize_pact\n    module = _hier_quantizer_pact(module, module.graph, **kwargs)\nRuntimeError: CUDA error: no kernel image is available for execution on the device\nCUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1.\n"
+  ],
+  "error": "RuntimeError: CUDA error: no kernel image is available for execution on the device\nCUDA kernel errors might be asynchronously reported at some other API call,so the stacktrace below might be incorrect.\nFor debugging consider passing CUDA_LAUNCH_BLOCKING=1."
+}

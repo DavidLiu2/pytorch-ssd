@@ -1,0 +1,33 @@
+{
+  "key": "golden",
+  "label": "Golden output artifact",
+  "status": "ok",
+  "source": "export/hybrid_follow/stage_drift/debug_compare_current_dory_493613_id_cpu_20260325/generated_golden_output.txt",
+  "stage_tag": "id",
+  "representation": "fixed-point-int32",
+  "input_mode": "staged_0_255",
+  "raw_native": [
+    6026,
+    18611,
+    58311
+  ],
+  "raw_semantic": [
+    0.18389892578125,
+    0.567962646484375,
+    1.779510498046875
+  ],
+  "decoded": {
+    "x_offset": 0.18389892578125,
+    "size_proxy": 0.567962646484375,
+    "visibility_logit": 1.779510498046875,
+    "visibility_confidence": 0.855636411811068
+  },
+  "notes": [
+    "Loaded from the export-side text/json artifact.",
+    "This golden artifact was generated from the ONNX result during this run."
+  ],
+  "error": null,
+  "metadata": {
+    "decode_scale": 32768.0
+  }
+}

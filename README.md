@@ -48,10 +48,13 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
   DORY config generation, artifact generation, `network_generate.py`, and the
   hybrid-follow raw-residual GAP8 patch reapply step.
 - `run_aideck_val.sh`
-  Single-sample AI-Deck Docker validation for the currently generated app.
+  Compatibility wrapper for the staged AI-Deck-only phase.
 - `run_real_image_val.sh`
-  Canonical batch real-image validation wrapper around the existing AI-Deck flow.
-  It prefers `../doryenv/bin/python3` automatically when available.
+  Compatibility wrapper for the real-image-only phase.
+- `run_hybrid_follow_val.sh`
+  Canonical hybrid-follow validation entrypoint. Its default flow runs staged
+  AI-Deck validation first, then the checkpoint-vs-application evaluation,
+  which already performs the real-image validation internally.
 - `run_real_image_overlay.sh`
   Compatibility wrapper that forwards to `run_real_image_val.sh --overlay-only`.
 - `export/`
@@ -71,13 +74,12 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
 3. `run_all.sh` simplifies and strips unsupported ONNX ops for DORY.
 4. `run_all.sh` generates the DORY app into `pytorch_ssd/application` by default.
    For `hybrid_follow`, it also reapplies the raw-residual GAP8 runtime patch set.
-5. `run_aideck_val.sh` builds that app in the AI-Deck Docker image and compares
-   GVSOC output against Python-side golden tensors.
-6. `run_real_image_val.sh` stages real images into `input.txt` plus `inputs.hex`,
-   runs GVSOC per image, writes per-image artifacts plus batch summaries, and
-   now also saves a `prediction_overlay.png` for each sample. Use
-   `run_real_image_val.sh --overlay-only` to regenerate overlays without rerunning
-   the app.
+5. `run_hybrid_follow_val.sh` is now the canonical validation entrypoint:
+   it runs staged AI-Deck validation, then runs the checkpoint-vs-application
+   evaluation report, and that evaluation step performs the real-image validation
+   plus before/after overlays on the same image set.
+6. `run_aideck_val.sh` and `run_real_image_val.sh` still exist as compatibility
+   wrappers when you only want one phase.
 
 ## Important Current Quirks
 

@@ -1,0 +1,17 @@
+{
+  "key": "nemo",
+  "label": "NEMO quantized",
+  "status": "skipped",
+  "source": null,
+  "stage_tag": "skip",
+  "representation": null,
+  "input_mode": null,
+  "raw_native": null,
+  "raw_semantic": null,
+  "decoded": null,
+  "notes": [
+    "Skipped because --nemo-stage=skip was requested."
+  ],
+  "error": null,
+  "metadata": {}
+}
