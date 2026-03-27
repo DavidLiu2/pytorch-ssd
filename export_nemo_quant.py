@@ -9,6 +9,7 @@ import os
 import random
 import types
 from copy import deepcopy
+from contextlib import nullcontext
 from pathlib import Path
 from types import MethodType
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -26,14 +27,34 @@ from utils.transforms import get_val_transforms
 
 HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY = os.environ.get(
     "HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY",
-    "fanin",
-).strip().lower() or "fanin"
+    "legacy",
+).strip().lower() or "legacy"
+
+HYBRID_FOLLOW_CONV_BIAS_SCALE_SOURCE = os.environ.get(
+    "HYBRID_FOLLOW_CONV_BIAS_SCALE_SOURCE",
+    "eps_out_static",
+).strip().lower() or "eps_out_static"
+
+HYBRID_FOLLOW_CONV_BIAS_ROUNDING = os.environ.get(
+    "HYBRID_FOLLOW_CONV_BIAS_ROUNDING",
+    "nearest_even",
+).strip().lower() or "nearest_even"
+
+HYBRID_FOLLOW_EXPORT_PRESET = os.environ.get(
+    "HYBRID_FOLLOW_EXPORT_PRESET",
+    "baseline",
+).strip().lower() or "baseline"
 
 HYBRID_FOLLOW_INTEGER_ADD_POLICY_CANDIDATES = (
     "legacy",
     "sqrt_fanin",
     "midpoint",
     "fanin",
+)
+
+HYBRID_FOLLOW_EXPORT_PRESET_CANDIDATES = (
+    "baseline",
+    "microblock_add_only",
 )
 
 
@@ -147,11 +168,37 @@ def maybe_convert_hybrid_follow_to_export_head(model):
     return export_model
 
 
+def annotate_module_names(model):
+    for name, module in model.named_modules():
+        try:
+            module._export_nemo_quant_module_name = name
+        except Exception:
+            continue
+    return model
+
+
+def normalize_hybrid_follow_export_preset(preset_name: Optional[str]) -> str:
+    preset = (preset_name or HYBRID_FOLLOW_EXPORT_PRESET).strip().lower()
+    if not preset:
+        preset = "baseline"
+    if preset not in HYBRID_FOLLOW_EXPORT_PRESET_CANDIDATES:
+        raise ValueError(
+            f"Unsupported hybrid_follow export preset: {preset_name}. "
+            f"Expected one of {HYBRID_FOLLOW_EXPORT_PRESET_CANDIDATES}."
+        )
+    return preset
+
+
 def _compute_integer_add_eps_out(eps_in_list, policy: str):
     max_eps = max(eps_in_list)
     fan_in = len(eps_in_list)
     if policy in {"legacy", "max_only"}:
         return max_eps
+    if policy in {"max_branch", "max_branch_scale"}:
+        return max_eps
+    if policy in {"joint_balanced", "joint_balanced_scale", "geometric_mean", "geomean"}:
+        min_eps = min(eps_in_list)
+        return torch.sqrt(max_eps * min_eps)
     if policy == "sqrt_fanin":
         return max_eps * math.sqrt(fan_in)
     if policy == "midpoint":
@@ -161,26 +208,98 @@ def _compute_integer_add_eps_out(eps_in_list, policy: str):
     raise ValueError(f"Unsupported integer-add scale policy: {policy}")
 
 
-def patch_integer_add_scale_selection(policy: str = HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY):
+def _normalize_integer_add_override_spec(value: Any):
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        override = dict(value)
+        if override.get("eps_out") is not None:
+            return {
+                "mode": "explicit_eps_out",
+                "eps_out": float(override["eps_out"]),
+                "policy_name": (
+                    str(override.get("policy_name")).strip().lower()
+                    if override.get("policy_name") is not None
+                    else "explicit_eps_out"
+                ),
+                "metadata": deepcopy(override.get("metadata") or {}),
+            }
+        policy = (
+            str(
+                override.get("policy")
+                or override.get("policy_name")
+                or override.get("mode")
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+        if not policy:
+            raise ValueError(f"Unsupported integer-add scale override: {value}")
+        return {
+            "mode": "policy",
+            "policy": policy,
+        }
+    return {
+        "mode": "policy",
+        "policy": str(value).strip().lower(),
+    }
+
+
+def patch_integer_add_scale_selection(
+    policy: str = HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY,
+    operator_policies: Optional[Dict[str, Any]] = None,
+):
     integer_add_cls = nemo.quant.pact.PACT_IntegerAdd
     original = getattr(integer_add_cls, "_export_nemo_quant_original_get_output_eps", None)
     if original is None:
         original = integer_add_cls.get_output_eps
         integer_add_cls._export_nemo_quant_original_get_output_eps = original
 
+    policy = (policy or HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY).strip().lower()
+    normalized_overrides = {}
+    for module_name, module_policy in (operator_policies or {}).items():
+        if module_policy is None:
+            continue
+        normalized_overrides[str(module_name)] = _normalize_integer_add_override_spec(module_policy)
+
     current_policy = getattr(integer_add_cls, "_export_nemo_quant_scale_policy", None)
-    if current_policy == policy:
+    current_overrides = getattr(integer_add_cls, "_export_nemo_quant_scale_policy_overrides", {})
+    if current_policy == policy and current_overrides == normalized_overrides:
         return policy
 
-    if policy == "legacy":
+    if policy == "legacy" and not normalized_overrides:
         integer_add_cls.get_output_eps = original
         integer_add_cls._export_nemo_quant_scale_policy = policy
+        integer_add_cls._export_nemo_quant_scale_policy_overrides = {}
         return policy
 
     def patched_get_output_eps(self, eps_in_list):
         if type(eps_in_list) is list:
             self.eps_in_list = eps_in_list
-        self.eps_out = _compute_integer_add_eps_out(self.eps_in_list, policy)
+        module_name = getattr(self, "_export_nemo_quant_module_name", None)
+        effective_override = normalized_overrides.get(module_name)
+        if effective_override is None:
+            effective_override = {"mode": "policy", "policy": policy}
+        effective_policy = effective_override.get("policy") if isinstance(effective_override, dict) else str(effective_override)
+        if effective_policy == "legacy" and effective_override.get("mode") == "policy":
+            return original(self, eps_in_list)
+        if effective_override.get("mode") == "explicit_eps_out":
+            eps_reference = None
+            for value in self.eps_in_list:
+                if torch.is_tensor(value):
+                    eps_reference = value
+                    break
+            if eps_reference is None:
+                self.eps_out = torch.as_tensor(float(effective_override["eps_out"]), dtype=torch.float32)
+            else:
+                self.eps_out = torch.as_tensor(
+                    float(effective_override["eps_out"]),
+                    dtype=eps_reference.dtype,
+                    device=eps_reference.device,
+                )
+        else:
+            self.eps_out = _compute_integer_add_eps_out(self.eps_in_list, effective_policy)
         self.alpha_out = 2.0 ** (self.precision.get_bits()) - 1
         self.D = 2 ** torch.as_tensor(
             torch.ceil(
@@ -190,10 +309,12 @@ def patch_integer_add_scale_selection(policy: str = HYBRID_FOLLOW_INTEGER_ADD_SC
             ),
             dtype=torch.int64,
         )
+        self._export_nemo_quant_scale_override = deepcopy(effective_override)
         return self.eps_out
 
     integer_add_cls.get_output_eps = patched_get_output_eps
     integer_add_cls._export_nemo_quant_scale_policy = policy
+    integer_add_cls._export_nemo_quant_scale_policy_overrides = normalized_overrides
     return policy
 
 
@@ -1081,6 +1202,7 @@ def _patch_hybrid_follow_graph_rebuild(graph):
 
 
 def repair_hybrid_follow_fused_quant_graph(model):
+    annotate_module_names(model)
     graph = getattr(model, "graph", None)
     if graph is None:
         raise RuntimeError("hybrid_follow graph repair requested before quantize_pact graph creation.")
@@ -1241,7 +1363,7 @@ def prepare_model_fp(
             print("[export_nemo_quant] Leaving hybrid_follow heads uncollapsed for this export path.")
 
     model_fp.to(device).eval()
-    return model_fp
+    return annotate_module_names(model_fp)
 
 
 def run_activation_calibration(model_q, calib_samples):
@@ -1250,6 +1372,535 @@ def run_activation_calibration(model_q, calib_samples):
             for sample in calib_samples:
                 _ = model_q(sample["tensor"])
     model_q.reset_alpha_act()
+
+
+def collect_module_output_samples(
+    model,
+    calib_samples,
+    module_names: Sequence[str],
+    *,
+    statistics_act: bool = False,
+):
+    captures = {str(name): [] for name in module_names}
+    handles = []
+
+    def capture_output(alias):
+        def hook(_module, _inputs, output):
+            captures[alias].append(output.detach().cpu())
+        return hook
+
+    for module_name in module_names:
+        module = resolve_dotted_module(model, module_name)
+        handles.append(module.register_forward_hook(capture_output(str(module_name))))
+
+    activation_context = (
+        model.statistics_act()
+        if statistics_act and hasattr(model, "statistics_act")
+        else nullcontext()
+    )
+    try:
+        with torch.no_grad():
+            with activation_context:
+                for sample in calib_samples:
+                    _ = model(sample["tensor"])
+    finally:
+        for handle in handles:
+            handle.remove()
+
+    return {
+        alias: [
+            np.asarray(tensor.detach().cpu().numpy(), dtype=np.float64)
+            for tensor in tensors
+        ]
+        for alias, tensors in captures.items()
+    }
+
+
+def collect_integer_add_branch_samples(model, calib_samples, module_name: str):
+    captures = {
+        "main": [],
+        "skip": [],
+        "output": [],
+    }
+    module = resolve_dotted_module(model, module_name)
+
+    def capture_branches(_module, inputs, output):
+        if len(inputs) >= 1:
+            captures["main"].append(inputs[0].detach().cpu())
+        if len(inputs) >= 2:
+            captures["skip"].append(inputs[1].detach().cpu())
+        captures["output"].append(output.detach().cpu())
+
+    handle = module.register_forward_hook(capture_branches)
+    try:
+        with torch.no_grad():
+            for sample in calib_samples:
+                _ = model(sample["tensor"])
+    finally:
+        handle.remove()
+
+    return {
+        alias: [
+            np.asarray(tensor.detach().cpu().numpy(), dtype=np.float64)
+            for tensor in tensors
+        ]
+        for alias, tensors in captures.items()
+    }
+
+
+def flatten_sample_tensors(tensors: Sequence[Any]):
+    if not tensors:
+        return np.asarray([], dtype=np.float64)
+    flattened = []
+    for tensor in tensors:
+        arr = np.asarray(tensor, dtype=np.float64).reshape(-1)
+        if arr.size:
+            flattened.append(arr)
+    if not flattened:
+        return np.asarray([], dtype=np.float64)
+    return np.concatenate(flattened)
+
+
+def activation_values_for_search(tensors: Sequence[Any], *, symmetric: bool = False):
+    values = flatten_sample_tensors(tensors)
+    if values.size == 0:
+        return values
+    if symmetric:
+        return values
+    return values[values > 0.0]
+
+
+def simulate_activation_quantization(
+    values: Any,
+    alpha: float,
+    bits: int,
+    *,
+    symmetric: bool = False,
+):
+    arr = np.asarray(values, dtype=np.float64)
+    if arr.size == 0:
+        return {
+            "quantized": arr,
+            "mse": 0.0,
+            "mean_abs_error": 0.0,
+            "max_abs_error": 0.0,
+            "clip_fraction": 0.0,
+            "eps_out": None,
+        }
+
+    alpha = max(float(alpha), 1e-12)
+    quant_levels = max((2 ** int(bits)) - 1, 1)
+    if symmetric:
+        eps = (2.0 * alpha) / quant_levels
+        clipped = np.clip(arr, -alpha, alpha)
+        quantized = np.floor(clipped / eps) * eps
+        clip_mask = np.abs(arr) > alpha
+    else:
+        eps = alpha / quant_levels
+        clipped = np.clip(arr, 0.0, alpha)
+        quantized = np.floor(clipped / eps) * eps
+        quantized = np.clip(quantized, 0.0, max(alpha - eps, 0.0))
+        clip_mask = arr > alpha
+
+    error = quantized - arr
+    return {
+        "quantized": quantized,
+        "mse": float(np.mean(np.square(error))),
+        "mean_abs_error": float(np.mean(np.abs(error))),
+        "max_abs_error": float(np.max(np.abs(error))),
+        "clip_fraction": float(np.mean(clip_mask.astype(np.float64))),
+        "eps_out": float(eps),
+    }
+
+
+def select_activation_alpha_by_percentile(
+    tensors: Sequence[Any],
+    percentile: float,
+    *,
+    symmetric: bool = False,
+):
+    values = activation_values_for_search(tensors, symmetric=symmetric)
+    if values.size == 0:
+        return 1e-12
+    quantile = float(np.clip(percentile, 0.0, 100.0)) / 100.0
+    base_values = np.abs(values) if symmetric else values
+    alpha = float(np.quantile(base_values, quantile))
+    return max(alpha, 1e-12)
+
+
+def select_activation_alpha_by_mse(
+    tensors: Sequence[Any],
+    bits: int,
+    *,
+    symmetric: bool = False,
+    candidate_count: int = 80,
+):
+    values = activation_values_for_search(tensors, symmetric=symmetric)
+    if values.size == 0:
+        return {
+            "alpha": 1e-12,
+            "search": [],
+            "best_report": simulate_activation_quantization(
+                np.asarray([], dtype=np.float64),
+                1e-12,
+                bits,
+                symmetric=symmetric,
+            ),
+        }
+
+    base_values = np.abs(values) if symmetric else values
+    value_max = float(np.max(base_values))
+    if value_max <= 0.0:
+        return {
+            "alpha": 1e-12,
+            "search": [],
+            "best_report": simulate_activation_quantization(values, 1e-12, bits, symmetric=symmetric),
+        }
+
+    quantiles = np.linspace(0.80, 1.0, max(int(candidate_count), 8))
+    candidates = np.unique(np.quantile(base_values, quantiles))
+    candidates = [max(float(candidate), 1e-12) for candidate in candidates if float(candidate) > 0.0]
+    if not candidates:
+        candidates = [value_max]
+
+    search_rows = []
+    best_alpha = candidates[-1]
+    best_report = None
+    best_key = None
+    for candidate in candidates:
+        report = simulate_activation_quantization(values, candidate, bits, symmetric=symmetric)
+        row = {
+            "alpha": float(candidate),
+            "mse": float(report["mse"]),
+            "mean_abs_error": float(report["mean_abs_error"]),
+            "max_abs_error": float(report["max_abs_error"]),
+            "clip_fraction": float(report["clip_fraction"]),
+            "eps_out": report["eps_out"],
+        }
+        search_rows.append(row)
+        key = (
+            float(row["mse"]),
+            float(row["mean_abs_error"]),
+            -float(candidate),
+        )
+        if best_key is None or key < best_key:
+            best_key = key
+            best_alpha = float(candidate)
+            best_report = report
+
+    if best_report is None:
+        best_report = simulate_activation_quantization(values, best_alpha, bits, symmetric=symmetric)
+
+    return {
+        "alpha": float(best_alpha),
+        "search": search_rows,
+        "best_report": {
+            "mse": float(best_report["mse"]),
+            "mean_abs_error": float(best_report["mean_abs_error"]),
+            "max_abs_error": float(best_report["max_abs_error"]),
+            "clip_fraction": float(best_report["clip_fraction"]),
+            "eps_out": best_report["eps_out"],
+        },
+    }
+
+
+def apply_activation_alpha_overrides(model, overrides: Dict[str, Dict[str, Any]]):
+    reports = []
+    for module_name, config in (overrides or {}).items():
+        if not isinstance(config, dict):
+            continue
+        if config.get("alpha") is None:
+            continue
+        module = resolve_dotted_module(model, module_name)
+        if module.__class__.__name__ != "PACT_Act":
+            raise TypeError(
+                f"Activation override expected a PACT_Act at {module_name}, "
+                f"found {module.__class__.__name__}"
+            )
+        alpha = max(float(config["alpha"]), 1e-12)
+        with torch.no_grad():
+            module.alpha.data[0] = alpha
+        module._export_nemo_quant_activation_override = deepcopy(config)
+        reports.append(
+            {
+                "module_name": module_name,
+                "alpha": alpha,
+                "policy_name": config.get("policy_name"),
+                "symmetric": bool(config.get("symmetric", False)),
+            }
+        )
+    return reports
+
+
+def build_activation_percentile_override(
+    model,
+    calib_samples,
+    *,
+    module_name: str,
+    percentile: float,
+    policy_name: str,
+) -> Dict[str, Any]:
+    sample_map = collect_module_output_samples(
+        model,
+        calib_samples,
+        [module_name],
+        statistics_act=True,
+    )
+    tensors = sample_map.get(module_name) or []
+    if not tensors:
+        raise RuntimeError(f"No calibration samples captured for activation module: {module_name}")
+
+    module = resolve_dotted_module(model, module_name)
+    bits = precision_bits_from_value(getattr(module, "precision", None)) or 8
+    alpha = float(select_activation_alpha_by_percentile(tensors, percentile, symmetric=False))
+    values = activation_values_for_search(tensors)
+    quant_report = simulate_activation_quantization(values, alpha, bits, symmetric=False)
+    return {
+        "alpha": alpha,
+        "policy_name": policy_name,
+        "symmetric": False,
+        "percentile": float(percentile),
+        "quantization_report": {
+            "mse": float(quant_report["mse"]),
+            "mean_abs_error": float(quant_report["mean_abs_error"]),
+            "max_abs_error": float(quant_report["max_abs_error"]),
+            "clip_fraction": float(quant_report["clip_fraction"]),
+            "eps_out": float(quant_report["eps_out"]),
+        },
+    }
+
+
+def simulate_integer_add_semantic_search(
+    branch_samples: Dict[str, List[np.ndarray]],
+    eps_in_list: Sequence[float],
+    eps_out: float,
+    *,
+    requantization_factor: int = 32,
+) -> Dict[str, Any]:
+    if len(eps_in_list) < 2:
+        raise ValueError(f"Expected two eps_in values for integer add, got {eps_in_list}")
+    if eps_out <= 0.0:
+        raise ValueError(f"eps_out must be positive, got {eps_out}")
+
+    main_samples = branch_samples.get("main") or []
+    skip_samples = branch_samples.get("skip") or []
+    output_samples = branch_samples.get("output") or []
+    if not main_samples or not skip_samples or not output_samples:
+        raise RuntimeError("Integer-add semantic search requires main/skip/output calibration samples.")
+
+    min_eps = min(float(value) for value in eps_in_list if value is not None)
+    exponent = int(
+        np.ceil(
+            np.log2(
+                float(requantization_factor) * float(eps_out) / max(min_eps, 1e-12)
+            )
+        )
+    )
+    divisor = 2 ** max(exponent, 0)
+    mul = [
+        int(round(float(divisor) * float(eps) / float(eps_out)))
+        for eps in eps_in_list[:2]
+    ]
+
+    predicted = []
+    for main_tensor, skip_tensor in zip(main_samples, skip_samples):
+        main_arr = np.asarray(main_tensor, dtype=np.float64)
+        skip_arr = np.asarray(skip_tensor, dtype=np.float64)
+        main_raw = np.rint(main_arr / float(eps_in_list[0])).astype(np.int64)
+        skip_raw = np.rint(skip_arr / float(eps_in_list[1])).astype(np.int64)
+        pre_raw = (main_raw * np.int64(mul[0])) + (skip_raw * np.int64(mul[1]))
+        post_raw = np.floor(pre_raw.astype(np.float64) / float(divisor)).astype(np.int64)
+        predicted.append(post_raw.astype(np.float64) * float(eps_out))
+
+    target_flattened = [
+        np.asarray(tensor, dtype=np.float64).reshape(-1)
+        for tensor in output_samples
+        if np.asarray(tensor).size
+    ]
+    target = (
+        np.concatenate(target_flattened, axis=0)
+        if target_flattened
+        else np.asarray([], dtype=np.float64)
+    )
+    predicted_flattened = [
+        np.asarray(tensor, dtype=np.float64).reshape(-1)
+        for tensor in predicted
+        if np.asarray(tensor).size
+    ]
+    predicted_flat = (
+        np.concatenate(predicted_flattened, axis=0)
+        if predicted_flattened
+        else np.asarray([], dtype=np.float64)
+    )
+    diff = compare_arrays_rich(target, predicted_flat) if target.size and predicted_flat.size else None
+    return {
+        "eps_out": float(eps_out),
+        "D": int(divisor),
+        "mul": mul,
+        "semantic_compare": diff,
+    }
+
+
+def select_integer_add_eps_out_by_mse(
+    branch_samples: Dict[str, List[np.ndarray]],
+    eps_in_list: Sequence[float],
+) -> Dict[str, Any]:
+    if len(eps_in_list) < 2:
+        raise ValueError(f"Expected two eps_in values for stage4.1.add, got {eps_in_list}")
+
+    max_eps = float(max(eps_in_list))
+    min_eps = float(min(eps_in_list))
+    candidate_values = np.unique(
+        np.concatenate(
+            [
+                np.geomspace(max(min_eps * 0.5, 1e-12), max_eps * 2.0, 80),
+                np.asarray(
+                    [
+                        min_eps,
+                        float(np.sqrt(max_eps * min_eps)),
+                        max_eps,
+                    ],
+                    dtype=np.float64,
+                ),
+            ]
+        )
+    )
+
+    best_key = None
+    best_report = None
+    search_rows = []
+    for candidate in candidate_values:
+        report = simulate_integer_add_semantic_search(
+            branch_samples,
+            eps_in_list,
+            float(candidate),
+        )
+        drift = report.get("semantic_compare") or {}
+        row = {
+            "eps_out": float(report["eps_out"]),
+            "D": int(report["D"]),
+            "mul": make_json_ready(report["mul"]),
+            "mean_abs_diff": float(drift.get("mean_abs_diff") or 0.0),
+            "max_abs_diff": float(drift.get("max_abs_diff") or 0.0),
+            "cosine_similarity": drift.get("cosine_similarity"),
+            "abs_mean_ratio": float(drift.get("abs_mean_ratio") or 0.0),
+        }
+        search_rows.append(row)
+        key = (
+            float(row["mean_abs_diff"]),
+            float(row["max_abs_diff"]),
+            -float(candidate),
+        )
+        if best_key is None or key < best_key:
+            best_key = key
+            best_report = report
+
+    if best_report is None:
+        best_report = simulate_integer_add_semantic_search(branch_samples, eps_in_list, max_eps)
+
+    return {
+        "policy_name": "mse_selected_joint",
+        "override": {
+            "eps_out": float(best_report["eps_out"]),
+            "policy_name": "mse_selected_joint",
+            "metadata": {
+                "search_rows": search_rows,
+                "semantic_compare": deepcopy(best_report.get("semantic_compare")),
+            },
+        },
+        "scale_report": best_report,
+        "search": search_rows,
+    }
+
+
+def derive_hybrid_follow_export_preset_config(
+    model,
+    calib_samples,
+    preset_name: Optional[str],
+) -> Dict[str, Any]:
+    preset = normalize_hybrid_follow_export_preset(preset_name)
+    config: Dict[str, Any] = {
+        "preset_name": preset,
+        "activation_overrides": {},
+        "integer_add_operator_overrides": {},
+        "search_context": {},
+    }
+    if preset == "baseline":
+        config["description"] = "Current exporter defaults"
+        return config
+
+    if preset == "microblock_add_only":
+        activation_module = "stage4.1.out_relu"
+        activation_override = build_activation_percentile_override(
+            model,
+            calib_samples,
+            module_name=activation_module,
+            percentile=99.0,
+            policy_name="percentile_99_0",
+        )
+        branch_samples = collect_integer_add_branch_samples(model, calib_samples, "stage4.1.add")
+        add_context = stage4_1_path_quant_context(model)
+        eps_in_list = [
+            float(value)
+            for value in (add_context.get("stage4.1.add") or {}).get("eps_in_list", [])
+            if value not in (None, 0.0)
+        ]
+        if len(eps_in_list) < 2:
+            fallback_eps = [
+                (add_context.get("stage4.1.conv2") or {}).get("eps_out"),
+                (add_context.get("skip_path_input") or {}).get("eps_out"),
+            ]
+            eps_in_list = [
+                float(value)
+                for value in fallback_eps
+                if value not in (None, 0.0)
+            ]
+        if len(eps_in_list) < 2:
+            raise RuntimeError(
+                "stage4.1.add calibration context did not expose two input eps values for the export preset."
+            )
+        add_scale_report = select_integer_add_eps_out_by_mse(branch_samples, eps_in_list)
+        config["description"] = (
+            "Patch stage4.1.add only: add activation percentile_99_0 and add scale mse_selected_joint."
+        )
+        config["activation_overrides"] = {
+            activation_module: activation_override,
+        }
+        config["integer_add_operator_overrides"] = {
+            "stage4.1.add": deepcopy(add_scale_report["override"]),
+        }
+        config["search_context"] = {
+            "add_activation": {
+                "module_name": activation_module,
+                **deepcopy(activation_override),
+            },
+            "add_scale": deepcopy(add_scale_report),
+        }
+        return config
+
+    raise ValueError(f"Unsupported hybrid_follow export preset: {preset}")
+
+
+def apply_hybrid_follow_export_preset_config(
+    model,
+    preset_config: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    config = deepcopy(preset_config or {})
+    preset_name = normalize_hybrid_follow_export_preset(config.get("preset_name"))
+    activation_report = apply_activation_alpha_overrides(
+        model,
+        config.get("activation_overrides") or {},
+    )
+    applied = {
+        "preset_name": preset_name,
+        "description": config.get("description"),
+        "activation_overrides": deepcopy(config.get("activation_overrides") or {}),
+        "integer_add_operator_overrides": deepcopy(config.get("integer_add_operator_overrides") or {}),
+        "activation_override_report": activation_report,
+        "search_context": deepcopy(config.get("search_context") or {}),
+    }
+    model._export_nemo_quant_preset_report = deepcopy(applied)
+    return applied
 
 
 def normalize_integer_requant_tensors(model):
@@ -1276,6 +1927,136 @@ def normalize_integer_requant_tensors(model):
             + ", ".join(normalized[:12])
             + (" ..." if len(normalized) > 12 else "")
         )
+
+
+def _normalize_conv_bias_scale_source(scale_source: Optional[str]) -> str:
+    normalized = (scale_source or HYBRID_FOLLOW_CONV_BIAS_SCALE_SOURCE).strip().lower()
+    if normalized not in {"eps_out_static", "eps_static"}:
+        raise ValueError(f"Unsupported deploy conv-bias scale source: {scale_source}")
+    return normalized
+
+
+def _normalize_rounding_mode(rounding_mode: Optional[str]) -> str:
+    normalized = (rounding_mode or HYBRID_FOLLOW_CONV_BIAS_ROUNDING).strip().lower()
+    aliases = {
+        "nearest": "nearest_even",
+        "round": "nearest_even",
+        "ties_to_even": "nearest_even",
+        "half_away_zero": "half_away_from_zero",
+        "half_away_from_zero": "half_away_from_zero",
+        "floor": "floor",
+    }
+    normalized = aliases.get(normalized, normalized)
+    if normalized not in {"nearest_even", "half_away_from_zero", "floor"}:
+        raise ValueError(f"Unsupported deploy conv-bias rounding mode: {rounding_mode}")
+    return normalized
+
+
+def round_tensor_by_policy(value: torch.Tensor, rounding_mode: Optional[str]) -> torch.Tensor:
+    normalized_mode = _normalize_rounding_mode(rounding_mode)
+    if normalized_mode == "nearest_even":
+        return torch.round(value)
+    if normalized_mode == "floor":
+        return torch.floor(value)
+    abs_value = torch.abs(value)
+    return torch.sign(value) * torch.floor(abs_value + 0.5)
+
+
+def resolve_conv_bias_integerization_policy(
+    module_name: str,
+    policy_overrides: Optional[Dict[str, Dict[str, Any]]] = None,
+    *,
+    default_scale_source: str = HYBRID_FOLLOW_CONV_BIAS_SCALE_SOURCE,
+    default_rounding_mode: str = HYBRID_FOLLOW_CONV_BIAS_ROUNDING,
+):
+    scale_source = _normalize_conv_bias_scale_source(default_scale_source)
+    rounding_mode = _normalize_rounding_mode(default_rounding_mode)
+    override = (policy_overrides or {}).get(module_name)
+    if isinstance(override, dict):
+        if override.get("scale_source") is not None:
+            scale_source = _normalize_conv_bias_scale_source(override.get("scale_source"))
+        if override.get("rounding_mode") is not None:
+            rounding_mode = _normalize_rounding_mode(override.get("rounding_mode"))
+    return {
+        "scale_source": scale_source,
+        "rounding_mode": rounding_mode,
+    }
+
+
+def integerize_deploy_conv_biases(
+    model,
+    policy_overrides: Optional[Dict[str, Dict[str, Any]]] = None,
+    *,
+    default_scale_source: str = HYBRID_FOLLOW_CONV_BIAS_SCALE_SOURCE,
+    default_rounding_mode: str = HYBRID_FOLLOW_CONV_BIAS_ROUNDING,
+    collect_reports: bool = False,
+):
+    normalized = []
+    reports = []
+    for name, module in model.named_modules():
+        if module.__class__.__name__ not in {"PACT_Conv2d", "PACT_Conv1d"}:
+            continue
+        if not getattr(module, "integerized", False):
+            continue
+        if getattr(module, "_deploy_bias_integerized", False):
+            continue
+        bias = getattr(module, "bias", None)
+        if bias is None:
+            continue
+        module_name = getattr(module, "_export_nemo_quant_module_name", None) or name
+        policy = resolve_conv_bias_integerization_policy(
+            module_name,
+            policy_overrides,
+            default_scale_source=default_scale_source,
+            default_rounding_mode=default_rounding_mode,
+        )
+        scale_source = policy["scale_source"]
+        rounding_mode = policy["rounding_mode"]
+        eps_out = tensor_scalar(getattr(module, scale_source, None))
+        if eps_out in (None, 0.0):
+            continue
+        with torch.no_grad():
+            original_bias = module.bias.detach().clone()
+            bias_counts = round_tensor_by_policy(original_bias / float(eps_out), rounding_mode)
+            reconstructed_bias = bias_counts * float(eps_out)
+            rounding_error = reconstructed_bias - original_bias
+            module.bias.data = bias_counts
+        module._deploy_bias_original_semantic = original_bias.detach().clone()
+        module._deploy_bias_integer_counts = bias_counts.detach().clone()
+        module._deploy_bias_scale_source = scale_source
+        module._deploy_bias_rounding_mode = rounding_mode
+        module._deploy_bias_output_eps = float(eps_out)
+        module._deploy_bias_rounding_error = rounding_error.detach().clone()
+        module._deploy_bias_integerization_report = {
+            "module_name": module_name,
+            "scale_source": scale_source,
+            "rounding_mode": rounding_mode,
+            "output_eps": float(eps_out),
+            "bias_original_semantic": original_bias.detach().cpu(),
+            "bias_integer_counts": bias_counts.detach().cpu(),
+            "bias_reconstructed_semantic": reconstructed_bias.detach().cpu(),
+            "bias_rounding_error": rounding_error.detach().cpu(),
+        }
+        module._deploy_bias_integerized = True
+        normalized.append(module_name)
+        reports.append(
+            {
+                "module_name": module_name,
+                "scale_source": scale_source,
+                "rounding_mode": rounding_mode,
+                "output_eps": float(eps_out),
+            }
+        )
+
+    if normalized:
+        print(
+            "[export_nemo_quant] Integerized deploy conv biases: "
+            + ", ".join(normalized[:12])
+            + (" ..." if len(normalized) > 12 else "")
+        )
+    if collect_reports:
+        return reports
+    return normalized
 
 
 def tensor_to_numpy(value):
@@ -1310,6 +2091,38 @@ def tensor_stats(value: Any):
         "abs_max": float(np.max(np.abs(flat))),
         "nonzero_count": int(np.count_nonzero(flat)),
         "unique_count": unique_count,
+    }
+
+
+def mean_abs_value(value: Any):
+    arr = np.asarray(tensor_to_numpy(value), dtype=np.float64)
+    if arr.size == 0:
+        return 0.0
+    return float(np.mean(np.abs(arr.reshape(-1))))
+
+
+def saturation_stats(value: Any, *, min_value: Optional[float], max_value: Optional[float], quantum: Optional[float]):
+    arr = np.asarray(tensor_to_numpy(value), dtype=np.float64).reshape(-1)
+    if arr.size == 0:
+        return {
+            "available": bool(min_value is not None or max_value is not None),
+            "min_count": 0,
+            "max_count": 0,
+        }
+    tolerance = max(float(quantum or 0.0) * 0.5, 1e-12)
+    min_count = None
+    max_count = None
+    if min_value is not None:
+        min_count = int(np.count_nonzero(arr <= float(min_value) + tolerance))
+    if max_value is not None:
+        max_count = int(np.count_nonzero(arr >= float(max_value) - tolerance))
+    return {
+        "available": bool(min_value is not None or max_value is not None),
+        "tolerance": tolerance,
+        "min_value": min_value,
+        "max_value": max_value,
+        "min_count": min_count,
+        "max_count": max_count,
     }
 
 
@@ -1391,6 +2204,204 @@ def serialize_quant_value(value: Any):
     if isinstance(value, (list, tuple)):
         return [serialize_quant_value(item) for item in value]
     return repr(value)
+
+
+def precision_bits_from_value(value: Any):
+    if value is None:
+        return None
+    if hasattr(value, "get_bits"):
+        return int(value.get_bits())
+    return None
+
+
+def tensor_scalar(value: Any):
+    scalar = scalar_from_value(value)
+    if scalar is None:
+        return None
+    return float(scalar)
+
+
+def module_output_eps(module, eps_in=None):
+    for attr_name in ("eps_out", "eps_out_static", "eps_static"):
+        if hasattr(module, attr_name):
+            value = tensor_scalar(getattr(module, attr_name))
+            if value is not None:
+                return value
+    alpha = tensor_scalar(getattr(module, "alpha", None))
+    bits = precision_bits_from_value(getattr(module, "precision", None))
+    if alpha is not None and bits is not None and bits > 0:
+        return float(alpha / ((2.0 ** bits) - 1.0))
+    if eps_in is not None and hasattr(module, "get_output_eps"):
+        try:
+            value = module.get_output_eps(torch.as_tensor(float(eps_in), dtype=torch.float32))
+        except Exception:
+            return None
+        return tensor_scalar(value)
+    return None
+
+
+def module_weight_eps(module):
+    if not hasattr(module, "W_alpha"):
+        return None
+    bits = precision_bits_from_value(getattr(module, "W_precision", None))
+    if bits is None:
+        bits = precision_bits_from_value(getattr(module, "precision", None))
+    if bits is None or bits <= 0:
+        return None
+    w_alpha = tensor_scalar(getattr(module, "W_alpha", None))
+    if w_alpha is None:
+        return None
+    return float((2.0 * w_alpha) / ((2.0 ** bits) - 1.0))
+
+
+def bias_contribution_report(module, output_eps: Optional[float]):
+    bias = getattr(module, "bias", None)
+    if bias is None or output_eps in (None, 0.0):
+        return None
+    stored = getattr(module, "_deploy_bias_integerization_report", None)
+    if isinstance(stored, dict):
+        bias_semantic = np.asarray(
+            tensor_to_numpy(stored.get("bias_original_semantic")),
+            dtype=np.float64,
+        ).reshape(-1)
+        effective_counts = np.asarray(
+            tensor_to_numpy(stored.get("bias_integer_counts")),
+            dtype=np.float64,
+        ).reshape(-1)
+        reconstructed = np.asarray(
+            tensor_to_numpy(stored.get("bias_reconstructed_semantic")),
+            dtype=np.float64,
+        ).reshape(-1)
+        rounding_error = np.asarray(
+            tensor_to_numpy(stored.get("bias_rounding_error")),
+            dtype=np.float64,
+        ).reshape(-1)
+        return {
+            "bias_semantic_stats": tensor_stats(bias_semantic),
+            "bias_effective_output_counts_stats": tensor_stats(effective_counts),
+            "bias_reconstructed_semantic_stats": tensor_stats(reconstructed),
+            "bias_rounding_error_stats": tensor_stats(rounding_error),
+            "scale_source": stored.get("scale_source"),
+            "rounding_mode": stored.get("rounding_mode"),
+            "output_eps": float(stored.get("output_eps") or output_eps),
+        }
+
+    bias_arr = np.asarray(tensor_to_numpy(bias), dtype=np.float64).reshape(-1)
+    if getattr(module, "_deploy_bias_integerized", False):
+        effective_counts = bias_arr.copy()
+        bias_arr = bias_arr * float(output_eps)
+    else:
+        effective_counts = bias_arr / float(output_eps)
+    return {
+        "bias_semantic_stats": tensor_stats(bias_arr),
+        "bias_effective_output_counts_stats": tensor_stats(effective_counts),
+        "output_eps": float(output_eps),
+    }
+
+
+def stage4_1_path_quant_context(model):
+    skip_module = resolve_dotted_module(model, "stage4.0.out_relu")
+    conv1_module = resolve_dotted_module(model, "stage4.1.conv1")
+    relu1_module = resolve_dotted_module(model, "stage4.1.relu1")
+    conv2_module = resolve_dotted_module(model, "stage4.1.conv2")
+    add_module = resolve_dotted_module(model, "stage4.1.add")
+
+    add_eps_in_list = [
+        float(scalar_from_value(value))
+        for value in getattr(add_module, "eps_in_list", [])
+        if scalar_from_value(value) is not None
+    ]
+
+    skip_eps_out = module_output_eps(skip_module)
+    if skip_eps_out is None and len(add_eps_in_list) >= 2:
+        skip_eps_out = float(add_eps_in_list[1])
+    conv1_eps_in = skip_eps_out
+    conv1_eps_out = module_output_eps(conv1_module, conv1_eps_in)
+    relu1_eps_out = module_output_eps(relu1_module, conv1_eps_out)
+    conv2_eps_in = relu1_eps_out
+    conv2_eps_out = module_output_eps(conv2_module, conv2_eps_in)
+    if conv2_eps_out is None and len(add_eps_in_list) >= 1:
+        conv2_eps_out = float(add_eps_in_list[0])
+
+    skip_bits = precision_bits_from_value(getattr(skip_module, "precision", None))
+    skip_alpha = tensor_scalar(getattr(skip_module, "alpha", None))
+    skip_alpha_out = tensor_scalar(getattr(skip_module, "alpha_out", None))
+    skip_max_semantic = None
+    if skip_alpha is not None:
+        skip_max_semantic = float(skip_alpha)
+    elif skip_alpha_out is not None and skip_eps_out is not None:
+        skip_max_semantic = float(skip_alpha_out) * float(skip_eps_out)
+
+    def conv_report(module, eps_in, eps_out):
+        return {
+            "module_class": module.__class__.__name__,
+            "eps_in": eps_in,
+            "eps_out": eps_out,
+            "weight_eps": module_weight_eps(module),
+            "bias_report": bias_contribution_report(module, eps_out),
+            "equivalent_requant": None,
+        }
+
+    return {
+        "stage4.1.conv1_input": {
+            "module_class": skip_module.__class__.__name__,
+            "eps_in": tensor_scalar(getattr(skip_module, "eps_in", None)),
+            "eps_out": skip_eps_out,
+            "precision_bits": skip_bits,
+            "alpha": skip_alpha,
+            "alpha_out": skip_alpha_out,
+            "semantic_clip_bounds": {
+                "min": 0.0,
+                "max": skip_max_semantic,
+            },
+        },
+        "skip_path_input": {
+            "module_class": skip_module.__class__.__name__,
+            "eps_in": tensor_scalar(getattr(skip_module, "eps_in", None)),
+            "eps_out": skip_eps_out,
+            "precision_bits": skip_bits,
+            "alpha": skip_alpha,
+            "alpha_out": skip_alpha_out,
+            "semantic_clip_bounds": {
+                "min": 0.0,
+                "max": skip_max_semantic,
+            },
+        },
+        "stage4.1.conv1": conv_report(conv1_module, conv1_eps_in, conv1_eps_out),
+        "stage4.1.relu1": {
+            "module_class": relu1_module.__class__.__name__,
+            "eps_in": conv1_eps_out,
+            "eps_out": relu1_eps_out,
+            "precision_bits": precision_bits_from_value(getattr(relu1_module, "precision", None)),
+            "alpha": tensor_scalar(getattr(relu1_module, "alpha", None)),
+            "alpha_out": tensor_scalar(getattr(relu1_module, "alpha_out", None)),
+            "D": tensor_scalar(getattr(relu1_module, "D", None)),
+            "requantization_factor": getattr(relu1_module, "requantization_factor", None),
+            "semantic_clip_bounds": {
+                "min": 0.0,
+                "max": tensor_scalar(getattr(relu1_module, "alpha", None)),
+            },
+        },
+        "stage4.1.conv2_input": {
+            "module_class": relu1_module.__class__.__name__,
+            "eps_in": conv1_eps_out,
+            "eps_out": relu1_eps_out,
+            "precision_bits": precision_bits_from_value(getattr(relu1_module, "precision", None)),
+            "alpha": tensor_scalar(getattr(relu1_module, "alpha", None)),
+            "alpha_out": tensor_scalar(getattr(relu1_module, "alpha_out", None)),
+            "D": tensor_scalar(getattr(relu1_module, "D", None)),
+            "requantization_factor": getattr(relu1_module, "requantization_factor", None),
+            "semantic_clip_bounds": {
+                "min": 0.0,
+                "max": tensor_scalar(getattr(relu1_module, "alpha", None)),
+            },
+        },
+        "stage4.1.conv2": conv_report(conv2_module, conv2_eps_in, conv2_eps_out),
+        "stage4.1.add": {
+            "eps_in_list": add_eps_in_list,
+            "eps_out": tensor_scalar(getattr(add_module, "eps_out", None)),
+        },
+    }
 
 
 def collect_module_quant_metadata(model, module_names):
@@ -1545,6 +2556,30 @@ def compare_arrays(left: Any, right: Any):
         "mean_abs_diff": float(np.mean(diff)) if diff.size else 0.0,
         "sum_abs_diff": float(np.sum(diff)) if diff.size else 0.0,
     }
+
+
+def compare_arrays_rich(left: Any, right: Any):
+    base = compare_arrays(left, right)
+    if "shape_mismatch" in base:
+        return base
+
+    left_arr = np.asarray(left, dtype=np.float64).reshape(-1)
+    right_arr = np.asarray(right, dtype=np.float64).reshape(-1)
+    left_abs_mean = float(np.mean(np.abs(left_arr))) if left_arr.size else 0.0
+    right_abs_mean = float(np.mean(np.abs(right_arr))) if right_arr.size else 0.0
+    denom = float(np.linalg.norm(left_arr) * np.linalg.norm(right_arr))
+    cosine_similarity = None
+    if denom > 0.0:
+        cosine_similarity = float(np.dot(left_arr, right_arr) / denom)
+    base.update(
+        {
+            "left_abs_mean": left_abs_mean,
+            "right_abs_mean": right_abs_mean,
+            "abs_mean_ratio": right_abs_mean / max(left_abs_mean, 1e-12),
+            "cosine_similarity": cosine_similarity,
+        }
+    )
+    return base
 
 
 def hybrid_follow_output_to_decoded(output: Any, stage: str):
@@ -1719,6 +2754,7 @@ def compute_integer_add_audit(module, inputs, output):
         "shift": None,
         "forward_uses_requantization": bool(deployment and integerized),
         "forward_clamps_output": False,
+        "policy_override": getattr(module, "_export_nemo_quant_scale_override", None),
     }
 
     predicted_pre_raw = None
@@ -1930,9 +2966,9 @@ def build_hybrid_follow_residual_focus_report(fp_probe, fq_probe, deploy_probe, 
                 "fp_stats": tensor_stats(fp_tensor),
                 "fq_stats": tensor_stats(fq_tensor),
                 "id_stats": tensor_stats(id_tensor),
-                "fp_vs_fq": compare_arrays(fp_tensor, fq_tensor),
-                "fq_vs_id": compare_arrays(fq_tensor, id_tensor),
-                "fp_vs_id": compare_arrays(fp_tensor, id_tensor),
+                "fp_vs_fq": compare_arrays_rich(fp_tensor, fq_tensor),
+                "fq_vs_id": compare_arrays_rich(fq_tensor, id_tensor),
+                "fp_vs_id": compare_arrays_rich(fp_tensor, id_tensor),
             }
         )
 
@@ -1944,7 +2980,7 @@ def build_hybrid_follow_residual_focus_report(fp_probe, fq_probe, deploy_probe, 
             strongest_metric = metric
             strongest_point = point
 
-    pre_post_quantization_loss = compare_arrays(
+    pre_post_quantization_loss = compare_arrays_rich(
         np.asarray(stage4_1_add["pre_requant_semantic"], dtype=np.float64),
         np.asarray(stage4_1_add["post_requant_semantic"], dtype=np.float64),
     )
@@ -1970,6 +3006,91 @@ def build_hybrid_follow_residual_focus_report(fp_probe, fq_probe, deploy_probe, 
         "stage4_1_add_scale_selection": id_scale,
         "stage4_1_add_code_path": id_add_audit["reports"]["stage4.1.add"].get("code_path"),
         "head_input_eps_in": float(head_eps_in),
+        "diagnosis": diagnosis,
+    }
+
+
+def build_hybrid_follow_residual_upstream_report(
+    fq_probe,
+    deploy_probe,
+    fq_quant_context,
+    id_quant_context,
+):
+    point_specs = [
+        ("stage4.1.conv1 input", "stage4_1_conv1_input", fq_quant_context.get("stage4.1.conv1_input"), id_quant_context.get("stage4.1.conv1_input")),
+        ("stage4.1.conv1 output", "stage4_1_conv1", fq_quant_context.get("stage4.1.conv1"), id_quant_context.get("stage4.1.conv1")),
+        ("stage4.1 activation between conv1 and conv2", "stage4_1_relu1", fq_quant_context.get("stage4.1.relu1"), id_quant_context.get("stage4.1.relu1")),
+        ("stage4.1.conv2 input", "stage4_1_conv2_input", fq_quant_context.get("stage4.1.conv2_input"), id_quant_context.get("stage4.1.conv2_input")),
+        ("stage4.1.conv2 output", "stage4_1_conv2", fq_quant_context.get("stage4.1.conv2"), id_quant_context.get("stage4.1.conv2")),
+        ("stage4.1 residual skip input", "stage4_1_add_input1", fq_quant_context.get("skip_path_input"), id_quant_context.get("skip_path_input")),
+    ]
+
+    points = []
+    for label, tensor_key, fq_ctx, id_ctx in point_specs:
+        fq_raw = np.asarray(fq_probe["tensors"][tensor_key], dtype=np.float64)
+        id_raw = np.asarray(deploy_probe["tensors"][tensor_key], dtype=np.float64)
+        id_eps_out = None if id_ctx is None else id_ctx.get("eps_out")
+        id_semantic = id_raw * float(id_eps_out) if id_eps_out not in (None, 0.0) else id_raw.copy()
+
+        semantic_clip_bounds = None if id_ctx is None else id_ctx.get("semantic_clip_bounds")
+        clip_min = None if semantic_clip_bounds is None else semantic_clip_bounds.get("min")
+        clip_max = None if semantic_clip_bounds is None else semantic_clip_bounds.get("max")
+        quantum = None if id_ctx is None else id_ctx.get("eps_out")
+
+        id_abs_mean = mean_abs_value(id_semantic)
+        fq_abs_mean = max(mean_abs_value(fq_raw), 1e-12)
+        points.append(
+            {
+                "point": label,
+                "fq_activation_stats": tensor_stats(fq_raw),
+                "id_activation_stats_raw": tensor_stats(id_raw),
+                "id_activation_stats_semantic": tensor_stats(id_semantic),
+                "fq_vs_id": compare_arrays_rich(fq_raw, id_semantic),
+                "id_to_fq_abs_mean_ratio": id_abs_mean / fq_abs_mean,
+                "fq_quant_context": make_json_ready(fq_ctx),
+                "id_quant_context": make_json_ready(id_ctx),
+                "fq_saturation": {
+                    "available": False,
+                },
+                "id_saturation": saturation_stats(
+                    id_semantic,
+                    min_value=clip_min,
+                    max_value=clip_max,
+                    quantum=quantum,
+                ),
+            }
+        )
+
+    point_by_name = {point["point"]: point for point in points}
+    conv1_input_point = point_by_name.get("stage4.1.conv1 input")
+    conv1_point = point_by_name.get("stage4.1.conv1 output")
+    relu1_point = point_by_name.get("stage4.1 activation between conv1 and conv2")
+    conv2_input_point = point_by_name.get("stage4.1.conv2 input")
+    conv2_point = point_by_name.get("stage4.1.conv2 output")
+    skip_point = point_by_name.get("stage4.1 residual skip input")
+
+    diagnosis = (
+        "Along the main branch before the residual add, stage4.1.conv1 input fq_vs_id mean_abs_diff={conv1_input_diff:.6f}, "
+        "stage4.1.conv1 output fq_vs_id mean_abs_diff={conv1_diff:.6f} "
+        "(abs-mean ratio={conv1_ratio:.6f}), stage4.1.conv2 fq_vs_id mean_abs_diff={conv2_diff:.6f} "
+        "(abs-mean ratio={conv2_ratio:.6f}), and the skip path fq_vs_id mean_abs_diff={skip_diff:.6f}. "
+        "That means the main branch is already {main_branch_state} before stage4.1.add."
+    ).format(
+        conv1_input_diff=float((conv1_input_point or {}).get("fq_vs_id", {}).get("mean_abs_diff") or 0.0),
+        conv1_diff=float((conv1_point or {}).get("fq_vs_id", {}).get("mean_abs_diff") or 0.0),
+        conv1_ratio=float((conv1_point or {}).get("id_to_fq_abs_mean_ratio") or 0.0),
+        conv2_diff=float((conv2_point or {}).get("fq_vs_id", {}).get("mean_abs_diff") or 0.0),
+        conv2_ratio=float((conv2_point or {}).get("id_to_fq_abs_mean_ratio") or 0.0),
+        skip_diff=float((skip_point or {}).get("fq_vs_id", {}).get("mean_abs_diff") or 0.0),
+        main_branch_state=(
+            "attenuated and distorted"
+            if float((conv2_point or {}).get("id_to_fq_abs_mean_ratio") or 1.0) < 0.75
+            else "distorted more than the skip path"
+        ),
+    )
+
+    return {
+        "points": points,
         "diagnosis": diagnosis,
     }
 
@@ -2046,6 +3167,59 @@ def residual_focus_markdown(focus_report):
     return "\n".join(lines) + "\n"
 
 
+def residual_upstream_markdown(upstream_report):
+    lines = [
+        "# Hybrid Follow Residual Upstream Report",
+        "",
+        upstream_report["diagnosis"],
+        "",
+    ]
+    for point in upstream_report.get("points", []):
+        fq_vs_id = point.get("fq_vs_id") or {}
+        id_ctx = point.get("id_quant_context") or {}
+        bias_report = id_ctx.get("bias_report") or {}
+        lines.extend(
+            [
+                "## {}".format(point["point"]),
+                "",
+                "- fq_vs_id mean_abs_diff=`{:.6f}` max_abs_diff=`{:.6f}`".format(
+                    float(fq_vs_id.get("mean_abs_diff") or 0.0),
+                    float(fq_vs_id.get("max_abs_diff") or 0.0),
+                ),
+                "- id_to_fq_abs_mean_ratio=`{:.6f}`".format(
+                    float(point.get("id_to_fq_abs_mean_ratio") or 0.0)
+                ),
+                "- id eps_in=`{}` eps_out=`{}`".format(
+                    id_ctx.get("eps_in"),
+                    id_ctx.get("eps_out"),
+                ),
+                "- fq eps_in=`{}` eps_out=`{}`".format(
+                    (point.get("fq_quant_context") or {}).get("eps_in"),
+                    (point.get("fq_quant_context") or {}).get("eps_out"),
+                ),
+                "- id scale context: weight_eps=`{}` D=`{}` requantization_factor=`{}`".format(
+                    id_ctx.get("weight_eps"),
+                    id_ctx.get("D"),
+                    id_ctx.get("requantization_factor"),
+                ),
+                "- fq scale context: weight_eps=`{}` D=`{}` requantization_factor=`{}`".format(
+                    (point.get("fq_quant_context") or {}).get("weight_eps"),
+                    (point.get("fq_quant_context") or {}).get("D"),
+                    (point.get("fq_quant_context") or {}).get("requantization_factor"),
+                ),
+                "- id activation semantic stats: `{}`".format(point.get("id_activation_stats_semantic")),
+                "- fq activation stats: `{}`".format(point.get("fq_activation_stats")),
+                "- id saturation: `{}`".format(point.get("id_saturation")),
+            ]
+        )
+        if bias_report:
+            lines.append("- bias effective output counts stats: `{}`".format(bias_report.get("bias_effective_output_counts_stats")))
+        else:
+            lines.append("- bias effective output counts stats: `None`")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
+
+
 def resolve_hybrid_follow_head_input_eps(model):
     head_module_name = "head" if hasattr(model, "head") else "head_x"
     head_module = resolve_dotted_module(model, head_module_name)
@@ -2067,7 +3241,10 @@ def build_integer_add_policy_trial(
     debug_input,
     policy,
 ):
-    patch_integer_add_scale_selection(policy)
+    patch_integer_add_scale_selection(
+        HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY,
+        {"stage4.1.add": policy},
+    )
 
     model_fp = prepare_model_fp(args, device)
     fp_probe = run_hybrid_follow_pytorch_probe(model_fp, debug_input["float"])
@@ -2098,6 +3275,7 @@ def build_integer_add_policy_trial(
 
     model_q.id_stage()
     normalize_integer_requant_tensors(model_q)
+    integerize_deploy_conv_biases(model_q)
     quant_probe = run_hybrid_follow_pytorch_probe(model_q, debug_input["staged"])
     id_integer_add_audit = run_hybrid_follow_integer_add_audit(model_q, debug_input["staged"])
 
@@ -2343,6 +3521,10 @@ def run_hybrid_follow_pytorch_probe(model, input_tensor):
     hook_specs = [
         ("stage4.0.add", "stage4_0_add", "add"),
         ("stage4.0.out_relu", "stage4_0_out_relu", "output"),
+        ("stage4.1.conv1", "stage4_1_conv1_input", "input"),
+        ("stage4.1.conv1", "stage4_1_conv1", "output"),
+        ("stage4.1.relu1", "stage4_1_relu1", "output"),
+        ("stage4.1.conv2", "stage4_1_conv2_input", "input"),
         ("stage4.1.conv2", "stage4_1_conv2", "output"),
         ("stage4.1.add", "stage4_1_add", "add"),
         ("stage4.1.out_relu", "stage4_1_out_relu", "output"),
@@ -2623,11 +3805,28 @@ def main():
                         help="Clamp Conv/Gemm/MatMul ONNX weight initializers into signed int8 range after export.")
     parser.add_argument("--round-export-params", action="store_true",
                         help="Opt in to NEMO export-time parameter rounding. Disabled by default because it can collapse hybrid_follow ID exports before deployment.")
+    parser.add_argument(
+        "--hybrid-follow-export-preset",
+        type=str,
+        default=HYBRID_FOLLOW_EXPORT_PRESET,
+        choices=list(HYBRID_FOLLOW_EXPORT_PRESET_CANDIDATES),
+        help=(
+            "Named hybrid_follow export preset. "
+            "Use baseline for current defaults or microblock_add_only for the promoted "
+            "stage4.1.add activation/scale patch."
+        ),
+    )
 
     args = parser.parse_args()
 
     if args.model_type == "hybrid_follow" and args.input_channels != 1:
         raise ValueError("hybrid_follow export requires --input-channels 1.")
+    if args.model_type != "hybrid_follow":
+        args.hybrid_follow_export_preset = "baseline"
+    else:
+        args.hybrid_follow_export_preset = normalize_hybrid_follow_export_preset(
+            args.hybrid_follow_export_preset
+        )
 
     device = (
         torch.device("cpu")
@@ -2672,6 +3871,7 @@ def main():
         "clamp_changed_result": None,
         "round_export_params": bool(args.round_export_params),
         "integer_add_scale_policy": HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY,
+        "hybrid_follow_export_preset": args.hybrid_follow_export_preset,
     }
 
     if debug_dir is not None and args.model_type == "hybrid_follow":
@@ -2722,6 +3922,10 @@ def main():
 
     if args.model_type == "hybrid_follow":
         print("[export_nemo_quant] hybrid_follow quantized export requested.")
+        print(
+            "[export_nemo_quant] hybrid_follow export preset: "
+            f"{args.hybrid_follow_export_preset}"
+        )
 
     print("[export_nemo_quant] Building FakeQuantized (FQ) model via quantize_pact...")
     model_q = nemo.transform.quantize_pact(deepcopy(model_fp), dummy_input=dummy_input)
@@ -2734,6 +3938,21 @@ def main():
 
     print("[export_nemo_quant] Calibrating activations with statistics_act() ...")
     run_activation_calibration(model_q, calib_samples)
+    preset_config = None
+    preset_report = None
+    if args.model_type == "hybrid_follow":
+        preset_config = derive_hybrid_follow_export_preset_config(
+            model_q,
+            calib_samples,
+            args.hybrid_follow_export_preset,
+        )
+        preset_report = apply_hybrid_follow_export_preset_config(model_q, preset_config)
+        patch_integer_add_scale_selection(
+            HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY,
+            (preset_report or {}).get("integer_add_operator_overrides"),
+        )
+    else:
+        patch_integer_add_scale_selection(HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY)
     if args.stage in {"qd", "id"}:
         try:
             model_q.reset_alpha_weights()
@@ -2745,6 +3964,9 @@ def main():
     metadata_snapshots = {}
     qd_integer_add_audit = None
     id_integer_add_audit = None
+    fq_stage4_1_quant_context = None
+    id_stage4_1_quant_context = None
+    integerized_conv_biases = []
 
     fp_probe = None
     fq_probe = None
@@ -2756,12 +3978,16 @@ def main():
         for name, value in fp_probe["tensors"].items():
             debug_report["tensor_stats"]["pytorch_fp"][name] = save_debug_tensor(fp_probe_dir, name, value)
         metadata_snapshots["pre_qd"] = collect_module_quant_metadata(model_deploy, HYBRID_FOLLOW_METADATA_MODULES)
+        fq_stage4_1_quant_context = stage4_1_path_quant_context(model_deploy)
         fq_probe = run_hybrid_follow_pytorch_probe(model_q, debug_input["float"])
         fq_probe_dir = debug_dir / "pytorch_fq"
         fq_probe_dir.mkdir(parents=True, exist_ok=True)
         debug_report["tensor_stats"]["pytorch_fq"] = {}
         for name, value in fq_probe["tensors"].items():
             debug_report["tensor_stats"]["pytorch_fq"][name] = save_debug_tensor(fq_probe_dir, name, value)
+        debug_report["hybrid_follow_export_preset_report"] = make_json_ready(
+            getattr(model_q, "_export_nemo_quant_preset_report", preset_report)
+        )
 
     if args.stage in {"qd", "id"}:
         qd_kwargs = {}
@@ -2790,10 +4016,12 @@ def main():
         print("[export_nemo_quant] Entering IntegerDeployable (ID) via id_stage() ...")
         model_deploy.id_stage()
         normalize_integer_requant_tensors(model_deploy)
+        integerized_conv_biases = integerize_deploy_conv_biases(model_deploy)
         exported_stage = "id"
 
         if debug_dir is not None and args.model_type == "hybrid_follow":
             metadata_snapshots["post_id"] = collect_module_quant_metadata(model_deploy, HYBRID_FOLLOW_METADATA_MODULES)
+            id_stage4_1_quant_context = stage4_1_path_quant_context(model_deploy)
             id_integer_add_audit = run_hybrid_follow_integer_add_audit(
                 model_deploy,
                 debug_input["staged"],
@@ -2941,6 +4169,7 @@ def main():
             )
 
         residual_focus_report = None
+        residual_upstream_report = None
         if (
             fp_probe is not None
             and fq_probe is not None
@@ -2961,11 +4190,30 @@ def main():
                     id_integer_add_audit,
                     head_eps_in,
                 )
+        if (
+            fq_probe is not None
+            and quant_probe is not None
+            and fq_stage4_1_quant_context is not None
+            and id_stage4_1_quant_context is not None
+        ):
+            residual_upstream_report = build_hybrid_follow_residual_upstream_report(
+                fq_probe,
+                quant_probe,
+                fq_stage4_1_quant_context,
+                id_stage4_1_quant_context,
+            )
         debug_report["residual_focus_report"] = residual_focus_report
         if residual_focus_report is not None:
             write_json(debug_dir / "residual_focus_report.json", residual_focus_report)
             (debug_dir / "residual_focus_report.md").write_text(
                 residual_focus_markdown(residual_focus_report),
+                encoding="utf-8",
+            )
+        debug_report["residual_upstream_report"] = residual_upstream_report
+        if residual_upstream_report is not None:
+            write_json(debug_dir / "residual_upstream_report.json", residual_upstream_report)
+            (debug_dir / "residual_upstream_report.md").write_text(
+                residual_upstream_markdown(residual_upstream_report),
                 encoding="utf-8",
             )
 
@@ -3075,6 +4323,7 @@ def main():
             "unclamped": unclamped_weight_audit,
             "clamped": clamped_weight_audit,
         }
+        debug_report["integerized_conv_biases"] = integerized_conv_biases
         if onnx_collapse is not None:
             debug_report["diagnosis"] = "export_or_onnx_collapse"
         elif pytorch_collapse is not None:
@@ -3141,9 +4390,40 @@ def main():
                     ),
                 ]
             )
+        if residual_upstream_report is not None:
+            point_by_name = {
+                point["point"]: point
+                for point in residual_upstream_report.get("points", [])
+            }
+            summary_lines.extend(
+                [
+                    "- stage4.1.conv1 fq->id mean abs diff: `{:.6f}`".format(
+                        float(
+                            point_by_name.get("stage4.1.conv1 output", {})
+                            .get("fq_vs_id", {})
+                            .get("mean_abs_diff", 0.0)
+                        )
+                    ),
+                    "- stage4.1.conv2 fq->id mean abs diff: `{:.6f}`".format(
+                        float(
+                            point_by_name.get("stage4.1.conv2 output", {})
+                            .get("fq_vs_id", {})
+                            .get("mean_abs_diff", 0.0)
+                        )
+                    ),
+                    "- stage4.1 skip fq->id mean abs diff: `{:.6f}`".format(
+                        float(
+                            point_by_name.get("stage4.1 residual skip input", {})
+                            .get("fq_vs_id", {})
+                            .get("mean_abs_diff", 0.0)
+                        )
+                    ),
+                ]
+            )
         if policy_sweep is not None:
             summary_lines.extend(
                 [
+                    "- Integerized deploy conv biases: `{}`".format(len(integerized_conv_biases)),
                     "- Integer add selected policy on known sample: `{}`".format(
                         policy_sweep["selected_policy"]
                     ),

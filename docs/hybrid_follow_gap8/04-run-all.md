@@ -16,7 +16,8 @@ For `MODEL_TYPE=hybrid_follow`, the script does all of the following:
 8. Generates DORY IO artifacts and weight text dumps.
 9. Runs `network_generate.py`.
 10. Writes the generated app into `pytorch_ssd/application`.
-11. Leaves the whole pipeline inside `pytorch_ssd` unless `SYNC_TO_CRAZYFLIE=1` is set manually.
+11. Runs the hybrid-follow quant drift sweep on the known bad sample plus the rep16 batch when the eval set is available.
+12. Leaves the whole pipeline inside `pytorch_ssd` unless `SYNC_TO_CRAZYFLIE=1` is set manually.
 
 ## Default Hybrid-Follow Settings
 
@@ -29,6 +30,10 @@ Important defaults for the hybrid model:
 - output app dir: `application`
 - `RUN_DORY=1`
 - `SYNC_TO_CRAZYFLIE=0`
+- `RUN_QUANT_POLICY_SWEEP=1`
+- quant sweep output dir: `export/hybrid_follow/quant_operator_sweep/run_all`
+- quant sweep known bad image: `data/coco/images/val2017/000000493613.jpg`
+- quant sweep eval set: `logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324`
 
 ## Basic Usage
 
@@ -106,6 +111,33 @@ SYNC_TO_CRAZYFLIE=0 \
 COMPAT_CALIB_BATCHES=4 ./run_all.sh
 ```
 
+### Skip the quant drift sweep
+
+```bash
+RUN_QUANT_POLICY_SWEEP=0 ./run_all.sh
+```
+
+### Use the promoted `microblock_add_only` export preset
+
+```bash
+HYBRID_FOLLOW_EXPORT_PRESET=microblock_add_only \
+RUN_QUANT_POLICY_SWEEP=0 \
+./run_all.sh
+```
+
+That preset keeps `conv1` and `conv2` on the baseline policy and only patches `stage4.1.add`:
+
+- add activation range: `percentile_99_0`
+- add output scale rule: `mse_selected_joint`
+
+### Point the quant drift sweep at a different eval batch
+
+```bash
+QUANT_POLICY_EVAL_DIR=logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324 \
+QUANT_POLICY_BATCH_LIMIT=8 \
+./run_all.sh
+```
+
 ## Important Outputs
 
 The hybrid export pipeline writes the main artifacts here:
@@ -119,6 +151,9 @@ The hybrid export pipeline writes the main artifacts here:
 - DORY weights text: `pytorch_ssd/export/hybrid_follow/weights_txt`
 - DORY manifest: `pytorch_ssd/export/hybrid_follow/nemo_dory_artifacts.json`
 - golden output tensor: `pytorch_ssd/export/hybrid_follow/output.txt`
+- quant drift sweep summary: `pytorch_ssd/export/hybrid_follow/quant_operator_sweep/run_all/summary.md`
+- quant drift sweep local report: `pytorch_ssd/export/hybrid_follow/quant_operator_sweep/run_all/local_operator_sweep.md`
+- quant drift sweep batch report: `pytorch_ssd/export/hybrid_follow/quant_operator_sweep/run_all/batch_score_compare.md`
 
 ## How The Default Staged Sample Is Created
 
@@ -164,8 +199,11 @@ Important consequences:
 - hybrid-follow export stays on the strict direct `qd_stage(eps_in=1/255)` then `id_stage()` path
 - the PyTorch and ONNX compatibility checks are part of the normal flow
 - raw ONNX Conv/Gemm initializer range issues are treated as diagnostics, not silent export-time clipping
+- `HYBRID_FOLLOW_EXPORT_PRESET=baseline` is still the default, and `microblock_add_only` is the current promoted preset for the stage4.1 add-only patch
 - the exporter now includes residual-stage drift reporting and an integer-add policy sweep for the known sample
+- `run_all.sh` now also runs the two-loop hybrid-follow quant drift sweep and writes `summary.{md,json}`, `local_operator_sweep.{md,json}`, and `batch_score_compare.{md,json}`
 - the current default residual-add scale policy is documented in [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md)
+- `REAPPLY_GAP8_RAW_RESIDUAL_PATCHES=1` now reapplies the verified GAP8 runtime patch set from `export/hybrid_follow/gap8_runtime_patch_template/`
 
 ## What Success Looks Like
 

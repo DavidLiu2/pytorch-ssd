@@ -19,8 +19,10 @@
  */
 #define DEFINE_CONSTANTS
 #include "net_utils.h"
+#include "printf.h"
 #include "pmsis.h"
 #include "network.h"
+#include "app_config.h"
 #include "directional_allocator.h"
 #include "mem.h"
 #include <string.h>
@@ -57,7 +59,9 @@
 #include "ReluConvolution12.h"
 
 
+#if APP_GENERATED_NETWORK_VERBOSE
 #define VERBOSE 1
+#endif
 
 #define L3_WEIGHTS_SIZE 4000000
 #define L3_INPUT_SIZE 1500000
@@ -229,7 +233,9 @@ struct network_run_token network_run_async(void *l2_buffer, size_t l2_buffer_siz
 void network_run_wait(struct network_run_token token)
 {
   pi_cluster_close(&token.cluster_dev);
+#if APP_GENERATED_NETWORK_VERBOSE
   print_perf("Final", cycle_network_execution, 41464048);
+#endif
 }
 
 void network_run(void *l2_buffer, size_t l2_buffer_size, void *l2_final_output, int exec, int initial_dir)

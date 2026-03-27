@@ -43,11 +43,19 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   DEFAULT_RUN_DORY="1"
   DEFAULT_SYNC_TO_CRAZYFLIE="0"
   DEFAULT_RUN_STAGE_DRIFT="1"
+  DEFAULT_RUN_QUANT_POLICY_SWEEP="1"
   DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="1"
   DEFAULT_RAW_RESIDUAL_PATCH_REPORT="export/hybrid_follow/gap8_raw_residual_patch_report.json"
+  DEFAULT_RAW_RESIDUAL_TEMPLATE_APP_DIR="${PROJECT_ROOT}/export/hybrid_follow/gap8_runtime_patch_template"
   DEFAULT_STAGE_DRIFT_IMAGE="training/hybrid_follow/eval_epoch_015/top_fn/01_p0.0114_000000132408.jpg"
   DEFAULT_STAGE_DRIFT_OUTPUT_DIR="export/hybrid_follow/stage_drift/run_all"
   DEFAULT_STAGE_DRIFT_NEMO_STAGE="auto"
+  DEFAULT_QUANT_POLICY_SWEEP_DIR="export/hybrid_follow/quant_operator_sweep/run_all"
+  DEFAULT_QUANT_POLICY_KNOWN_BAD_IMAGE="data/coco/images/val2017/000000493613.jpg"
+  DEFAULT_QUANT_POLICY_EVAL_DIR="logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324"
+  DEFAULT_QUANT_POLICY_BATCH_LIMIT="16"
+  DEFAULT_QUANT_POLICY_HARD_CASE_COUNT="4"
+  DEFAULT_HYBRID_FOLLOW_EXPORT_PRESET="baseline"
 else
   DEFAULT_CKPT="training/person_ssd_pytorch/ssd_mbv2_epoch_030.pth"
   DEFAULT_OUT_ONNX="export/ssd_mbv2_nemo_id.onnx"
@@ -72,11 +80,19 @@ else
   DEFAULT_RUN_DORY="1"
   DEFAULT_SYNC_TO_CRAZYFLIE="0"
   DEFAULT_RUN_STAGE_DRIFT="0"
+  DEFAULT_RUN_QUANT_POLICY_SWEEP="0"
   DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="0"
   DEFAULT_RAW_RESIDUAL_PATCH_REPORT="export/gap8_raw_residual_patch_report.json"
+  DEFAULT_RAW_RESIDUAL_TEMPLATE_APP_DIR=""
   DEFAULT_STAGE_DRIFT_IMAGE=""
   DEFAULT_STAGE_DRIFT_OUTPUT_DIR="export/stage_drift/run_all"
   DEFAULT_STAGE_DRIFT_NEMO_STAGE="skip"
+  DEFAULT_QUANT_POLICY_SWEEP_DIR="export/quant_operator_sweep/run_all"
+  DEFAULT_QUANT_POLICY_KNOWN_BAD_IMAGE=""
+  DEFAULT_QUANT_POLICY_EVAL_DIR=""
+  DEFAULT_QUANT_POLICY_BATCH_LIMIT="16"
+  DEFAULT_QUANT_POLICY_HARD_CASE_COUNT="4"
+  DEFAULT_HYBRID_FOLLOW_EXPORT_PRESET="baseline"
 fi
 
 CKPT="${CKPT:-${DEFAULT_CKPT}}"
@@ -99,14 +115,23 @@ SYNC_TO_CRAZYFLIE="${SYNC_TO_CRAZYFLIE:-${DEFAULT_SYNC_TO_CRAZYFLIE}}"
 GENERATE_DORY_ARTIFACTS="${GENERATE_DORY_ARTIFACTS:-1}"
 STRICT_DORY_ARTIFACTS="${STRICT_DORY_ARTIFACTS:-0}"
 RUN_STAGE_DRIFT="${RUN_STAGE_DRIFT:-${DEFAULT_RUN_STAGE_DRIFT}}"
+RUN_QUANT_POLICY_SWEEP="${RUN_QUANT_POLICY_SWEEP:-${DEFAULT_RUN_QUANT_POLICY_SWEEP}}"
 REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES:-${DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}}"
 RAW_RESIDUAL_PATCH_REPORT="${RAW_RESIDUAL_PATCH_REPORT:-${DEFAULT_RAW_RESIDUAL_PATCH_REPORT}}"
+RAW_RESIDUAL_TEMPLATE_APP_DIR="${RAW_RESIDUAL_TEMPLATE_APP_DIR:-${DEFAULT_RAW_RESIDUAL_TEMPLATE_APP_DIR}}"
 STAGE_DRIFT_IMAGE="${STAGE_DRIFT_IMAGE:-${DEFAULT_STAGE_DRIFT_IMAGE}}"
 STAGE_DRIFT_OUTPUT_DIR="${STAGE_DRIFT_OUTPUT_DIR:-${DEFAULT_STAGE_DRIFT_OUTPUT_DIR}}"
 STAGE_DRIFT_NEMO_STAGE="${STAGE_DRIFT_NEMO_STAGE:-${DEFAULT_STAGE_DRIFT_NEMO_STAGE}}"
 STAGE_DRIFT_GOLDEN="${STAGE_DRIFT_GOLDEN:-}"
 STAGE_DRIFT_GVSOC_JSON="${STAGE_DRIFT_GVSOC_JSON:-}"
 STAGE_DRIFT_CALIB_BATCHES="${STAGE_DRIFT_CALIB_BATCHES:-${COMPAT_CALIB_BATCHES}}"
+QUANT_POLICY_SWEEP_DIR="${QUANT_POLICY_SWEEP_DIR:-${DEFAULT_QUANT_POLICY_SWEEP_DIR}}"
+QUANT_POLICY_KNOWN_BAD_IMAGE="${QUANT_POLICY_KNOWN_BAD_IMAGE:-${DEFAULT_QUANT_POLICY_KNOWN_BAD_IMAGE}}"
+QUANT_POLICY_EVAL_DIR="${QUANT_POLICY_EVAL_DIR:-${DEFAULT_QUANT_POLICY_EVAL_DIR}}"
+QUANT_POLICY_BATCH_LIMIT="${QUANT_POLICY_BATCH_LIMIT:-${DEFAULT_QUANT_POLICY_BATCH_LIMIT}}"
+QUANT_POLICY_HARD_CASE_COUNT="${QUANT_POLICY_HARD_CASE_COUNT:-${DEFAULT_QUANT_POLICY_HARD_CASE_COUNT}}"
+QUANT_POLICY_RUN_VAL_SUMMARY="${QUANT_POLICY_RUN_VAL_SUMMARY:-}"
+HYBRID_FOLLOW_EXPORT_PRESET="${HYBRID_FOLLOW_EXPORT_PRESET:-${DEFAULT_HYBRID_FOLLOW_EXPORT_PRESET}}"
 if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   DEFAULT_MEAN=""
   DEFAULT_STD=""
@@ -467,6 +492,8 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
       echo "[run_all] No hybrid_follow calibration images found; export will fall back to random calibration."
     fi
   fi
+
+  echo "[run_all] Using hybrid_follow export preset: ${HYBRID_FOLLOW_EXPORT_PRESET}"
 fi
 
 if [ "${RUN_COMPAT_CHECKS}" = "1" ]; then
@@ -518,6 +545,7 @@ NEMO_CMD=(
   --eps-in "${EPS_IN}"
   --calib-batches "${CALIB_BATCHES}"
   --calib-seed "${CALIB_SEED}"
+  --hybrid-follow-export-preset "${HYBRID_FOLLOW_EXPORT_PRESET}"
 )
 
 if [ "${STRICT_STAGE}" = "1" ]; then
@@ -770,9 +798,14 @@ if [ "${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}" = "1" ]; then
     echo "ERROR: missing raw-residual patch tool: ${RAW_PATCH_TOOL}"
     exit 1
   fi
+  if [ -z "${RAW_RESIDUAL_TEMPLATE_APP_DIR}" ] || [ ! -d "${RAW_RESIDUAL_TEMPLATE_APP_DIR}" ]; then
+    echo "ERROR: missing raw-residual template app dir: ${RAW_RESIDUAL_TEMPLATE_APP_DIR}"
+    exit 1
+  fi
   echo "[run_all] Reapplying hybrid_follow GAP8 raw-residual patch set ..."
   "$DORY_PY" "${RAW_PATCH_TOOL}" \
     --application-dir "${DORY_APP_DIR_ABS}" \
+    --template-application-dir "${RAW_RESIDUAL_TEMPLATE_APP_DIR}" \
     --json-out "${RAW_RESIDUAL_PATCH_REPORT_ABS}"
 fi
 
@@ -812,6 +845,46 @@ if [ "${RUN_STAGE_DRIFT}" = "1" ] && [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   fi
 fi
 
+QUANT_POLICY_SUMMARY=""
+if [ "${RUN_QUANT_POLICY_SWEEP}" = "1" ] && [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
+  if [ -z "${CALIB_DIR}" ] || [ ! -d "${CALIB_DIR}" ]; then
+    echo "[run_all] WARNING: skipping quant policy sweep because calib dir is missing: ${CALIB_DIR}"
+  elif [ -z "${QUANT_POLICY_EVAL_DIR}" ] || [ ! -d "${QUANT_POLICY_EVAL_DIR}" ]; then
+    echo "[run_all] WARNING: skipping quant policy sweep because eval dir is missing: ${QUANT_POLICY_EVAL_DIR}"
+  elif [ -z "${QUANT_POLICY_KNOWN_BAD_IMAGE}" ] || [ ! -f "${QUANT_POLICY_KNOWN_BAD_IMAGE}" ]; then
+    echo "[run_all] WARNING: skipping quant policy sweep because known bad image is missing: ${QUANT_POLICY_KNOWN_BAD_IMAGE}"
+  else
+    echo "[run_all] Running hybrid_follow quant drift sweep ..."
+    QUANT_POLICY_CMD=(
+      "${NEMO_PY}"
+      "${PROJECT_ROOT}/export/sweep_hybrid_follow_quant_drift.py"
+      --ckpt "${CKPT}"
+      --calib-dir "${CALIB_DIR}"
+      --known-bad-image "${QUANT_POLICY_KNOWN_BAD_IMAGE}"
+      --eval-dir "${QUANT_POLICY_EVAL_DIR}"
+      --output-dir "${QUANT_POLICY_SWEEP_DIR}"
+      --overwrite
+      --height "${INPUT_HEIGHT}"
+      --width "${INPUT_WIDTH}"
+      --input-channels "${INPUT_CHANNELS}"
+      --bits "${BITS}"
+      --eps-in "${EPS_IN}"
+      --calib-batches "${COMPAT_CALIB_BATCHES}"
+      --calib-seed "${CALIB_SEED}"
+      --eval-limit "${QUANT_POLICY_BATCH_LIMIT}"
+      --hard-case-count "${QUANT_POLICY_HARD_CASE_COUNT}"
+    )
+    if [ -n "${QUANT_POLICY_RUN_VAL_SUMMARY}" ]; then
+      QUANT_POLICY_CMD+=(--run-val-summary "${QUANT_POLICY_RUN_VAL_SUMMARY}")
+    fi
+    if ! "${QUANT_POLICY_CMD[@]}"; then
+      echo "[run_all] WARNING: quant policy sweep failed; export artifacts are still available."
+    else
+      QUANT_POLICY_SUMMARY="${QUANT_POLICY_SWEEP_DIR}/summary.md"
+    fi
+  fi
+fi
+
 echo "======================================================="
 echo " DONE: NEMO export + ONNX simplification + DORY export "
 echo "======================================================="
@@ -826,9 +899,13 @@ echo "DORY weight txt dir: ${DORY_WEIGHTS_TXT_DIR_ABS}"
 echo "DORY artifact manifest: ${DORY_ARTIFACT_MANIFEST_ABS}"
 if [ "${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}" = "1" ]; then
   echo "Raw residual patch report: ${RAW_RESIDUAL_PATCH_REPORT_ABS}"
+  echo "Raw residual patch template: ${RAW_RESIDUAL_TEMPLATE_APP_DIR}"
 fi
 if [ -n "${STAGE_DRIFT_SUMMARY}" ]; then
   echo "Stage drift summary: ${STAGE_DRIFT_SUMMARY}"
+fi
+if [ -n "${QUANT_POLICY_SUMMARY}" ]; then
+  echo "Quant policy sweep summary: ${QUANT_POLICY_SUMMARY}"
 fi
 if [ "${SYNC_TO_CRAZYFLIE}" = "1" ]; then
   echo "crazyflie sync dir: ${CRAZYFLIE_APP_DIR_ABS}"

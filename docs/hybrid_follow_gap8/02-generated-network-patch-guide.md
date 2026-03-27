@@ -16,7 +16,8 @@ The working system needed fixes in four places:
 2. Fix DORY layout handling for the final fully connected layer.
 3. Fix the generated runtime so raw branch outputs stay `int32_t` until the residual add is finished.
 4. Fix the final requantization helper so large negative accumulators do not wrap and turn into `255`.
-5. Audit and tune `PACT_IntegerAdd` scale selection when FQ -> ID drift remains after export/runtime checks pass.
+5. Verify deploy-time fused conv biases were integerized with `eps_out_static` after `id_stage()`.
+6. Audit and tune `PACT_IntegerAdd` scale selection when FQ -> ID drift remains after export/runtime checks pass.
 
 ## Persistent Fixes vs Generated Fixes
 
@@ -30,7 +31,8 @@ These should remain in place across regenerations.
 | --- | --- | --- |
 | `pytorch_ssd/export_nemo_quant.py` | collapse the three hybrid heads into one 3-output linear layer | avoids a DORY-hostile multi-head export with separate outputs and `Concat` |
 | `pytorch_ssd/export_nemo_quant.py` | clamp `Conv` / `Gemm` / `MatMul` initializers into int8 range | prevents export-time weights from exceeding what the GAP kernels expect |
-| `pytorch_ssd/export_nemo_quant.py` | instrument `PACT_IntegerAdd` scale selection and compare candidate policies | current residual-stage drift is centered around FQ -> ID integer add scaling |
+| `pytorch_ssd/export_nemo_quant.py` | integerize deploy-time fused conv biases with `eps_out_static` after `id_stage()` | fixes the March 26, 2026 upstream FQ -> ID distortion in the stage4.1 main branch |
+| `pytorch_ssd/export_nemo_quant.py` | instrument `PACT_IntegerAdd` scale selection and compare candidate policies | current residual-stage drift is centered around FQ -> ID integer add scaling once the upstream conv path is fixed |
 | `dory/dory/Hardware_targets/PULP/Common/HW_Parser.py` | find the true source node for fully connected layout adjustment | keeps FC weight layout correct when the producer is not simply `node_id - 1` |
 | `dory/dory/Hardware_targets/PULP/Backend_Kernels/pulp-nn/32bit/src/pulp_nn_utils.c` | use `int32_t` inside `pulp_nn_quant_u8()` | fixes requant overflow in future codegen |
 | `dory/dory/Hardware_targets/PULP/Backend_Kernels/pulp-nn/64bit/src/pulp_nn_utils.c` | same `pulp_nn_quant_u8()` fix | keeps both backend copies aligned |

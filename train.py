@@ -45,11 +45,18 @@ def parse_args():
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--num_workers", type=int, default=4)
     ap.add_argument("--output_dir", type=str, default=None)
+    ap.add_argument("--init-ckpt", type=str, default=None)
     ap.add_argument("--height", type=int, default=128)
     ap.add_argument("--width", type=int, default=128)
     ap.add_argument("--input-channels", type=int, default=1, choices=[1, 3])
     ap.add_argument("--num-classes", type=int, default=2)
     ap.add_argument("--width-mult", type=float, default=0.1)
+    ap.add_argument("--stage4-heads-only", action="store_true")
+    ap.add_argument("--quant-aware-finetune", action="store_true")
+    ap.add_argument("--qat-bits", type=int, default=8)
+    ap.add_argument("--qat-calib-batches", type=int, default=16)
+    ap.add_argument("--activation-range-regularization", action="store_true")
+    ap.add_argument("--activation-range-reg-weight", type=float, default=1e-3)
     ap.add_argument(
         "--allow-person-only-follow-ann",
         action="store_true",
@@ -253,6 +260,121 @@ def build_model(args):
     )
 
 
+def load_init_checkpoint(model, ckpt_path: Path, device: torch.device):
+    checkpoint = torch.load(ckpt_path, map_location=device)
+    state_dict = checkpoint.get("state_dict", checkpoint)
+    missing, unexpected = model.load_state_dict(state_dict, strict=False)
+    print(
+        f"Loaded init checkpoint: {ckpt_path} "
+        f"(missing={len(missing)}, unexpected={len(unexpected)})"
+    )
+    if missing:
+        print(f"  Missing keys (first 10): {missing[:10]}")
+    if unexpected:
+        print(f"  Unexpected keys (first 10): {unexpected[:10]}")
+    return checkpoint
+
+
+def apply_stage4_heads_only_freeze(model) -> None:
+    trainable_prefixes = (
+        "stage4.",
+        "head_x.",
+        "head_size.",
+        "head_vis.",
+        "head.",
+    )
+    trainable = 0
+    frozen = 0
+    for name, param in model.named_parameters():
+        requires_grad = name.startswith(trainable_prefixes)
+        param.requires_grad = requires_grad
+        if requires_grad:
+            trainable += param.numel()
+        else:
+            frozen += param.numel()
+    print(
+        "Applied stage4+heads freeze: "
+        f"trainable_params={trainable}, frozen_params={frozen}"
+    )
+
+
+def collect_qat_calib_samples(train_loader, device, max_batches: int):
+    samples = []
+    for batch_idx, batch in enumerate(train_loader):
+        if batch_idx >= max(int(max_batches), 0):
+            break
+        images, _targets = batch
+        images = images.to(device)
+        for image_idx in range(images.shape[0]):
+            samples.append({"tensor": images[image_idx:image_idx + 1].detach()})
+    return samples
+
+
+def enable_quant_aware_finetune(model, train_loader, device, args):
+    if not args.quant_aware_finetune:
+        return model
+    if args.model_type != "hybrid_follow":
+        raise ValueError("--quant-aware-finetune is only supported for hybrid_follow.")
+
+    import nemo
+
+    from export_nemo_quant import (
+        patch_model_to_graph_compat,
+        resolve_dotted_module,
+        run_activation_calibration,
+    )
+
+    patch_model_to_graph_compat()
+    dummy_input = torch.randn(
+        1,
+        args.input_channels,
+        args.height,
+        args.width,
+        device=device,
+    )
+    model_q = nemo.transform.quantize_pact(model, dummy_input=dummy_input)
+    model_q.to(device)
+    model_q.change_precision(
+        bits=args.qat_bits,
+        scale_weights=True,
+        scale_activations=True,
+    )
+    calib_samples = collect_qat_calib_samples(train_loader, device, args.qat_calib_batches)
+    if calib_samples:
+        model_q.eval()
+        run_activation_calibration(model_q, calib_samples)
+        model_q.train()
+
+    for module_name in ("stage4.0.out_relu", "stage4.1.relu1", "stage4.1.out_relu"):
+        try:
+            module = resolve_dotted_module(model_q, module_name)
+        except (AttributeError, IndexError, KeyError):
+            continue
+        alpha = getattr(module, "alpha", None)
+        if torch.is_tensor(alpha):
+            module._range_reg_target_alpha = float(alpha.detach().cpu().item())
+
+    print(
+        "Enabled quant-aware fine-tune: "
+        f"bits={args.qat_bits}, calib_batches={args.qat_calib_batches}"
+    )
+    return model_q
+
+
+def activation_range_regularization_loss(model, weight: float):
+    reg_loss = None
+    for _name, module in model.named_modules():
+        target_alpha = getattr(module, "_range_reg_target_alpha", None)
+        alpha = getattr(module, "alpha", None)
+        if target_alpha is None or not torch.is_tensor(alpha):
+            continue
+        term = torch.square(alpha - float(target_alpha)).sum()
+        reg_loss = term if reg_loss is None else reg_loss + term
+    if reg_loss is None:
+        return None
+    return reg_loss * float(weight)
+
+
 def resolve_output_dir(args, repo_root: Path) -> Path:
     if args.output_dir:
         return repo_root / args.output_dir
@@ -276,6 +398,7 @@ def train_or_eval_epoch(
     optimizer=None,
     track_follow_metrics: bool = False,
     vis_thresh: float = 0.5,
+    extra_train_loss_fn=None,
 ):
     is_train = optimizer is not None
     model.train(mode=is_train)
@@ -284,6 +407,7 @@ def train_or_eval_epoch(
     running_x = 0.0
     running_size = 0.0
     running_visibility = 0.0
+    running_extra_train_loss = 0.0
     visibility_bce_sum = 0.0
     follow_sample_count = 0
     x_abs_error_sum = 0.0
@@ -308,6 +432,12 @@ def train_or_eval_epoch(
                 predictions = model(images)
                 loss_items = compute_hybrid_follow_loss(predictions, follow_targets)
                 losses = loss_items["total"]
+                extra_train_loss_value = 0.0
+                if is_train and extra_train_loss_fn is not None:
+                    extra_train_loss = extra_train_loss_fn(model)
+                    if extra_train_loss is not None:
+                        losses = losses + extra_train_loss
+                        extra_train_loss_value = float(extra_train_loss.detach().cpu().item())
                 loss_value = float(losses.detach().cpu().item())
 
                 if is_train:
@@ -319,6 +449,7 @@ def train_or_eval_epoch(
                 running_x += float(loss_items["x_offset"].cpu().item())
                 running_size += float(loss_items["size_proxy"].cpu().item())
                 running_visibility += float(loss_items["visibility"].cpu().item())
+                running_extra_train_loss += extra_train_loss_value
                 if track_follow_metrics:
                     visibility_target = follow_targets[:, 2]
                     pred_visible = torch.sigmoid(predictions[:, 2]) >= vis_thresh
@@ -367,6 +498,7 @@ def train_or_eval_epoch(
                         "x": f"{float(loss_items['x_offset'].cpu().item()):.4f}",
                         "size": f"{float(loss_items['size_proxy'].cpu().item()):.4f}",
                         "vis": f"{float(loss_items['visibility'].cpu().item()):.4f}",
+                        "reg": f"{extra_train_loss_value:.4f}",
                     }
                 )
                 continue
@@ -395,6 +527,8 @@ def train_or_eval_epoch(
         stats["x_offset"] = running_x / num_batches
         stats["size_proxy"] = running_size / num_batches
         stats["visibility"] = running_visibility / num_batches
+        if extra_train_loss_fn is not None:
+            stats["extra_train_loss"] = running_extra_train_loss / num_batches
         if track_follow_metrics:
             precision = _safe_div(float(tp), float(tp + fp))
             recall = _safe_div(float(tp), float(tp + fn))
@@ -426,6 +560,12 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     args.train_ann, args.val_ann = resolve_annotation_paths(args)
 
+    if args.activation_range_regularization and not args.quant_aware_finetune:
+        raise ValueError(
+            "--activation-range-regularization requires --quant-aware-finetune "
+            "so the stage4 activation clipping parameters exist."
+        )
+
     if args.model_type == "hybrid_follow":
         print(f"Hybrid-follow train annotations: {args.train_ann}")
         print(f"Hybrid-follow val annotations: {args.val_ann}")
@@ -447,6 +587,22 @@ def main():
     )
 
     model = build_model(args).to(device)
+    if args.init_ckpt:
+        init_ckpt_path = (repo_root / args.init_ckpt).resolve()
+        if not init_ckpt_path.is_file():
+            raise FileNotFoundError(f"Init checkpoint not found: {init_ckpt_path}")
+        load_init_checkpoint(model, init_ckpt_path, device)
+
+    model = enable_quant_aware_finetune(model, train_loader, device, args)
+    if args.stage4_heads_only:
+        apply_stage4_heads_only_freeze(model)
+
+    extra_train_loss_fn = None
+    if args.activation_range_regularization:
+        extra_train_loss_fn = lambda current_model: activation_range_regularization_loss(
+            current_model,
+            args.activation_range_reg_weight,
+        )
 
     params = [param for param in model.parameters() if param.requires_grad]
     optimizer = SGD(params, lr=args.lr, momentum=0.9, weight_decay=5e-4)
@@ -467,6 +623,7 @@ def main():
             device=device,
             model_type=args.model_type,
             optimizer=optimizer,
+            extra_train_loss_fn=extra_train_loss_fn,
         )
         scheduler.step()
 
@@ -486,6 +643,8 @@ def main():
                     **train_stats
                 )
             )
+            if "extra_train_loss" in train_stats:
+                print(f"Train range regularization: {train_stats['extra_train_loss']:.4f}")
             print(
                 "Val loss: {loss:.4f} (x={x_offset:.4f}, size={size_proxy:.4f}, vis={visibility:.4f})".format(
                     **val_stats

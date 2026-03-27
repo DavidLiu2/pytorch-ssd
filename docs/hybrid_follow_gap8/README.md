@@ -12,7 +12,7 @@ This folder explains how the working `hybrid_follow` GAP8 deployment differs fro
 - [06-real-image-validation.md](06-real-image-validation.md): how to run real-image validation batches and where the per-image artifacts land.
 - [07-model-compatibility-checks.md](07-model-compatibility-checks.md): summarize the model-architecture findings and explain the PyTorch/ONNX compatibility checker.
 - [08-stage-drift-comparison.md](08-stage-drift-comparison.md): explain how to compare PyTorch, NEMO, ONNX, golden, and GVSOC outputs for semantic drift.
-- [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md): current residual export/runtime status, including the `PACT_IntegerAdd` policy comparison on the known sample.
+- [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md): current residual export/runtime status, including the conv-bias fix and the latest `PACT_IntegerAdd` policy comparisons.
 
 ## Current Validated State
 
@@ -22,8 +22,12 @@ This folder explains how the working `hybrid_follow` GAP8 deployment differs fro
 - `pytorch_ssd/run_aideck_val.sh` uses `pytorch_ssd/application` as the primary app source.
 - Real-image batch validation writes outputs under `pytorch_ssd/export/hybrid_follow/real_image_validation/`.
 - The generated app is back on the raw residual add path instead of the plain `uint8_t` residual helper path.
-- The exporter now includes focused FQ -> ID residual drift reporting and an integer-add policy sweep on the known sample.
-- The active default integer-add scale policy is `fanin`.
+- `run_all.sh` can now promote the current exporter winner with `HYBRID_FOLLOW_EXPORT_PRESET=microblock_add_only`.
+- The raw-residual GAP8 patch set is reapplied from `pytorch_ssd/export/hybrid_follow/gap8_runtime_patch_template/` during fresh hybrid-follow exports.
+- The exporter now includes focused FQ -> ID residual drift reporting, stage4.1 upstream conv instrumentation, and an integer-add policy sweep on the known sample.
+- `run_all.sh` now also runs a two-loop quant drift sweep on `000000493613.jpg` plus the rep16 batch when those inputs are available.
+- Deploy-time fused conv biases are integerized with `eps_out_static` after `id_stage()`.
+- The active default integer-add scale policy is `legacy`.
 - The current open issue is residual-stage quantization drift before runtime, not a generic ONNX collapse.
 
 ## Important Directories
@@ -40,4 +44,5 @@ This folder explains how the working `hybrid_follow` GAP8 deployment differs fro
 3. Run `run_aideck_val.sh` to build the app inside the AI-Deck Docker container and compare the final GVSOC tensor with the golden export.
 4. Run `run_real_image_val.sh` when you want the same validation flow driven by real images instead of the default staged sample.
 5. Run the stage-drift comparison when you need to pinpoint where semantic drift begins before runtime.
-6. Use [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md) when the drift is centered around `stage4.1.add` or other residual adds.
+6. Read the quant sweep recommendation in `export/hybrid_follow/quant_operator_sweep/run_all/summary.md` before changing deploy-time scale or bias policy defaults.
+7. Use [09-export-runtime-residual-fix.md](09-export-runtime-residual-fix.md) when the drift is centered around `stage4.1.add` or other residual adds.

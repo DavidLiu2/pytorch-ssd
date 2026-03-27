@@ -1,14 +1,15 @@
 # Hybrid Follow Residual Export And Runtime Status
 
-This note tracks the current `hybrid_follow` residual-state debugging as of March 25, 2026.
+This note tracks the current `hybrid_follow` residual-state debugging as of March 26, 2026.
 
 The short version is:
 
 - the old GAP8 raw-residual runtime patches are still required and are present
-- deploy-stage ONNX now matches the in-memory NEMO ID graph on the known sample
-- the active issue is no longer a generic ONNX export collapse
-- the current open drift appears during the FakeQuantized -> IntegerDeployable transition around residual adds, especially `stage4.1.add`
-- the currently selected residual-add policy in `export_nemo_quant.py` is `fanin`
+- deploy-stage ONNX still matches the in-memory NEMO ID graph on the known sample
+- the active issue is still a staged quantization-equivalence problem, not a generic ONNX export collapse
+- the March 26 fix was upstream of `PACT_IntegerAdd`: deploy-time fused conv biases must be integerized with `eps_out_static` after `id_stage()`
+- after that fix, the stage4.1 main branch no longer shows the earlier severe pre-add distortion on the known sample
+- `PACT_IntegerAdd` still matters, but the best default policy changed after the bias fix: the representative 16-image batch now favors `legacy`
 
 ## Current Status
 
@@ -16,16 +17,26 @@ What is currently true on the known sample `data/coco/images/val2017/00000049361
 
 - `deploy == ONNX` to numerical noise
 - raw residual GAP8 patches are present in `application/`
-- the first material semantic drift is already present before runtime
-- the largest tracked drift point is still `stage4.1.add pre-requant`
-- changing the `PACT_IntegerAdd` scale-selection policy improves the known sample slightly, but does not fully remove the FQ -> ID gap
+- the first material semantic drift is still present before runtime
+- the stage4.1 main branch is no longer the dominant upstream distortion source after the deploy conv-bias fix
+- the largest tracked drift point on the current known-sample run is `stage4.1.add post-requant`
+- changing the `PACT_IntegerAdd` scale-selection policy still moves the final outputs, but now it is tuning a smaller residual mismatch instead of compensating for a broken conv path
 
 Current reference artifacts:
 
-- [summary.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260325_fanin_default/summary.md)
-- [residual_focus_report.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260325_fanin_default/residual_focus_report.md)
-- [integer_add_policy_sweep.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260325_fanin_default/integer_add_policy_sweep.md)
-- [debug_report.json](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260325_fanin_default/debug_report.json)
+- [summary.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260326_conv_bias_fix/summary.md)
+- [residual_upstream_report.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260326_conv_bias_fix/residual_upstream_report.md)
+- [integer_add_policy_sweep.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260326_conv_bias_fix/integer_add_policy_sweep.md)
+- [debug_report.json](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/debug_export_quant_collapse_493613_20260326_conv_bias_fix/debug_report.json)
+- [policy_batch_compare.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/policy_batch_compare_legacy_vs_fanin_20260326_conv_bias_fix/policy_batch_compare.md)
+
+Current workflow update:
+
+- `run_all.sh` now also runs `export/sweep_hybrid_follow_quant_drift.py` when the rep16 eval set is available
+- that sweep identifies the earliest material FQ -> ID tap on `000000493613.jpg`, compares a small operator-specific policy set there, then scores the result on rep16
+- each run writes `summary.{md,json}`, `local_operator_sweep.{md,json}`, and `batch_score_compare.{md,json}` under `export/hybrid_follow/quant_operator_sweep/run_all/`
+- the sweep ends with one explicit recommendation: keep baseline, patch one operator with one policy, or reject all tested policies
+- `run_all.sh` now reapplies the raw-residual GAP8 runtime patch set from the repo-local template at `export/hybrid_follow/gap8_runtime_patch_template/` instead of depending on an already-patched generated app
 
 ## What Was Ruled Out
 
@@ -33,9 +44,9 @@ These were the key narrowing steps:
 
 1. Export-side zero collapse was ruled out on the known sample because the exported ONNX matches the in-memory ID graph.
 2. The old runtime-only residual bug was ruled out as the sole blocker because the raw residual GAP8 patch set is present.
-3. The remaining warning is the residual-add scale selection and divisor choice in the NEMO QD/ID path.
+3. The remaining warning is the residual-add scale selection and divisor choice in the NEMO QD/ID path, after correcting deploy conv bias scaling.
 
-So the current issue is a staged quantization-equivalence problem, not a generic exporter failure.
+So the active problem is a staged quantization-equivalence issue, not a generic exporter failure.
 
 ## Exact NEMO Code Path
 
@@ -51,7 +62,28 @@ Their behavior matters because:
 - `forward()` uses integer requantization once the graph is both deployment-ready and integerized
 - `pact_integer_requantize_add()` computes rounded integer branch multipliers and then does `floor(sum(...) / D)`
 
-The repo-local exporter now monkeypatches only the `get_output_eps()` policy during export/debug runs. It does not change the downstream integer add formula.
+The repo-local exporter monkeypatches only the `get_output_eps()` policy during export/debug runs. It does not change the downstream integer add formula.
+
+## March 26 Upstream Fix
+
+The key exporter fix landed in `export_nemo_quant.py`, not in ONNX export and not in the GAP8 generated app:
+
+- after `model_q.id_stage()`, every fused deploy-time `PACT_Conv2d` / `PACT_Conv1d` bias is now integerized with `round(bias / eps_out_static)`
+- this is applied by `integerize_deploy_conv_biases(model_q)` before probing the in-memory ID model or exporting ONNX
+- the fix uses `eps_out_static`, not `eps_static`
+
+Why this mattered:
+
+- NeMO integerizes fused conv weights, but its deploy path was still carrying fused conv bias in semantic float units
+- our earlier branch diagnostics were also reading the wrong conv semantic output scale in a few places because they preferred `eps_static` over `eps_out_static`
+- once both were corrected, the large stage4.1 pre-add distortion mostly disappeared on the known sample
+
+Known-sample effect of the deploy conv-bias fix:
+
+- `stage4.1.conv1 output` FQ -> ID mean abs diff: `0.266821 -> 0.018721`
+- `stage4.1 activation between conv1 and conv2` FQ -> ID mean abs diff: `0.091894 -> 0.005373`
+- `stage4.1.conv2 output` FQ -> ID mean abs diff: `0.318061 -> 0.014137`
+- final decoded drift improved to `x=0.023793`, `size=0.295018`, `vis_conf=0.090408` on the current active run
 
 ## Corrected Baseline Semantics
 
@@ -67,67 +99,74 @@ In repo-local policy names:
 - `midpoint` means halfway between `legacy` and `sqrt_fanin`
 - `fanin` means `max(eps_in_list) * branch_count`
 
-## Known-Sample Policy Comparison
+## Known-Sample Policy Comparison After The Bias Fix
 
-The exporter now writes a focused policy sweep report for the known sample.
+The exporter writes a focused policy sweep report for the known sample.
 
 Selection metric:
 
 - `score_final_output = x_abs_diff + size_abs_diff + vis_conf_abs_diff`
 
-Measured result on `000000493613.jpg`:
+Measured result on `000000493613.jpg` after the deploy conv-bias fix:
 
 | Policy | `stage4.1.add eps_out` | `D` | Final score | Largest tracked drift |
 | --- | --- | --- | --- | --- |
-| `legacy` | `0.0091613736` | `32768` | `1.003436` | `stage4.1.add pre-requant = 0.391681` |
-| `sqrt_fanin` | `0.0129561387` | `32768` | `1.009752` | `stage4.1.add pre-requant = 0.391817` |
-| `midpoint` | `0.0110587571` | `32768` | `1.004311` | `stage4.1.add pre-requant = 0.391937` |
-| `fanin` | `0.0183227472` | `65536` | `0.996848` | `stage4.1.add pre-requant = 0.391293` |
+| `legacy` | `0.0091613736` | `32768` | `0.406244` | `stage4.1.add post-requant = 0.018155` |
+| `sqrt_fanin` | `0.0129561387` | `32768` | `0.416341` | `stage4.1.add post-requant = 0.021956` |
+| `midpoint` | `0.0110587571` | `32768` | `0.404355` | `stage4.1.add post-requant = 0.015361` |
+| `fanin` | `0.0183227472` | `65536` | `0.409219` | `stage4.1.add post-requant = 0.023875` |
 
-Current selected policy:
+Current interpretation:
 
-- `fanin`
+- the known sample alone prefers `midpoint`
+- the default export policy is now `legacy`
 
-Why it was kept:
+Why the default changed anyway:
 
-- it gave the best final-output score on the known sample
-- it also gave the smallest tracked drift at `stage4.1.add pre-requant` among the tested policies
-- the improvement is modest, but real
+- after the conv-bias fix, the representative 16-image batch favors `legacy` over `fanin`
+- we intentionally kept the wider comparison narrow instead of opening a broader policy search again
+- `midpoint` remains available for single-sample debugging, but it is not the default deployment policy
+
+## Representative 16-Image Batch After The Bias Fix
+
+Batch comparison artifacts:
+
+- [policy_batch_compare.md](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/policy_batch_compare_legacy_vs_fanin_20260326_conv_bias_fix/policy_batch_compare.md)
+- [policy_batch_compare.json](/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/hybrid_follow/policy_batch_compare_legacy_vs_fanin_20260326_conv_bias_fix/policy_batch_compare.json)
+
+Aggregate result on the representative 16-image set:
+
+- `legacy`: mean final score `0.561764`
+- `fanin`: mean final score `0.569508`
+- `legacy` beat `fanin` on `12 / 16` images
+- mean score delta `fanin - legacy = +0.007744`
+
+That is why `legacy` is now the default policy in `export_nemo_quant.py`.
 
 ## Focused Residual Numbers
 
-With the current `fanin` policy:
+On the current known-sample run with the conv-bias fix:
 
-- `stage4.0.add eps_in = [1.165186e-05, 3.091901e-05]`
-- `stage4.0.add eps_out = 6.183803e-05`
-- `stage4.0.add D = 256`
-- `stage4.0.add mul = [48, 128]`
+- `stage4.1.conv1 input`: `0.011530`
+- `stage4.1.conv1 output`: `0.018721`
+- `stage4.1 activation between conv1 and conv2`: `0.005373`
+- `stage4.1.conv2 input`: `0.005373`
+- `stage4.1.conv2 output`: `0.014137`
+- `stage4.1 residual skip input`: `0.011530`
 
-- `stage4.1.add eps_in = [1.380884e-05, 9.161374e-03]`
-- `stage4.1.add eps_out = 1.832275e-02`
-- `stage4.1.add D = 65536`
-- `stage4.1.add mul = [49, 32768]`
+On the same run with the active `fanin` artifact:
 
-Tracked FQ -> ID drift points on the same sample:
-
-- `stage4.1.conv2 output`: `0.318061`
-- `stage4.1 residual skip input`: `0.197471`
-- `stage4.1.add pre-requant`: `0.391293`
-- `stage4.1.add post-requant`: `0.390068`
-- `global pool output`: `0.205429`
-- `head input`: `0.205429`
-
-Final decoded FQ -> ID drift with `fanin`:
-
-- `x_abs_diff = 0.050862`
-- `size_abs_diff = 0.398137`
-- `vis_conf_abs_diff = 0.547849`
+- `stage4.1.add pre-requant`: `0.021403`
+- `stage4.1.add post-requant`: `0.023875`
+- `global pool output`: `0.017574`
+- `head input`: `0.017574`
 
 This is the key interpretation:
 
-- the add requant step is not the only damage
-- by the time we reach `stage4.1.add pre-requant`, the branches already disagree materially
-- the residual-add policy still matters because it changes downstream eps propagation and final decoded outputs
+- before the conv-bias fix, the main residual branch was already badly distorted before the add
+- after the fix, the main branch and skip branch are much closer through `conv1`, activation, and `conv2`
+- the residual add is once again the dominant local drift point on the known sample
+- the remaining mismatch is smaller, but it is still real enough to affect final decoded outputs
 
 ## Runtime Raw Residual State
 
@@ -144,39 +183,46 @@ That includes:
 
 Those fixes remain necessary, but they are no longer the main active suspect for the current known-sample drift.
 
-## Repro Command
+## Repro Commands
 
-PowerShell:
+Known-sample focused debug:
 
 ```powershell
 python .\export_nemo_quant.py `
   --model-type hybrid_follow `
   --ckpt .\training\hybrid_follow\hybrid_follow_best_follow_score.pth `
-  --out .\export\hybrid_follow\debug_export_quant_collapse_493613_20260325_fanin_default\hybrid_follow_debug.onnx `
+  --out .\export\hybrid_follow\debug_export_quant_collapse_493613_20260326_conv_bias_fix\hybrid_follow_debug.onnx `
   --stage id `
   --bits 8 `
   --eps-in 0.00392156862745098 `
   --height 128 --width 128 --input-channels 1 `
   --calib-dir .\export\hybrid_follow\debug_export_quant_collapse_493613_20260325\input `
   --calib-batches 1 `
-  --debug-quant-drift-dir .\export\hybrid_follow\debug_export_quant_collapse_493613_20260325_fanin_default
+  --debug-quant-drift-dir .\export\hybrid_follow\debug_export_quant_collapse_493613_20260326_conv_bias_fix
 ```
 
 This writes:
 
 - `summary.md`
+- `residual_upstream_report.json/.md`
 - `residual_focus_report.json/.md`
 - `integer_add_audit.json/.md`
 - `integer_add_policy_sweep.json/.md`
 - `debug_report.json`
+
+Representative 16-image `legacy` vs `fanin` comparison after the bias fix was run in-process with the same repo-local exporter logic and calibration set. The output is in:
+
+- `export/hybrid_follow/policy_batch_compare_legacy_vs_fanin_20260326_conv_bias_fix/`
 
 ## What To Do Next
 
 If the known sample still fails after runtime checks and deploy matches ONNX:
 
 1. Re-run the focused drift report on `000000493613.jpg`.
-2. Read `integer_add_policy_sweep.md` before changing export logic.
-3. Treat `stage4.1.add` as the first policy suspect, not ONNX export as a whole.
-4. Keep raw residual GAP8 patch verification in place, but do not assume it explains FQ -> ID drift.
+2. Read `export/hybrid_follow/quant_operator_sweep/run_all/summary.md` before changing deploy-time quant policy defaults.
+3. Check whether deploy conv biases are integerized with `eps_out_static` before assuming the add policy is the root cause.
+4. Read `residual_upstream_report.md` before changing `PACT_IntegerAdd` policy.
+5. Use the representative batch comparison to decide the default policy, not the known sample alone.
+6. Keep raw residual GAP8 patch verification in place, but do not assume it explains FQ -> ID drift.
 
 This note replaces the older claim that the active blocker was a generic export-side collapse.

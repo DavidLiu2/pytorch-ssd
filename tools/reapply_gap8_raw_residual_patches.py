@@ -12,7 +12,9 @@ DEFAULT_TEMPLATE_APPLICATION_DIR = PROJECT_DIR / "application"
 
 
 PATCH_TEMPLATE_FILES = (
+    "inc/app_config.h",
     "inc/pulp_nn_kernels.h",
+    "inc/printf.h",
     "src/network.c",
     "src/pulp_nn_add.c",
     "src/pulp_nn_conv_Ho_parallel.c",
