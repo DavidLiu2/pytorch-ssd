@@ -5,16 +5,15 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 TOOLS_DIR="${SCRIPT_DIR}/tools"
 AIDECK_IMPL="${TOOLS_DIR}/run_aideck_val_impl.sh"
 REAL_IMPL="${TOOLS_DIR}/run_real_image_val_impl.sh"
-EVAL_SCRIPT="${SCRIPT_DIR}/export/evaluate_hybrid_follow_application.py"
 
 show_usage() {
   cat <<'EOF'
 Usage:
-  ./run_hybrid_follow_val.sh [full] [evaluate args...]
-  ./run_hybrid_follow_val.sh aideck [run_aideck_val args...]
-  ./run_hybrid_follow_val.sh real [run_real_image_val args...]
-  ./run_hybrid_follow_val.sh overlay [run_real_image_val args...]
-  ./run_hybrid_follow_val.sh compare [evaluate args...]
+  ./run_val.sh [full] [evaluate args...]
+  ./run_val.sh aideck [aideck args...]
+  ./run_val.sh real [real-image args...]
+  ./run_val.sh overlay [real-image args...]
+  ./run_val.sh compare [evaluate args...]
 
 Modes:
   full
@@ -33,9 +32,22 @@ Modes:
     Run only the checkpoint-vs-application evaluation report.
 
 Notes:
-  - `run_aideck_val.sh` and `run_real_image_val.sh` are now compatibility wrappers.
+  - `aideck`, `real`, and `overlay` dispatch directly to scripts in `tools/`.
   - Set `COMPARE_PYTHON=/path/to/python` if compare/full should use a specific interpreter.
+  - Set `COMPARE_EVAL_SCRIPT=/path/to/script.py` to override the compare evaluator.
 EOF
+}
+
+select_compare_eval_script() {
+  local raw_path
+  raw_path="${COMPARE_EVAL_SCRIPT:-${SCRIPT_DIR}/export/evaluate_hybrid_follow_application.py}"
+
+  if [[ "${raw_path}" = /* ]]; then
+    printf '%s\n' "${raw_path}"
+    return 0
+  fi
+
+  printf '%s\n' "${SCRIPT_DIR}/${raw_path}"
 }
 
 select_compare_python() {
@@ -83,22 +95,27 @@ select_compare_python() {
 
 run_compare() {
   local python_bin
+  local eval_script
   local has_run_script=0
   local args=("$@")
 
-  for ((i=0; i<${#args[@]}; i++)); do
-    if [[ "${args[i]}" == "--run-script" ]]; then
-      has_run_script=1
-      break
-    fi
-  done
+  eval_script="$(select_compare_eval_script)"
 
-  if [[ "${has_run_script}" -eq 0 ]]; then
-    args=(--run-script "${REAL_IMPL}" "${args[@]}")
+  if [[ "$(basename "${eval_script}")" == "evaluate_hybrid_follow_application.py" ]]; then
+    for ((i=0; i<${#args[@]}; i++)); do
+      if [[ "${args[i]}" == "--run-script" ]]; then
+        has_run_script=1
+        break
+      fi
+    done
+
+    if [[ "${has_run_script}" -eq 0 ]]; then
+      args=(--run-script "${REAL_IMPL}" "${args[@]}")
+    fi
   fi
 
   python_bin="$(select_compare_python)"
-  "${python_bin}" "${EVAL_SCRIPT}" "${args[@]}"
+  "${python_bin}" "${eval_script}" "${args[@]}"
 }
 
 MODE="full"

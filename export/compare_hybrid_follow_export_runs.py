@@ -17,8 +17,8 @@ TARGET_KEY_MAP = {
 TRANSITION_ORDER = [
     "FP -> FQ",
     "FQ -> ID",
-    "ID -> ONNX",
-    "ONNX -> application",
+    "ID/ONNX export",
+    "golden -> GVSOC runtime",
 ]
 
 
@@ -84,7 +84,7 @@ def x_sign(value: float) -> int:
 
 def stage_metric_row(row: dict[str, Any], target_name: str) -> dict[str, Any]:
     target_key = TARGET_KEY_MAP[target_name]
-    pytorch = (row.get("stage_outputs") or {}).get("pytorch") or {}
+    pytorch = (row.get("stage_outputs") or {}).get("fp") or (row.get("stage_outputs") or {}).get("pytorch") or {}
     target = (row.get("stage_outputs") or {}).get(target_key) or {}
 
     pytorch_x = float(pytorch["x_offset_raw"])
@@ -339,14 +339,24 @@ def build_markdown_summary(summary: dict[str, Any]) -> str:
             if payload is None:
                 continue
             export_fidelity = payload.get("export_fidelity") or {}
+            anti_collapse = payload.get("anti_collapse") or {}
             lines.extend(
                 [
                     f"- {label}: preset=`{payload.get('hybrid_follow_export_preset')}` "
                     f"earliest_nonzero=`{payload.get('earliest_nonzero_transition')}` "
                     f"most_common=`{payload.get('most_common_transition')}` "
-                    f"id_to_onnx_warn=`{export_fidelity.get('id_to_onnx_threshold_warn_count')}`",
+                    f"id_to_onnx_warn=`{export_fidelity.get('id_to_onnx_threshold_warn_count')}` "
+                    f"golden_to_gvsoc_warn=`{export_fidelity.get('golden_to_gvsoc_threshold_warn_count')}`",
                 ]
             )
+            gvsoc_collapse = anti_collapse.get("gvsoc") or {}
+            if gvsoc_collapse:
+                lines.append(
+                    f"  gvsoc anti-collapse: sign_flip=`{gvsoc_collapse.get('sign_flip_rate')}` "
+                    f"corr=`{gvsoc_collapse.get('correlation')}` "
+                    f"slope=`{gvsoc_collapse.get('slope')}` "
+                    f"collapsed_fraction=`{gvsoc_collapse.get('collapsed_fraction')}`"
+                )
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"

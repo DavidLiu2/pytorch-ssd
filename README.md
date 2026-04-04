@@ -40,23 +40,17 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
   Person-only COCO dataset loader.
 - `utils/transforms.py`
   Grayscale-centered transforms. Can output either 1 or 3 channels.
-- `export_nemo_quant.py`
+- `nemo/export_nemo_quant.py`
   Loads a checkpoint, handles compatibility remapping, runs NEMO export,
   and writes the ONNX used by later stages.
 - `run_all.sh`
   End-to-end export script. Runs NEMO export, onnxsim, custom ONNX cleanup,
   DORY config generation, artifact generation, `network_generate.py`, and the
   hybrid-follow raw-residual GAP8 patch reapply step.
-- `run_aideck_val.sh`
-  Compatibility wrapper for the staged AI-Deck-only phase.
-- `run_real_image_val.sh`
-  Compatibility wrapper for the real-image-only phase.
-- `run_hybrid_follow_val.sh`
+- `run_val.sh`
   Canonical hybrid-follow validation entrypoint. Its default flow runs staged
   AI-Deck validation first, then the checkpoint-vs-application evaluation,
   which already performs the real-image validation internally.
-- `run_real_image_overlay.sh`
-  Compatibility wrapper that forwards to `run_real_image_val.sh --overlay-only`.
 - `export/`
   ONNX files, stripped graphs, DORY configs, manifests, weight text dumps,
   and other export/debug artifacts.
@@ -64,28 +58,28 @@ train -> quantize -> ONNX cleanup -> DORY -> GAP8 deployment pipeline.
   Saved checkpoints and a small demo output image.
 - `application/`
   The active generated GAP8 application used by the validation pipeline.
-  `run_all.sh` writes DORY output here by default, and `run_aideck_val.sh`
+  `run_all.sh` writes DORY output here by default, and `run_val.sh aideck`
   validates this local app without touching another repo.
 
 ## How The Current Pipeline Works
 
 1. `train.py` trains `SSDMobileNetV2Raw` on person-only COCO annotations.
-2. `export_nemo_quant.py` loads a checkpoint and exports a NEMO-quantized ONNX.
+2. `nemo/export_nemo_quant.py` loads a checkpoint and exports a NEMO-quantized ONNX.
 3. `run_all.sh` simplifies and strips unsupported ONNX ops for DORY.
 4. `run_all.sh` generates the DORY app into `pytorch_ssd/application` by default.
    For `hybrid_follow`, it also reapplies the raw-residual GAP8 runtime patch set.
-5. `run_hybrid_follow_val.sh` is now the canonical validation entrypoint:
+5. `run_val.sh` is the canonical validation entrypoint:
    it runs staged AI-Deck validation, then runs the checkpoint-vs-application
    evaluation report, and that evaluation step performs the real-image validation
    plus before/after overlays on the same image set.
-6. `run_aideck_val.sh` and `run_real_image_val.sh` still exist as compatibility
-   wrappers when you only want one phase.
+6. `run_val.sh aideck`, `run_val.sh real`, and `run_val.sh overlay` still expose
+   the individual validation phases directly.
 
 ## Important Current Quirks
 
 - There is model-format drift across the project history.
   Some checkpoints use `backbone.features.*` keys while the current export
-  model uses explicit `backbone.stage*` modules. `export_nemo_quant.py`
+  model uses explicit `backbone.stage*` modules. `nemo/export_nemo_quant.py`
   contains key-remapping logic to bridge that gap.
 - There is also channel-history drift.
   Export logs show older checkpoints can carry a 3-channel first conv and are
@@ -118,12 +112,11 @@ After that, the files that usually need to move together are:
 - `train.py`
 - `models/`
 - `utils/transforms.py`
-- `export_nemo_quant.py`
+- `nemo/export_nemo_quant.py`
 - `run_all.sh`
 - `export/` cleanup scripts and configs
 - `application/`
-- `run_aideck_val.sh`
-- `run_real_image_val.sh`
+- `run_val.sh`
 
 ## Practical Warning
 

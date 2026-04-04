@@ -292,11 +292,14 @@ def main() -> None:
             pass
 
     golden_files = []
+    layer_records = []
     for idx, tensor_name in enumerate(layer_tensors):
         if tensor_name not in output_map:
             raise RuntimeError(f"Missing runtime tensor '{tensor_name}' while writing out_layer files.")
         arr = np.asarray(output_map[tensor_name])
         flat = arr.reshape(-1)
+        original_dtype = str(arr.dtype)
+        original_itemsize = int(arr.dtype.itemsize)
         if np.issubdtype(flat.dtype, np.floating):
             flat = np.rint(flat).astype(np.int64)
         else:
@@ -309,6 +312,17 @@ def main() -> None:
             as_int=True,
         )
         golden_files.append(str(out_path.resolve()))
+        layer_records.append(
+            {
+                "index": idx,
+                "tensor_name": tensor_name,
+                "path": str(out_path.resolve()),
+                "shape": list(arr.shape),
+                "element_count": int(arr.size),
+                "original_dtype": original_dtype,
+                "original_itemsize_bytes": original_itemsize,
+            }
+        )
 
     primary_arr = np.asarray(output_map[primary_output_name]).reshape(-1)
     if np.issubdtype(primary_arr.dtype, np.floating):
@@ -330,6 +344,7 @@ def main() -> None:
         "input_file": str(input_path.resolve()),
         "output_file": str(output_path.resolve()),
         "golden_activations": golden_files,
+        "layers": layer_records,
         "weight_files": weight_files,
         "num_layers": len(golden_files),
     }

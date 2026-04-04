@@ -5,19 +5,36 @@ import torch
 import torchvision.transforms.functional as F
 from PIL import Image
 
-from models.hybrid_follow_net import HybridFollowNet
+from models.follow_model_factory import (
+    build_follow_model_from_checkpoint,
+    load_checkpoint_payload,
+    load_follow_checkpoint,
+)
+from utils.follow_task import follow_runtime_decode_summary
 
 
-def load_checkpoint(model: torch.nn.Module, ckpt_path: Path, device: torch.device) -> None:
-    state = torch.load(ckpt_path, map_location=device)
-    if isinstance(state, dict):
-        for key in ("state_dict", "model", "net", "module"):
-            if key in state and isinstance(state[key], dict):
-                state = state[key]
-                break
-    if not isinstance(state, dict):
-        raise TypeError("Checkpoint payload is not a state_dict-like dict.")
-    model.load_state_dict(state, strict=True)
+def _load_checkpoint_payload(ckpt_path: Path, device: torch.device):
+    return load_checkpoint_payload(ckpt_path, device)
+
+
+def build_model_from_checkpoint(ckpt_path: Path, device: torch.device):
+    return build_follow_model_from_checkpoint(ckpt_path, device)
+
+
+def load_checkpoint(
+    model: torch.nn.Module,
+    ckpt_path: Path,
+    device: torch.device,
+    *,
+    checkpoint=None,
+) -> None:
+    load_follow_checkpoint(
+        model,
+        ckpt_path,
+        device,
+        checkpoint=checkpoint,
+        strict=True,
+    )
 
 
 def preprocess_image(image_path: Path, image_size=(128, 128)) -> torch.Tensor:
@@ -44,8 +61,7 @@ def main():
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = HybridFollowNet(input_channels=1, image_size=(128, 128)).to(device)
-    load_checkpoint(model, Path(args.ckpt), device)
+    model = build_model_from_checkpoint(Path(args.ckpt), device)
     model.eval()
 
     x = preprocess_image(Path(args.image)).to(device)
@@ -53,22 +69,25 @@ def main():
     with torch.no_grad():
         raw = model(x)[0]
 
-    x_offset_raw = float(raw[0].cpu().item())
-    size_proxy_raw = float(raw[1].cpu().item())
-    visibility_logit = float(raw[2].cpu().item())
+    metadata = _load_checkpoint_payload(Path(args.ckpt), device)
+    model_type = str((metadata or {}).get("model_type", "hybrid_follow"))
+    follow_head_type = (metadata or {}).get("follow_head_type")
+    decoded = follow_runtime_decode_summary(
+        raw,
+        head_type=follow_head_type,
+        model_type=model_type,
+        vis_thresh=args.vis_thresh,
+    )
 
-    x_offset = max(-1.0, min(1.0, x_offset_raw))
-    size_proxy = max(0.0, min(1.0, size_proxy_raw))
-    visibility_confidence = float(torch.sigmoid(raw[2]).cpu().item())
-    target_visible = visibility_confidence >= args.vis_thresh
-
-    print(f"raw_x_offset={x_offset_raw:.6f}")
-    print(f"raw_size_proxy={size_proxy_raw:.6f}")
-    print(f"raw_visibility_logit={visibility_logit:.6f}")
-    print(f"x_offset={x_offset:.6f}")
-    print(f"size_proxy={size_proxy:.6f}")
-    print(f"visibility_confidence={visibility_confidence:.6f}")
-    print(f"target_visible={int(target_visible)}")
+    print(f"model_type={model_type}")
+    if follow_head_type is not None:
+        print(f"follow_head_type={follow_head_type}")
+    print("raw_output={}".format(",".join(f"{float(value):.6f}" for value in raw.detach().cpu().tolist())))
+    for key, value in decoded.items():
+        if isinstance(value, float):
+            print(f"{key}={value:.6f}")
+        else:
+            print(f"{key}={value}")
 
 
 if __name__ == "__main__":

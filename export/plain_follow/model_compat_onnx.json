@@ -1,0 +1,432 @@
+{
+  "status": "warn",
+  "counts": {
+    "error": 0,
+    "warning": 3,
+    "info": 5
+  },
+  "reports": [
+    {
+      "scope": "onnx:raw",
+      "status": "warn",
+      "metrics": {
+        "path": "export/plain_follow/plain_follow_quant.onnx",
+        "op_counts": {
+          "Conv": 7,
+          "Mul": 16,
+          "Add": 7,
+          "Cast": 28,
+          "Constant": 17,
+          "Div": 8,
+          "Clip": 7,
+          "AveragePool": 1,
+          "Floor": 1,
+          "Flatten": 1,
+          "Gemm": 1
+        },
+        "initializer_count": 23,
+        "opset_versions": {
+          "ai.onnx": 9
+        }
+      },
+      "findings": [
+        {
+          "scope": "onnx:raw",
+          "severity": "info",
+          "code": "ONNX.LOADED",
+          "message": "Loaded the ONNX graph successfully.",
+          "details": {
+            "path": "export/plain_follow/plain_follow_quant.onnx",
+            "opset": {
+              "ai.onnx": 9
+            }
+          }
+        },
+        {
+          "scope": "onnx:raw",
+          "severity": "info",
+          "code": "ONNX.DORY_FRIENDLY_OP_SET",
+          "message": "The ONNX op set matches the currently validated DORY-friendly path.",
+          "details": {}
+        },
+        {
+          "scope": "onnx:raw",
+          "severity": "warning",
+          "code": "ONNX.BN_AFFINE_INITIALIZERS",
+          "message": "The ONNX graph still contains explicit BN affine initializers (.kappa / .lamda).",
+          "details": {
+            "kappa_count": 7,
+            "lamda_count": 7,
+            "examples": [
+              "stem.bn.kappa",
+              "stage1.downsample.bn.kappa",
+              "stage1.refine.bn.kappa",
+              "stage2.downsample.bn.kappa",
+              "stage2.refine.bn.kappa",
+              "stage3.downsample.bn.kappa",
+              "stage3.refine.bn.kappa",
+              "stem.bn.lamda",
+              "stage1.downsample.bn.lamda",
+              "stage1.refine.bn.lamda"
+            ]
+          }
+        },
+        {
+          "scope": "onnx:raw",
+          "severity": "warning",
+          "code": "ONNX.WEIGHT_RANGE_DIAGNOSTIC",
+          "message": "Some Conv/Gemm/MatMul initializers round outside signed int8. Treat this as a diagnostic and confirm DORY frontend acceptance.",
+          "details": {
+            "examples": [
+              {
+                "name": "stem.conv.weight",
+                "count": 1,
+                "min": -138.0,
+                "max": 117.00000762939453
+              },
+              {
+                "name": "stage1.downsample.conv.weight",
+                "count": 2,
+                "min": -131.0,
+                "max": 123.99999237060547
+              },
+              {
+                "name": "stage1.refine.conv.weight",
+                "count": 1,
+                "min": -146.0,
+                "max": 109.0
+              },
+              {
+                "name": "stage2.downsample.conv.weight",
+                "count": 1,
+                "min": -131.0,
+                "max": 124.0
+              },
+              {
+                "name": "stage2.refine.conv.weight",
+                "count": 1,
+                "min": -135.0,
+                "max": 120.0
+              },
+              {
+                "name": "stage3.downsample.conv.weight",
+                "count": 1,
+                "min": -126.00000762939453,
+                "max": 129.0
+              },
+              {
+                "name": "stage3.refine.conv.weight",
+                "count": 4,
+                "min": -124.0,
+                "max": 131.0
+              },
+              {
+                "name": "output_head.weight",
+                "count": 3,
+                "min": -137.0,
+                "max": 118.0
+              }
+            ],
+            "total": 8
+          }
+        }
+      ]
+    },
+    {
+      "scope": "onnx:dory",
+      "status": "warn",
+      "metrics": {
+        "path": "export/plain_follow/plain_follow_dory.onnx",
+        "op_counts": {
+          "Conv": 7,
+          "Cast": 28,
+          "Mul": 9,
+          "Div": 8,
+          "Clip": 7,
+          "AveragePool": 1,
+          "Floor": 1,
+          "Flatten": 1,
+          "Gemm": 1
+        },
+        "initializer_count": 26,
+        "opset_versions": {
+          "ai.onnx": 9
+        }
+      },
+      "findings": [
+        {
+          "scope": "onnx:dory",
+          "severity": "info",
+          "code": "ONNX.LOADED",
+          "message": "Loaded the ONNX graph successfully.",
+          "details": {
+            "path": "export/plain_follow/plain_follow_dory.onnx",
+            "opset": {
+              "ai.onnx": 9
+            }
+          }
+        },
+        {
+          "scope": "onnx:dory",
+          "severity": "info",
+          "code": "ONNX.DORY_FRIENDLY_OP_SET",
+          "message": "The ONNX op set matches the currently validated DORY-friendly path.",
+          "details": {}
+        },
+        {
+          "scope": "onnx:dory",
+          "severity": "info",
+          "code": "ONNX.NO_BN_AFFINE_INITIALIZERS",
+          "message": "No .kappa or .lamda initializers remain in the ONNX graph.",
+          "details": {}
+        },
+        {
+          "scope": "onnx:dory",
+          "severity": "warning",
+          "code": "ONNX.WEIGHT_RANGE_DIAGNOSTIC",
+          "message": "Some Conv/Gemm/MatMul initializers round outside signed int8. Treat this as a diagnostic and confirm DORY frontend acceptance.",
+          "details": {
+            "examples": [
+              {
+                "name": "stem.conv.weight",
+                "count": 1,
+                "min": -138.0,
+                "max": 117.00000762939453
+              },
+              {
+                "name": "stage1.downsample.conv.weight",
+                "count": 2,
+                "min": -131.0,
+                "max": 123.99999237060547
+              },
+              {
+                "name": "stage1.refine.conv.weight",
+                "count": 1,
+                "min": -146.0,
+                "max": 109.0
+              },
+              {
+                "name": "stage2.downsample.conv.weight",
+                "count": 1,
+                "min": -131.0,
+                "max": 124.0
+              },
+              {
+                "name": "stage2.refine.conv.weight",
+                "count": 1,
+                "min": -135.0,
+                "max": 120.0
+              },
+              {
+                "name": "stage3.downsample.conv.weight",
+                "count": 1,
+                "min": -126.00000762939453,
+                "max": 129.0
+              },
+              {
+                "name": "stage3.refine.conv.weight",
+                "count": 4,
+                "min": -124.0,
+                "max": 131.0
+              },
+              {
+                "name": "output_head.weight",
+                "count": 3,
+                "min": -137.0,
+                "max": 118.0
+              }
+            ],
+            "total": 8
+          }
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "scope": "onnx:raw",
+      "severity": "info",
+      "code": "ONNX.LOADED",
+      "message": "Loaded the ONNX graph successfully.",
+      "details": {
+        "path": "export/plain_follow/plain_follow_quant.onnx",
+        "opset": {
+          "ai.onnx": 9
+        }
+      }
+    },
+    {
+      "scope": "onnx:raw",
+      "severity": "info",
+      "code": "ONNX.DORY_FRIENDLY_OP_SET",
+      "message": "The ONNX op set matches the currently validated DORY-friendly path.",
+      "details": {}
+    },
+    {
+      "scope": "onnx:raw",
+      "severity": "warning",
+      "code": "ONNX.BN_AFFINE_INITIALIZERS",
+      "message": "The ONNX graph still contains explicit BN affine initializers (.kappa / .lamda).",
+      "details": {
+        "kappa_count": 7,
+        "lamda_count": 7,
+        "examples": [
+          "stem.bn.kappa",
+          "stage1.downsample.bn.kappa",
+          "stage1.refine.bn.kappa",
+          "stage2.downsample.bn.kappa",
+          "stage2.refine.bn.kappa",
+          "stage3.downsample.bn.kappa",
+          "stage3.refine.bn.kappa",
+          "stem.bn.lamda",
+          "stage1.downsample.bn.lamda",
+          "stage1.refine.bn.lamda"
+        ]
+      }
+    },
+    {
+      "scope": "onnx:raw",
+      "severity": "warning",
+      "code": "ONNX.WEIGHT_RANGE_DIAGNOSTIC",
+      "message": "Some Conv/Gemm/MatMul initializers round outside signed int8. Treat this as a diagnostic and confirm DORY frontend acceptance.",
+      "details": {
+        "examples": [
+          {
+            "name": "stem.conv.weight",
+            "count": 1,
+            "min": -138.0,
+            "max": 117.00000762939453
+          },
+          {
+            "name": "stage1.downsample.conv.weight",
+            "count": 2,
+            "min": -131.0,
+            "max": 123.99999237060547
+          },
+          {
+            "name": "stage1.refine.conv.weight",
+            "count": 1,
+            "min": -146.0,
+            "max": 109.0
+          },
+          {
+            "name": "stage2.downsample.conv.weight",
+            "count": 1,
+            "min": -131.0,
+            "max": 124.0
+          },
+          {
+            "name": "stage2.refine.conv.weight",
+            "count": 1,
+            "min": -135.0,
+            "max": 120.0
+          },
+          {
+            "name": "stage3.downsample.conv.weight",
+            "count": 1,
+            "min": -126.00000762939453,
+            "max": 129.0
+          },
+          {
+            "name": "stage3.refine.conv.weight",
+            "count": 4,
+            "min": -124.0,
+            "max": 131.0
+          },
+          {
+            "name": "output_head.weight",
+            "count": 3,
+            "min": -137.0,
+            "max": 118.0
+          }
+        ],
+        "total": 8
+      }
+    },
+    {
+      "scope": "onnx:dory",
+      "severity": "info",
+      "code": "ONNX.LOADED",
+      "message": "Loaded the ONNX graph successfully.",
+      "details": {
+        "path": "export/plain_follow/plain_follow_dory.onnx",
+        "opset": {
+          "ai.onnx": 9
+        }
+      }
+    },
+    {
+      "scope": "onnx:dory",
+      "severity": "info",
+      "code": "ONNX.DORY_FRIENDLY_OP_SET",
+      "message": "The ONNX op set matches the currently validated DORY-friendly path.",
+      "details": {}
+    },
+    {
+      "scope": "onnx:dory",
+      "severity": "info",
+      "code": "ONNX.NO_BN_AFFINE_INITIALIZERS",
+      "message": "No .kappa or .lamda initializers remain in the ONNX graph.",
+      "details": {}
+    },
+    {
+      "scope": "onnx:dory",
+      "severity": "warning",
+      "code": "ONNX.WEIGHT_RANGE_DIAGNOSTIC",
+      "message": "Some Conv/Gemm/MatMul initializers round outside signed int8. Treat this as a diagnostic and confirm DORY frontend acceptance.",
+      "details": {
+        "examples": [
+          {
+            "name": "stem.conv.weight",
+            "count": 1,
+            "min": -138.0,
+            "max": 117.00000762939453
+          },
+          {
+            "name": "stage1.downsample.conv.weight",
+            "count": 2,
+            "min": -131.0,
+            "max": 123.99999237060547
+          },
+          {
+            "name": "stage1.refine.conv.weight",
+            "count": 1,
+            "min": -146.0,
+            "max": 109.0
+          },
+          {
+            "name": "stage2.downsample.conv.weight",
+            "count": 1,
+            "min": -131.0,
+            "max": 124.0
+          },
+          {
+            "name": "stage2.refine.conv.weight",
+            "count": 1,
+            "min": -135.0,
+            "max": 120.0
+          },
+          {
+            "name": "stage3.downsample.conv.weight",
+            "count": 1,
+            "min": -126.00000762939453,
+            "max": 129.0
+          },
+          {
+            "name": "stage3.refine.conv.weight",
+            "count": 4,
+            "min": -124.0,
+            "max": 131.0
+          },
+          {
+            "name": "output_head.weight",
+            "count": 3,
+            "min": -137.0,
+            "max": 118.0
+          }
+        ],
+        "total": 8
+      }
+    }
+  ]
+}

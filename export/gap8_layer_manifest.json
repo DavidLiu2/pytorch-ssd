@@ -1,0 +1,273 @@
+{
+  "dory_manifest": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/nemo_dory_artifacts.json",
+  "network_header": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/application/inc/network.h",
+  "num_layers": 15,
+  "layers": [
+    {
+      "index": 0,
+      "layer_name": "ReluConvolution0",
+      "runtime_byte_count": 65536,
+      "element_count": 65536,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer0.txt",
+      "tensor_name": "80",
+      "shape": [
+        1,
+        16,
+        64,
+        64
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 1,
+      "layer_name": "ReluConvolution1",
+      "runtime_byte_count": 24576,
+      "element_count": 24576,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer1.txt",
+      "tensor_name": "91",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 2,
+      "layer_name": "Convolution2",
+      "runtime_byte_count": 98304,
+      "element_count": 24576,
+      "element_width_bytes": 4,
+      "runtime_dtype": "int32_le",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer2.txt",
+      "tensor_name": "93",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 3,
+      "layer_name": "Convolution3",
+      "runtime_byte_count": 98304,
+      "element_count": 24576,
+      "element_width_bytes": 4,
+      "runtime_dtype": "int32_le",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer3.txt",
+      "tensor_name": "95",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 4,
+      "layer_name": "ReluAddition4",
+      "runtime_byte_count": 24576,
+      "element_count": 24576,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer4.txt",
+      "tensor_name": "105",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 5,
+      "layer_name": "ReluConvolution5",
+      "runtime_byte_count": 24576,
+      "element_count": 24576,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer5.txt",
+      "tensor_name": "116",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 6,
+      "layer_name": "ReluConvolution6",
+      "runtime_byte_count": 8192,
+      "element_count": 8192,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer6.txt",
+      "tensor_name": "127",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 7,
+      "layer_name": "Convolution7",
+      "runtime_byte_count": 32768,
+      "element_count": 8192,
+      "element_width_bytes": 4,
+      "runtime_dtype": "int32_le",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer7.txt",
+      "tensor_name": "129",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 8,
+      "layer_name": "Convolution8",
+      "runtime_byte_count": 32768,
+      "element_count": 8192,
+      "element_width_bytes": 4,
+      "runtime_dtype": "int32_le",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer8.txt",
+      "tensor_name": "131",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 9,
+      "layer_name": "ReluAddition9",
+      "runtime_byte_count": 8192,
+      "element_count": 8192,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer9.txt",
+      "tensor_name": "141",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 10,
+      "layer_name": "ReluConvolution10",
+      "runtime_byte_count": 8192,
+      "element_count": 8192,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer10.txt",
+      "tensor_name": "152",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 11,
+      "layer_name": "ReluConvolution11",
+      "runtime_byte_count": 3072,
+      "element_count": 3072,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer11.txt",
+      "tensor_name": "163",
+      "shape": [
+        1,
+        48,
+        8,
+        8
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 12,
+      "layer_name": "ReluConvolution12",
+      "runtime_byte_count": 3072,
+      "element_count": 3072,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer12.txt",
+      "tensor_name": "174",
+      "shape": [
+        1,
+        48,
+        8,
+        8
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 13,
+      "layer_name": "ReluPooling13",
+      "runtime_byte_count": 48,
+      "element_count": 48,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer13.txt",
+      "tensor_name": "183",
+      "shape": [
+        1,
+        48
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 14,
+      "layer_name": "FullyConnected14",
+      "runtime_byte_count": 44,
+      "element_count": 11,
+      "element_width_bytes": 4,
+      "runtime_dtype": "int32_le",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/out_layer14.txt",
+      "tensor_name": "184",
+      "shape": [
+        1,
+        11
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    }
+  ]
+}

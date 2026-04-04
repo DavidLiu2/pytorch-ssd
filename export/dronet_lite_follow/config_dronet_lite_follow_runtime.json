@@ -1,0 +1,7 @@
+{
+  "BNRelu_bits": 32,
+  "onnx_file": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/dronet_lite_follow/dronet_lite_follow_dory.onnx",
+  "code reserved space": 100000,
+  "input_bits": 8,
+  "input_signed": false
+}

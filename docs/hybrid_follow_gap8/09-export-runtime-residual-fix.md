@@ -66,7 +66,7 @@ The repo-local exporter monkeypatches only the `get_output_eps()` policy during 
 
 ## March 26 Upstream Fix
 
-The key exporter fix landed in `export_nemo_quant.py`, not in ONNX export and not in the GAP8 generated app:
+The key exporter fix landed in `nemo/export_nemo_quant.py`, not in ONNX export and not in the GAP8 generated app:
 
 - after `model_q.id_stage()`, every fused deploy-time `PACT_Conv2d` / `PACT_Conv1d` bias is now integerized with `round(bias / eps_out_static)`
 - this is applied by `integerize_deploy_conv_biases(model_q)` before probing the in-memory ID model or exporting ONNX
@@ -141,7 +141,7 @@ Aggregate result on the representative 16-image set:
 - `legacy` beat `fanin` on `12 / 16` images
 - mean score delta `fanin - legacy = +0.007744`
 
-That is why `legacy` is now the default policy in `export_nemo_quant.py`.
+That is why `legacy` is now the default policy in `nemo/export_nemo_quant.py`.
 
 ## Focused Residual Numbers
 

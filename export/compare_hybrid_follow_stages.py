@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import shutil
 import sys
 import traceback
@@ -23,16 +24,29 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
 if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
+EXPORTER_DIR = PROJECT_DIR / "nemo"
+if str(EXPORTER_DIR) not in sys.path:
+    sys.path.insert(0, str(EXPORTER_DIR))
 
 from export_nemo_quant import (  # noqa: E402
+    HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY,
+    ExportRequest,
+    apply_hybrid_follow_export_preset_config,
     build_model,
+    collect_calib_samples,
+    integer_add_scale_selection_scope,
+    integerize_deploy_conv_biases,
     iter_calib_batches,
     load_checkpoint,
+    load_checkpoint_payload,
     maybe_convert_hybrid_follow_to_export_head,
     maybe_fuse_hybrid_follow_for_export,
+    normalize_hybrid_follow_export_preset,
     normalize_integer_requant_tensors,
     patch_model_to_graph_compat,
     repair_hybrid_follow_fused_quant_graph,
+    derive_hybrid_follow_export_preset_config,
+    hybrid_follow_model_kwargs_from_checkpoint_payload,
 )
 from hybrid_follow_image_artifacts import (  # noqa: E402
     PREPROCESS_DESCRIPTION,
@@ -48,8 +62,15 @@ DEFAULT_ONNX = PROJECT_DIR / "export" / "hybrid_follow" / "hybrid_follow_dory.on
 DEFAULT_OUTPUT_DIR = PROJECT_DIR / "export" / "hybrid_follow" / "stage_drift_report"
 DEFAULT_CALIB_DIR = PROJECT_DIR / "data" / "coco" / "images" / "val2017"
 
-STAGE_ORDER = ["pytorch", "nemo", "onnx", "golden", "gvsoc"]
+STAGE_ORDER = ["fp", "fq", "id", "onnx", "golden", "gvsoc"]
 PAIRWISE_SPECS = [
+    ("fp", "fq", "fp_to_fq"),
+    ("fq", "id", "fq_to_id"),
+    ("id", "onnx", "id_to_onnx"),
+    ("onnx", "golden", "onnx_to_golden"),
+    ("golden", "gvsoc", "golden_to_gvsoc"),
+    ("fp", "onnx", "fp_to_onnx"),
+    ("fp", "gvsoc", "fp_to_gvsoc"),
     ("pytorch", "nemo", "pytorch_vs_quantized"),
     ("nemo", "onnx", "quantized_vs_onnx"),
     ("pytorch", "onnx", "pytorch_vs_onnx"),
@@ -57,6 +78,25 @@ PAIRWISE_SPECS = [
     ("golden", "gvsoc", "golden_vs_gvsoc"),
     ("pytorch", "gvsoc", "pytorch_vs_gvsoc"),
 ]
+
+
+def build_hybrid_follow_model_for_checkpoint(
+    ckpt_path: Path,
+    args: argparse.Namespace,
+    device: torch.device,
+):
+    payload = load_checkpoint_payload(str(ckpt_path), device)
+    kwargs = hybrid_follow_model_kwargs_from_checkpoint_payload(payload)
+    return build_model(
+        "hybrid_follow",
+        args.num_classes,
+        args.width_mult,
+        (args.height, args.width),
+        args.input_channels,
+        stage4_variant=kwargs.get("stage4_variant"),
+        stage4_1_ablation=kwargs.get("stage4_variant"),
+        stage_channels=kwargs.get("stage_channels"),
+    )
 
 
 @dataclass
@@ -103,8 +143,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image", default=str(DEFAULT_IMAGE), help="Input image path.")
     parser.add_argument("--ckpt", default=str(DEFAULT_CKPT), help="Checkpoint path.")
     parser.add_argument("--onnx", default=str(DEFAULT_ONNX), help="Exported ONNX path.")
-    parser.add_argument("--golden", default=None, help="Optional golden output artifact path.")
-    parser.add_argument("--gvsoc-json", default=None, help="Optional gvsoc_final_tensor.json path.")
+    parser.add_argument("--golden", default=None, help="Required golden output artifact path.")
+    parser.add_argument("--gvsoc-json", default=None, help="Required gvsoc_final_tensor.json path.")
+    parser.add_argument("--gvsoc-log", default=None, help="Required GVSOC run log path with LAYER_BYTES markers.")
+    parser.add_argument("--layer-manifest", default=None, help="Required combined GAP8/DORY layer manifest JSON.")
     parser.add_argument("--output-dir", default=str(DEFAULT_OUTPUT_DIR), help="Artifact output directory.")
     parser.add_argument("--overwrite", action="store_true", help="Replace the output directory if it exists.")
     parser.add_argument("--height", type=int, default=128)
@@ -116,7 +158,13 @@ def parse_args() -> argparse.Namespace:
         "--nemo-stage",
         choices=["auto", "skip", "fq", "qd", "id"],
         default="auto",
-        help="Optional in-memory NEMO stage. Auto currently means FQ.",
+        help="Legacy compatibility selector for the `nemo` alias. Explicit `fq` and `id` are always collected.",
+    )
+    parser.add_argument(
+        "--hybrid-follow-export-preset",
+        default="baseline",
+        choices=["baseline", "microblock_add_only"],
+        help="Hybrid-follow preset mirrored for explicit FQ/ID stage collection.",
     )
     parser.add_argument(
         "--nemo-calib-dir",
@@ -213,6 +261,196 @@ def parse_numeric_artifact(path: Path) -> list[int]:
         for token in line.replace(",", " ").split():
             values.append(int(token))
     return values
+
+
+LAYER_BEGIN_RE = re.compile(
+    r"^LAYER_BYTES_BEGIN\s+(\d+)\s+(\S+)\s+bytes=(\d+)\s+sum_mod32=(\d+)\s+hash32=(\d+)$"
+)
+LAYER_LINE_RE = re.compile(r"^LAYER_BYTES\s+(\d+)\s+(\S+)\s+offset=(\d+)(.*)$")
+LAYER_END_RE = re.compile(r"^LAYER_BYTES_END\s+(\d+)\s+(\S+)$")
+
+
+def parse_gvsoc_layer_bytes(log_path: Path) -> dict[int, dict[str, Any]]:
+    layers: dict[int, dict[str, Any]] = {}
+    current_index: int | None = None
+    for raw_line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = raw_line.strip()
+        begin_match = LAYER_BEGIN_RE.match(line)
+        if begin_match:
+            current_index = int(begin_match.group(1))
+            layers[current_index] = {
+                "index": current_index,
+                "layer_name": begin_match.group(2),
+                "byte_count": int(begin_match.group(3)),
+                "sum_mod32": int(begin_match.group(4)),
+                "hash32": int(begin_match.group(5)),
+                "raw_bytes": [],
+            }
+            continue
+
+        end_match = LAYER_END_RE.match(line)
+        if end_match:
+            current_index = None
+            continue
+
+        line_match = LAYER_LINE_RE.match(line)
+        if line_match:
+            index = int(line_match.group(1))
+            payload = line_match.group(4).strip()
+            if index not in layers:
+                raise RuntimeError(f"Found LAYER_BYTES payload for missing layer index {index} in {log_path}")
+            if payload:
+                layers[index]["raw_bytes"].extend(int(token) for token in payload.split())
+
+    for index, payload in layers.items():
+        expected = int(payload["byte_count"])
+        actual = len(payload["raw_bytes"])
+        if actual != expected:
+            raise RuntimeError(
+                f"GVSOC layer dump size mismatch for layer {index}: expected {expected}, got {actual}"
+            )
+    return layers
+
+
+def decode_runtime_layer_values(raw_bytes: list[int], element_width_bytes: int) -> np.ndarray:
+    data = bytes(int(value) & 0xFF for value in raw_bytes)
+    if element_width_bytes == 1:
+        return np.frombuffer(data, dtype=np.uint8).astype(np.int64)
+    if element_width_bytes == 4:
+        return np.frombuffer(data, dtype="<i4").astype(np.int64)
+    if element_width_bytes == 2:
+        return np.frombuffer(data, dtype="<i2").astype(np.int64)
+    raise ValueError(f"Unsupported runtime element width: {element_width_bytes}")
+
+
+def compare_runtime_layers(
+    *,
+    gvsoc_log_path: Path,
+    layer_manifest_path: Path,
+    output_dir: Path,
+) -> dict[str, Any]:
+    manifest = json.loads(layer_manifest_path.read_text(encoding="utf-8"))
+    gvsoc_layers = parse_gvsoc_layer_bytes(gvsoc_log_path)
+    reports = []
+    first_divergent = None
+
+    for layer in manifest.get("layers") or []:
+        index = int(layer["index"])
+        gvsoc_payload = gvsoc_layers.get(index)
+        if gvsoc_payload is None:
+            reports.append(
+                {
+                    "index": index,
+                    "layer_name": layer.get("layer_name"),
+                    "status": "missing",
+                    "reason": "No GVSOC layer dump found for this layer index.",
+                }
+            )
+            continue
+
+        golden_values = np.asarray(parse_numeric_artifact(Path(layer["golden_path"])), dtype=np.int64).reshape(-1)
+        runtime_values = decode_runtime_layer_values(
+            gvsoc_payload["raw_bytes"],
+            int(layer["element_width_bytes"]),
+        ).reshape(-1)
+        if runtime_values.shape != golden_values.shape:
+            status = "shape_mismatch"
+            diff_report = {
+                "expected_shape": [int(golden_values.size)],
+                "actual_shape": [int(runtime_values.size)],
+            }
+        else:
+            diff = np.abs(runtime_values.astype(np.float64) - golden_values.astype(np.float64))
+            cosine = None
+            runtime_norm = float(np.linalg.norm(runtime_values.astype(np.float64)))
+            golden_norm = float(np.linalg.norm(golden_values.astype(np.float64)))
+            if runtime_norm > 0.0 and golden_norm > 0.0:
+                cosine = float(
+                    np.dot(runtime_values.astype(np.float64), golden_values.astype(np.float64))
+                    / (runtime_norm * golden_norm)
+                )
+            diff_report = {
+                "mean_abs_diff": float(diff.mean()) if diff.size else 0.0,
+                "max_abs_diff": float(diff.max()) if diff.size else 0.0,
+                "cosine_similarity": cosine,
+                "exact_match": bool(np.array_equal(runtime_values, golden_values)),
+            }
+            status = "ok" if diff_report["exact_match"] else "warn"
+            if first_divergent is None and status == "warn":
+                first_divergent = {
+                    "index": index,
+                    "layer_name": layer.get("layer_name"),
+                    "tensor_name": layer.get("tensor_name"),
+                    **diff_report,
+                }
+
+        layer_report = {
+            "index": index,
+            "layer_name": layer.get("layer_name"),
+            "tensor_name": layer.get("tensor_name"),
+            "status": status,
+            "element_count": int(layer["element_count"]),
+            "element_width_bytes": int(layer["element_width_bytes"]),
+            "golden_path": layer.get("golden_path"),
+            "gvsoc_byte_count": int(gvsoc_payload["byte_count"]),
+            "gvsoc_sum_mod32": int(gvsoc_payload["sum_mod32"]),
+            "gvsoc_hash32": int(gvsoc_payload["hash32"]),
+            "compare": diff_report,
+        }
+        reports.append(layer_report)
+
+        layer_dir = output_dir / "runtime_layers" / f"{index:02d}_{layer.get('layer_name')}"
+        layer_dir.mkdir(parents=True, exist_ok=True)
+        write_json(layer_dir / "report.json", layer_report)
+        write_json(
+            layer_dir / "gvsoc_values.json",
+            {
+                "index": index,
+                "layer_name": layer.get("layer_name"),
+                "values": runtime_values.tolist(),
+            },
+        )
+
+    summary = {
+        "gvsoc_log": str(gvsoc_log_path),
+        "layer_manifest": str(layer_manifest_path),
+        "layer_count": len(reports),
+        "first_divergent_layer": first_divergent,
+        "layers": reports,
+    }
+    write_json(output_dir / "runtime_layer_compare.json", summary)
+    lines = [
+        "# Runtime Layer Compare",
+        "",
+        f"- GVSOC log: `{gvsoc_log_path}`",
+        f"- Layer manifest: `{layer_manifest_path}`",
+        "",
+    ]
+    if first_divergent is None:
+        lines.append("- First divergent layer: none")
+    else:
+        lines.append(
+            "- First divergent layer: `{} {}` mean_abs_diff=`{:.6f}` max_abs_diff=`{:.6f}`".format(
+                first_divergent["index"],
+                first_divergent["layer_name"],
+                float(first_divergent["mean_abs_diff"]),
+                float(first_divergent["max_abs_diff"]),
+            )
+        )
+    lines.extend(["", "| idx | layer | status | mean_abs | max_abs |", "| --- | --- | --- | ---: | ---: |"])
+    for report in reports:
+        compare = report.get("compare") or {}
+        lines.append(
+            "| {} | {} | {} | {} | {} |".format(
+                report["index"],
+                report.get("layer_name"),
+                report["status"],
+                "{:.6f}".format(float(compare.get("mean_abs_diff"))) if compare.get("mean_abs_diff") is not None else "n/a",
+                "{:.6f}".format(float(compare.get("max_abs_diff"))) if compare.get("max_abs_diff") is not None else "n/a",
+            )
+        )
+    (output_dir / "runtime_layer_compare.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return summary
 
 
 def sigmoid(value: float) -> float:
@@ -373,19 +611,13 @@ def onnx_stage_modes(stage_tag: str) -> tuple[str, str]:
 
 
 def run_pytorch_stage(ckpt_path: Path, x_float: torch.Tensor, args: argparse.Namespace) -> StageResult:
-    model = build_model(
-        "hybrid_follow",
-        args.num_classes,
-        args.width_mult,
-        (args.height, args.width),
-        args.input_channels,
-    )
+    model = build_hybrid_follow_model_for_checkpoint(ckpt_path, args, torch.device("cpu"))
     model = load_checkpoint(model, str(ckpt_path), torch.device("cpu"))
     model.eval()
     with torch.no_grad():
         output = model(x_float)
     return to_stage_result(
-        key="pytorch",
+        key="fp",
         label="PyTorch checkpoint",
         status="ok",
         source=str(ckpt_path),
@@ -414,36 +646,20 @@ def build_nemo_calib_args(args: argparse.Namespace) -> SimpleNamespace:
     )
 
 
-def run_nemo_stage(
+def build_nemo_stage_results(
     ckpt_path: Path,
     x_float: torch.Tensor,
     x_uint8: torch.Tensor,
     args: argparse.Namespace,
-) -> StageResult:
-    requested_stage = "fq" if args.nemo_stage == "auto" else args.nemo_stage
-    if requested_stage == "skip":
-        return to_stage_result(
-            key="nemo",
-            label="NEMO quantized",
-            status="skipped",
-            stage_tag="skip",
-            notes=["Skipped because --nemo-stage=skip was requested."],
-        )
-
+) -> dict[str, StageResult]:
     notes = []
     if args.nemo_stage == "auto":
-        notes.append("Auto mode chose FQ because it is the cleanest portable in-memory quantized checkpoint.")
+        notes.append("Auto mode chose FQ for the legacy `nemo` alias. Explicit FQ/ID stages are collected together.")
 
     patch_model_to_graph_compat()
     import nemo
 
-    model_fp = build_model(
-        "hybrid_follow",
-        args.num_classes,
-        args.width_mult,
-        (args.height, args.width),
-        args.input_channels,
-    )
+    model_fp = build_hybrid_follow_model_for_checkpoint(ckpt_path, args, torch.device("cpu"))
     model_fp = load_checkpoint(model_fp, str(ckpt_path), torch.device("cpu"))
     model_fp = maybe_fuse_hybrid_follow_for_export(model_fp)
     model_fp = maybe_convert_hybrid_follow_to_export_head(model_fp)
@@ -456,63 +672,143 @@ def run_nemo_stage(
     model_q.change_precision(bits=args.nemo_bits, scale_weights=True, scale_activations=True)
 
     calib_args = build_nemo_calib_args(args)
-    if not calib_args.calib_dir and not calib_args.calib_tensor:
-        notes.append("No calibration data was provided; random fallback calibration may reduce fidelity.")
-
+    calib_samples = collect_calib_samples(calib_args, (args.height, args.width), torch.device("cpu"))
     with torch.no_grad():
         with model_q.statistics_act():
-            for batch in iter_calib_batches(calib_args, (args.height, args.width), torch.device("cpu")):
-                _ = model_q(batch)
+            for sample in calib_samples:
+                _ = model_q(sample["tensor"])
     model_q.reset_alpha_act()
-    if requested_stage in {"qd", "id"}:
-        try:
-            model_q.reset_alpha_weights()
-        except Exception:
-            notes.append("reset_alpha_weights() raised, so weight alpha reset was skipped.")
 
-    representation = "float"
-    input_mode = "float_0_1"
-    stage_input = x_float
+    preset_name = normalize_hybrid_follow_export_preset(args.hybrid_follow_export_preset)
+    preset_config = derive_hybrid_follow_export_preset_config(
+        model_q,
+        calib_samples,
+        preset_name,
+    )
+    preset_report = apply_hybrid_follow_export_preset_config(model_q, preset_config)
 
-    if requested_stage in {"qd", "id"}:
-        model_q.qd_stage(eps_in=args.nemo_eps_in)
-        repair_hybrid_follow_fused_quant_graph(model_q)
-        representation = "fixed-point-int32"
-        input_mode = "staged_0_255"
-        stage_input = x_uint8.to(dtype=torch.float32)
-    if requested_stage == "id":
-        model_q.id_stage()
-        normalize_integer_requant_tensors(model_q)
-
+    results: dict[str, StageResult] = {}
     with torch.no_grad():
-        output = model_q(stage_input)
+        fq_output = model_q(x_float)
 
     eps_out = getattr(model_q, "eps_out", None)
     if torch.is_tensor(eps_out):
         eps_out = eps_out.detach().cpu().numpy().tolist()
 
-    return to_stage_result(
-        key="nemo",
-        label=f"NEMO {requested_stage.upper()} (in-memory)",
+    shared_metadata = {
+        "bits": args.nemo_bits,
+        "eps_in": args.nemo_eps_in,
+        "calib_dir": calib_args.calib_dir,
+        "calib_tensor": calib_args.calib_tensor,
+        "calib_batches": calib_args.calib_batches,
+        "hybrid_follow_export_preset": preset_name,
+        "preset_report": preset_report,
+    }
+    results["fq"] = to_stage_result(
+        key="fq",
+        label="NEMO FQ (in-memory)",
         status="ok",
         source=str(ckpt_path),
-        stage_tag=requested_stage,
-        representation=representation,
-        input_mode=input_mode,
-        raw_native=output.detach().cpu().numpy(),
+        stage_tag="fq",
+        representation="float",
+        input_mode="float_0_1",
+        raw_native=fq_output.detach().cpu().numpy(),
         integer_output_scale=args.integer_output_scale,
-        notes=notes,
+        notes=notes + ["Built from the shared calibrated preset snapshot used for explicit FQ/ID collection."],
         metadata={
-            "shape": list(output.shape),
-            "dtype": str(output.dtype),
-            "bits": args.nemo_bits,
-            "eps_in": args.nemo_eps_in,
+            **shared_metadata,
+            "shape": list(fq_output.shape),
+            "dtype": str(fq_output.dtype),
             "eps_out": eps_out,
-            "calib_dir": calib_args.calib_dir,
-            "calib_tensor": calib_args.calib_tensor,
-            "calib_batches": calib_args.calib_batches,
         },
     )
+
+    with integer_add_scale_selection_scope(
+        HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY,
+        (preset_report or {}).get("integer_add_operator_overrides"),
+    ):
+        try:
+            model_q.reset_alpha_weights()
+        except Exception:
+            notes.append("reset_alpha_weights() raised, so weight alpha reset was skipped.")
+
+        model_q.qd_stage(eps_in=args.nemo_eps_in)
+        repair_hybrid_follow_fused_quant_graph(model_q)
+        with torch.no_grad():
+            qd_output = model_q(x_uint8.to(dtype=torch.float32))
+
+        qd_eps_out = getattr(model_q, "eps_out", None)
+        if torch.is_tensor(qd_eps_out):
+            qd_eps_out = qd_eps_out.detach().cpu().numpy().tolist()
+
+        results["qd"] = to_stage_result(
+            key="qd",
+            label="NEMO QD (in-memory)",
+            status="ok",
+            source=str(ckpt_path),
+            stage_tag="qd",
+            representation="fixed-point-int32",
+            input_mode="staged_0_255",
+            raw_native=qd_output.detach().cpu().numpy(),
+            integer_output_scale=args.integer_output_scale,
+            notes=notes + ["Built from the shared calibrated preset snapshot used for explicit FQ/ID collection."],
+            metadata={
+                **shared_metadata,
+                "shape": list(qd_output.shape),
+                "dtype": str(qd_output.dtype),
+                "eps_out": qd_eps_out,
+            },
+        )
+
+        model_q.id_stage()
+        normalize_integer_requant_tensors(model_q)
+        integerize_deploy_conv_biases(model_q)
+        with torch.no_grad():
+            id_output = model_q(x_uint8.to(dtype=torch.float32))
+
+    id_eps_out = getattr(model_q, "eps_out", None)
+    if torch.is_tensor(id_eps_out):
+        id_eps_out = id_eps_out.detach().cpu().numpy().tolist()
+
+    results["id"] = to_stage_result(
+        key="id",
+        label="NEMO ID (in-memory)",
+        status="ok",
+        source=str(ckpt_path),
+        stage_tag="id",
+        representation="fixed-point-int32",
+        input_mode="staged_0_255",
+        raw_native=id_output.detach().cpu().numpy(),
+        integer_output_scale=args.integer_output_scale,
+        notes=notes + ["Built from the shared calibrated preset snapshot used for explicit FQ/ID collection."],
+        metadata={
+            **shared_metadata,
+            "shape": list(id_output.shape),
+            "dtype": str(id_output.dtype),
+            "eps_out": id_eps_out,
+        },
+    )
+    return results
+
+
+def run_nemo_stage(
+    ckpt_path: Path,
+    x_float: torch.Tensor,
+    x_uint8: torch.Tensor,
+    args: argparse.Namespace,
+    requested_stage: str | None = None,
+) -> StageResult:
+    requested_stage = requested_stage or ("fq" if args.nemo_stage == "auto" else args.nemo_stage)
+    if requested_stage == "skip":
+        return to_stage_result(
+            key=requested_stage,
+            label="NEMO quantized",
+            status="skipped",
+            stage_tag="skip",
+            notes=["Skipped because --nemo-stage=skip was requested."],
+        )
+    results = build_nemo_stage_results(ckpt_path, x_float, x_uint8, args)
+    return results[requested_stage]
 
 
 def run_onnx_stage(
@@ -769,6 +1065,7 @@ def build_markdown_summary(
     preprocess_artifacts: dict[str, Any],
     generated_golden_path: Path | None,
     integer_output_scale: float,
+    runtime_layer_compare: dict[str, Any] | None,
 ) -> str:
     lines = [
         "# Hybrid Follow Stage Drift Summary",
@@ -807,6 +1104,21 @@ def build_markdown_summary(
         for warning in report.get("warnings", []):
             lines.append(f"- {warning}")
 
+    if runtime_layer_compare is not None:
+        first_divergent = runtime_layer_compare.get("first_divergent_layer")
+        lines.extend(["", "## Runtime Layers", ""])
+        if first_divergent is None:
+            lines.append("- First divergent GVSOC layer: none")
+        else:
+            lines.append(
+                "- First divergent GVSOC layer: `{} {}` mean_abs=`{:.6f}` max_abs=`{:.6f}`".format(
+                    first_divergent["index"],
+                    first_divergent["layer_name"],
+                    float(first_divergent["mean_abs_diff"]),
+                    float(first_divergent["max_abs_diff"]),
+                )
+            )
+
     lines.extend(
         [
             "",
@@ -820,6 +1132,8 @@ def build_markdown_summary(
             f"- Pairwise JSON: `{output_dir / 'pairwise_diff_report.json'}`",
         ]
     )
+    if runtime_layer_compare is not None:
+        lines.append(f"- Runtime layer compare: `{output_dir / 'runtime_layer_compare.json'}`")
     return "\n".join(lines) + "\n"
 
 
@@ -833,6 +1147,8 @@ def main() -> int:
     onnx_path = resolve_repo_path(args.onnx) if args.onnx else None
     golden_path = resolve_repo_path(args.golden) if args.golden else None
     gvsoc_path = resolve_repo_path(args.gvsoc_json) if args.gvsoc_json else None
+    gvsoc_log_path = resolve_repo_path(args.gvsoc_log) if args.gvsoc_log else None
+    layer_manifest_path = resolve_repo_path(args.layer_manifest) if args.layer_manifest else None
     output_dir = resolve_repo_path(args.output_dir)
 
     if image_path is None or not image_path.is_file():
@@ -848,25 +1164,47 @@ def main() -> int:
     stages: dict[str, StageResult] = {}
 
     if ckpt_path is not None and ckpt_path.is_file():
-        stages["pytorch"] = safe_run_stage("pytorch", lambda: run_pytorch_stage(ckpt_path, x_float, args))
-        stages["nemo"] = safe_run_stage("nemo", lambda: run_nemo_stage(ckpt_path, x_float, x_uint8, args))
+        stages["fp"] = safe_run_stage("fp", lambda: run_pytorch_stage(ckpt_path, x_float, args))
+        try:
+            nemo_results = build_nemo_stage_results(ckpt_path, x_float, x_uint8, args)
+        except Exception as exc:
+            nemo_results = {
+                stage_key: to_stage_result(
+                    key=stage_key,
+                    label=f"NEMO {stage_key.upper()}",
+                    status="error",
+                    error=f"{type(exc).__name__}: {exc}",
+                    notes=[traceback.format_exc(limit=6)],
+                )
+                for stage_key in ("fq", "qd", "id")
+            }
+        stages["fq"] = nemo_results["fq"]
+        stages["id"] = nemo_results["id"]
     else:
         error = f"Checkpoint file not found: {ckpt_path}"
-        stages["pytorch"] = to_stage_result(
-            key="pytorch",
+        stages["fp"] = to_stage_result(
+            key="fp",
             label="PyTorch checkpoint",
             status="skipped",
             source=str(ckpt_path) if ckpt_path else None,
             error=error,
             notes=["PyTorch stage skipped because the checkpoint file was not found."],
         )
-        stages["nemo"] = to_stage_result(
-            key="nemo",
-            label="NEMO quantized",
+        stages["fq"] = to_stage_result(
+            key="fq",
+            label="NEMO FQ",
             status="skipped",
             source=str(ckpt_path) if ckpt_path else None,
             error=error,
-            notes=["NEMO stage skipped because the checkpoint file was not found."],
+            notes=["NEMO FQ stage skipped because the checkpoint file was not found."],
+        )
+        stages["id"] = to_stage_result(
+            key="id",
+            label="NEMO ID",
+            status="skipped",
+            source=str(ckpt_path) if ckpt_path else None,
+            error=error,
+            notes=["NEMO ID stage skipped because the checkpoint file was not found."],
         )
 
     if onnx_path is not None and onnx_path.is_file():
@@ -882,10 +1220,6 @@ def main() -> int:
         )
 
     generated_golden_path: Path | None = None
-    if golden_path is None and stages["onnx"].status == "ok" and stages["onnx"].representation == "fixed-point-int32":
-        generated_golden_path = save_generated_golden_artifact(output_dir, stages["onnx"])
-        golden_path = generated_golden_path
-
     if golden_path is not None and golden_path.is_file():
         stages["golden"] = safe_run_stage(
             "golden",
@@ -930,9 +1264,26 @@ def main() -> int:
             notes=["GVSOC stage skipped because no gvsoc_final_tensor.json path was provided."],
         )
 
+    legacy_nemo_stage = "fq" if args.nemo_stage in {"auto", "fq", "skip"} else args.nemo_stage
+    stages["pytorch"] = stages["fp"]
+    stages["nemo"] = nemo_results.get(legacy_nemo_stage, stages["fq"]) if ckpt_path is not None and ckpt_path.is_file() else stages["fq"]
+
     write_stage_json_artifacts(output_dir, stages)
     pairwise_reports = build_pairwise_reports(stages, thresholds)
     drift_onset = summarize_drift_onset(stages, pairwise_reports)
+
+    runtime_layer_compare = None
+    if (
+        gvsoc_log_path is not None
+        and gvsoc_log_path.is_file()
+        and layer_manifest_path is not None
+        and layer_manifest_path.is_file()
+    ):
+        runtime_layer_compare = compare_runtime_layers(
+            gvsoc_log_path=gvsoc_log_path,
+            layer_manifest_path=layer_manifest_path,
+            output_dir=output_dir,
+        )
 
     aggregate_report = {
         "image_path": str(image_path),
@@ -944,7 +1295,23 @@ def main() -> int:
         "stages": {key: stage.to_dict() for key, stage in stages.items()},
         "pairwise": pairwise_reports,
         "drift_onset": drift_onset,
+        "runtime_layer_compare": runtime_layer_compare,
     }
+    required_stage_keys = ("fp", "fq", "id", "onnx", "golden", "gvsoc")
+    required_stage_failures = [
+        {
+            "stage": stage_key,
+            "status": stages[stage_key].status,
+            "error": stages[stage_key].error,
+        }
+        for stage_key in required_stage_keys
+        if stage_key not in stages or stages[stage_key].status != "ok"
+    ]
+    aggregate_report["required_stage_failures"] = required_stage_failures
+    if runtime_layer_compare is None:
+        aggregate_report["runtime_layer_compare_failure"] = (
+            "Runtime layer compare requires --gvsoc-log and --layer-manifest."
+        )
     write_json(output_dir / "stage_drift_report.json", aggregate_report)
     write_json(output_dir / "pairwise_diff_report.json", pairwise_reports)
 
@@ -958,13 +1325,20 @@ def main() -> int:
         preprocess_artifacts=preprocess_artifacts,
         generated_golden_path=generated_golden_path,
         integer_output_scale=args.integer_output_scale,
+        runtime_layer_compare=runtime_layer_compare,
     )
     (output_dir / "summary.md").write_text(summary_text, encoding="utf-8")
 
-    completed = sum(1 for stage in stages.values() if stage.status == "ok")
-    if completed == 0:
-        print("No stages completed successfully. See stage_drift_report.json for details.")
-        return 1
+    if required_stage_failures:
+        raise RuntimeError(
+            "Stage drift requires FP, FQ, ID, ONNX, golden, and GVSOC stages. "
+            f"Failures: {required_stage_failures}"
+        )
+    if runtime_layer_compare is None:
+        raise RuntimeError(
+            "Stage drift requires runtime layer comparison. "
+            "Provide both --gvsoc-log and --layer-manifest."
+        )
 
     print(f"Image: {image_path}")
     print(f"Output dir: {output_dir}")

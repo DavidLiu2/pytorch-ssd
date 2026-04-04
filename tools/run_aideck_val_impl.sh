@@ -32,6 +32,9 @@ case "$(uname -s)" in
           HOST_EXPECTED_OUTPUT
           HOST_RUN_LOG_COPY
           HOST_FINAL_TENSOR_JSON
+          HOST_TRACE_LAYER_OUTPUTS
+          HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE
+          HOST_LAYER_MANIFEST
           HOST_STAGE_DRIFT_IMAGE
           HOST_STAGE_DRIFT_CKPT
           HOST_STAGE_DRIFT_ONNX
@@ -67,7 +70,7 @@ esac
 # AI-Deck Docker bring-up + GVSOC validation for the current generated app.
 #
 # Usage:
-#   bash pytorch_ssd/run_aideck_val.sh
+#   bash pytorch_ssd/run_val.sh aideck
 #
 # Optional env vars:
 #   CONTAINER_NAME=aideck
@@ -109,6 +112,9 @@ HOST_VALIDATION_MAIN="${HOST_VALIDATION_MAIN:-$PROJECT_DIR/aideck_val_main_hybri
 HOST_EXPECTED_OUTPUT="${HOST_EXPECTED_OUTPUT:-$PROJECT_DIR/export/hybrid_follow/output.txt}"
 HOST_RUN_LOG_COPY="${HOST_RUN_LOG_COPY:-}"
 HOST_FINAL_TENSOR_JSON="${HOST_FINAL_TENSOR_JSON:-}"
+HOST_TRACE_LAYER_OUTPUTS="${HOST_TRACE_LAYER_OUTPUTS:-0}"
+HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE="${HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE:-64}"
+HOST_LAYER_MANIFEST="${HOST_LAYER_MANIFEST:-$PROJECT_DIR/export/hybrid_follow/gap8_layer_manifest.json}"
 HOST_STAGE_DRIFT_IMAGE="${HOST_STAGE_DRIFT_IMAGE:-}"
 HOST_STAGE_DRIFT_CKPT="${HOST_STAGE_DRIFT_CKPT:-$PROJECT_DIR/training/hybrid_follow/hybrid_follow_best_follow_score.pth}"
 HOST_STAGE_DRIFT_ONNX="${HOST_STAGE_DRIFT_ONNX:-$PROJECT_DIR/export/hybrid_follow/hybrid_follow_dory.onnx}"
@@ -344,6 +350,14 @@ docker exec "$CONTAINER_NAME" bash -lc "
   if grep -q 'unsigned int args\\[4\\];' '$CONTAINER_APP_DIR/src/network.c'; then
     perl -0pi -e 's/unsigned int args\\[4\\];/unsigned int args[5];/' '$CONTAINER_APP_DIR/src/network.c'
   fi
+  if [[ '$HOST_TRACE_LAYER_OUTPUTS' == '1' ]]; then
+    if grep -q '#define APP_TRACE_LAYER_OUTPUTS (0)' '$CONTAINER_APP_DIR/inc/app_config.h'; then
+      perl -0pi -e 's/#define APP_TRACE_LAYER_OUTPUTS \\(0\\)/#define APP_TRACE_LAYER_OUTPUTS (1)/' '$CONTAINER_APP_DIR/inc/app_config.h'
+    fi
+    if grep -q '#define APP_TRACE_LAYER_OUTPUT_BYTES_PER_LINE' '$CONTAINER_APP_DIR/inc/app_config.h'; then
+      perl -0pi -e 's/#define APP_TRACE_LAYER_OUTPUT_BYTES_PER_LINE \\([^\\)]*\\)/#define APP_TRACE_LAYER_OUTPUT_BYTES_PER_LINE (${HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE}u)/' '$CONTAINER_APP_DIR/inc/app_config.h'
+    fi
+  fi
 "
 
 echo "[3/5] Apply out_mult alias patch where needed..."
@@ -469,8 +483,18 @@ if [[ "$RUN_AFTER_BUILD" == "1" ]]; then
           --overwrite
           --nemo-stage "$STAGE_DRIFT_NEMO_STAGE"
         )
+        GVSOC_LOG_PATH="$HOST_RUN_LOG"
+        if [[ -n "$HOST_RUN_LOG_COPY" && -f "$HOST_RUN_LOG_COPY" ]]; then
+          GVSOC_LOG_PATH="$HOST_RUN_LOG_COPY"
+        fi
         if [[ -n "$FINAL_TENSOR_JSON_PATH" && -f "$FINAL_TENSOR_JSON_PATH" ]]; then
           STAGE_DRIFT_CMD+=(--gvsoc-json "$FINAL_TENSOR_JSON_PATH")
+        fi
+        if [[ -n "$GVSOC_LOG_PATH" && -f "$GVSOC_LOG_PATH" ]]; then
+          STAGE_DRIFT_CMD+=(--gvsoc-log "$GVSOC_LOG_PATH")
+        fi
+        if [[ -n "$HOST_LAYER_MANIFEST" && -f "$HOST_LAYER_MANIFEST" ]]; then
+          STAGE_DRIFT_CMD+=(--layer-manifest "$HOST_LAYER_MANIFEST")
         fi
         if ! "${STAGE_DRIFT_CMD[@]}"; then
           echo "[stage-drift] WARNING: stage-drift comparison failed; continuing."

@@ -157,14 +157,19 @@ def get_train_transforms(
     input_channels: int = 1,
     image_size: Tuple[int, int] = (128, 128),
 ):
-    if model_type == "hybrid_follow":
+    if model_type in {"hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"}:
         if input_channels != 1:
-            raise ValueError("hybrid_follow path requires input_channels=1.")
+            raise ValueError(f"{model_type} path requires input_channels=1.")
+        flip_prob = 0.5
+        if model_type == "dronet_lite_follow":
+            # Keep dronet-lite augmentation milder so the visibility gate settles
+            # before the residual path starts chasing harder x offsets.
+            flip_prob = 0.25
         return Compose(
             [
                 CenterCropSquare(),
                 ResizeImage(image_size),
-                RandomHorizontalFlip(0.5),
+                RandomHorizontalFlip(flip_prob),
                 ToTensorGray(output_channels=1),
             ]
         )
@@ -182,9 +187,9 @@ def get_val_transforms(
     input_channels: int = 1,
     image_size: Tuple[int, int] = (128, 128),
 ):
-    if model_type == "hybrid_follow":
+    if model_type in {"hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"}:
         if input_channels != 1:
-            raise ValueError("hybrid_follow path requires input_channels=1.")
+            raise ValueError(f"{model_type} path requires input_channels=1.")
         return Compose(
             [
                 CenterCropSquare(),

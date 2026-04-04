@@ -1,0 +1,111 @@
+{
+  "status": "pass",
+  "counts": {
+    "error": 0,
+    "warning": 0,
+    "info": 6
+  },
+  "reports": [
+    {
+      "scope": "python",
+      "status": "pass",
+      "metrics": {
+        "leaf_module_classes": {
+          "Conv2d": 7,
+          "BatchNorm2d": 7,
+          "ReLU": 7,
+          "AvgPool2d": 1,
+          "Linear": 1
+        }
+      },
+      "findings": [
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.SEQUENTIAL_NAMES",
+          "message": "Sequential containers use explicit child names or are absent.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.FX_TRACE_OK",
+          "message": "torch.fx symbolic_trace() succeeded on the PyTorch model.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.EXPLICIT_RELU_MODULES",
+          "message": "No functional ReLU calls were detected in the FX graph.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.EXPLICIT_MERGES",
+          "message": "No functional add nodes were detected in the FX graph.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.QD_STAGE_OK",
+          "message": "The export-ready model completed qd_stage() successfully during the dry-run.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.ID_STAGE_OK",
+          "message": "The export-ready model completed id_stage() successfully during the dry-run.",
+          "details": {}
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.SEQUENTIAL_NAMES",
+      "message": "Sequential containers use explicit child names or are absent.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.FX_TRACE_OK",
+      "message": "torch.fx symbolic_trace() succeeded on the PyTorch model.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.EXPLICIT_RELU_MODULES",
+      "message": "No functional ReLU calls were detected in the FX graph.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.EXPLICIT_MERGES",
+      "message": "No functional add nodes were detected in the FX graph.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.QD_STAGE_OK",
+      "message": "The export-ready model completed qd_stage() successfully during the dry-run.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.ID_STAGE_OK",
+      "message": "The export-ready model completed id_stage() successfully during the dry-run.",
+      "details": {}
+    }
+  ]
+}

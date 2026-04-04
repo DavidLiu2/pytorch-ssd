@@ -1,6 +1,6 @@
-# Using `run_aideck_val.sh`
+# Using `run_val.sh aideck`
 
-`pytorch_ssd/run_aideck_val.sh` is the build-and-validate step for the generated GAP8 app. It uses the AI-Deck Docker image and compares the final GVSOC tensor with the golden export.
+`pytorch_ssd/run_val.sh aideck` is the build-and-validate step for the generated GAP8 app. It uses the AI-Deck Docker image and compares the final GVSOC tensor with the golden export.
 
 ## What It Does
 
@@ -44,13 +44,13 @@ From WSL:
 
 ```bash
 cd /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd
-./run_aideck_val.sh
+./run_val.sh aideck
 ```
 
 From a Windows shell that launches Git Bash or MSYS Bash, the script can hand itself off to WSL automatically:
 
 ```bash
-bash pytorch_ssd/run_aideck_val.sh
+bash pytorch_ssd/run_val.sh aideck
 ```
 
 ## Important Environment Variables
@@ -71,7 +71,7 @@ Common overrides:
 Example:
 
 ```bash
-PLATFORM=gvsoc AUTO_REFRESH_APP=0 ./run_aideck_val.sh
+PLATFORM=gvsoc AUTO_REFRESH_APP=0 ./run_val.sh aideck
 ```
 
 With a staged real-image input:
@@ -80,7 +80,7 @@ With a staged real-image input:
 HOST_INPUT_HEX=export/hybrid_follow/real_image_validation/demo/0001/inputs.hex \
 HOST_EXPECTED_OUTPUT=export/hybrid_follow/real_image_validation/demo/0001/output.txt \
 HOST_RUN_LOG_COPY=export/hybrid_follow/real_image_validation/demo/0001/gvsoc.log \
-./run_aideck_val.sh
+./run_val.sh aideck
 ```
 
 ## Logs And Outputs
@@ -111,7 +111,7 @@ For the current working setup, the validated final tensor is:
 
 ```bash
 cd /mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd
-./run_aideck_val.sh
+./run_val.sh aideck
 ```
 
 ## When To Rerun `run_all.sh`
@@ -124,4 +124,4 @@ Rerun `run_all.sh` when:
 - DORY parser or backend kernel code changed
 - `pytorch_ssd/application` is missing or stale
 
-In most normal cases you do not need to copy files manually. `run_all.sh` already generates directly into `pytorch_ssd/application`, and `run_aideck_val.sh` already prefers that location.
+In most normal cases you do not need to copy files manually. `run_all.sh` already generates directly into `pytorch_ssd/application`, and `run_val.sh aideck` already prefers that location.

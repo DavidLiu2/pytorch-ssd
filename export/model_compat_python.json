@@ -1,0 +1,146 @@
+{
+  "status": "pass",
+  "counts": {
+    "error": 0,
+    "warning": 0,
+    "info": 7
+  },
+  "reports": [
+    {
+      "scope": "python",
+      "status": "pass",
+      "metrics": {
+        "leaf_module_classes": {
+          "Conv2d": 11,
+          "BatchNorm2d": 11,
+          "ReLU": 9,
+          "PassthroughAdd": 2,
+          "AvgPool2d": 1,
+          "Linear": 1
+        }
+      },
+      "findings": [
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.SEQUENTIAL_NAMES",
+          "message": "Sequential containers use explicit child names or are absent.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.EXPLICIT_ADD_MODULES",
+          "message": "Residual additions are represented as explicit modules instead of plain functional adds.",
+          "details": {
+            "add_modules": [
+              "stage1.add",
+              "stage2.add"
+            ]
+          }
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.FX_TRACE_OK",
+          "message": "torch.fx symbolic_trace() succeeded on the PyTorch model.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.EXPLICIT_RELU_MODULES",
+          "message": "No functional ReLU calls were detected in the FX graph.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.EXPLICIT_ADD_TRACE",
+          "message": "FX lowers the explicit Add modules into add nodes, but the model still exposes named Add modules for export/debugging.",
+          "details": {
+            "fx_nodes": [
+              "add",
+              "add_1"
+            ]
+          }
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.QD_STAGE_OK",
+          "message": "The export-ready model completed qd_stage() successfully during the dry-run.",
+          "details": {}
+        },
+        {
+          "scope": "python",
+          "severity": "info",
+          "code": "PY.ID_STAGE_OK",
+          "message": "The export-ready model completed id_stage() successfully during the dry-run.",
+          "details": {}
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.SEQUENTIAL_NAMES",
+      "message": "Sequential containers use explicit child names or are absent.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.EXPLICIT_ADD_MODULES",
+      "message": "Residual additions are represented as explicit modules instead of plain functional adds.",
+      "details": {
+        "add_modules": [
+          "stage1.add",
+          "stage2.add"
+        ]
+      }
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.FX_TRACE_OK",
+      "message": "torch.fx symbolic_trace() succeeded on the PyTorch model.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.EXPLICIT_RELU_MODULES",
+      "message": "No functional ReLU calls were detected in the FX graph.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.EXPLICIT_ADD_TRACE",
+      "message": "FX lowers the explicit Add modules into add nodes, but the model still exposes named Add modules for export/debugging.",
+      "details": {
+        "fx_nodes": [
+          "add",
+          "add_1"
+        ]
+      }
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.QD_STAGE_OK",
+      "message": "The export-ready model completed qd_stage() successfully during the dry-run.",
+      "details": {}
+    },
+    {
+      "scope": "python",
+      "severity": "info",
+      "code": "PY.ID_STAGE_OK",
+      "message": "The export-ready model completed id_stage() successfully during the dry-run.",
+      "details": {}
+    }
+  ]
+}

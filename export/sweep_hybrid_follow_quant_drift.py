@@ -24,6 +24,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = SCRIPT_DIR.parent
 if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
+EXPORTER_DIR = PROJECT_DIR / "nemo"
+if str(EXPORTER_DIR) not in sys.path:
+    sys.path.insert(0, str(EXPORTER_DIR))
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
@@ -41,10 +44,10 @@ from export_nemo_quant import (  # noqa: E402
     compare_decoded_hybrid_follow_outputs,
     hybrid_follow_image_to_tensor,
     hybrid_follow_output_to_decoded,
+    integer_add_scale_selection_scope,
     integerize_deploy_conv_biases,
     make_json_ready,
     normalize_integer_requant_tensors,
-    patch_integer_add_scale_selection,
     patch_model_to_graph_compat,
     prepare_model_fp,
     repair_hybrid_follow_fused_quant_graph,
@@ -137,6 +140,8 @@ class PolicySpec:
     activation_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
     integer_add_operator_overrides: dict[str, Any] = field(default_factory=dict)
     conv_bias_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
+    model_patch_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
+    diagnostic_only: bool = False
     search_context: dict[str, Any] = field(default_factory=dict)
 
 
@@ -168,7 +173,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eval-limit", type=int, default=16)
     parser.add_argument("--hard-case-count", type=int, default=4)
     parser.add_argument("--operator", default="auto",
-                        choices=["auto", "stage4.1.conv1", "stage4.1.conv2", "stage4.1.add", "global_pool", "head"])
+                        choices=["auto", "stage4.1.add"])
     parser.add_argument("--material-mean-abs-diff", type=float, default=0.01)
     parser.add_argument("--warn-x-abs-diff", type=float, default=DEFAULT_THRESHOLDS["x_abs_diff"])
     parser.add_argument("--warn-size-abs-diff", type=float, default=DEFAULT_THRESHOLDS["size_abs_diff"])
@@ -559,6 +564,90 @@ def final_output_score(drift: dict[str, Any] | None, weights: dict[str, float]) 
     )
 
 
+def x_sign(value: float) -> int:
+    if value > 0.0:
+        return 1
+    if value < 0.0:
+        return -1
+    return 0
+
+
+def ordering_agreement(fp_values: np.ndarray, quant_values: np.ndarray) -> float | None:
+    if fp_values.size < 2 or quant_values.size != fp_values.size:
+        return None
+    agree = 0
+    total = 0
+    for left_idx in range(fp_values.size):
+        for right_idx in range(left_idx + 1, fp_values.size):
+            fp_delta = float(fp_values[left_idx] - fp_values[right_idx])
+            if abs(fp_delta) < 1e-9:
+                continue
+            quant_delta = float(quant_values[left_idx] - quant_values[right_idx])
+            total += 1
+            if x_sign(fp_delta) == x_sign(quant_delta):
+                agree += 1
+    if total == 0:
+        return None
+    return float(agree) / float(total)
+
+
+def summarize_anti_collapse(fp_values: list[float], exported_values: list[float]) -> dict[str, Any]:
+    if not fp_values or not exported_values or len(fp_values) != len(exported_values):
+        return {
+            "count": 0,
+            "sign_flip_rate": None,
+            "correlation": None,
+            "slope": None,
+            "collapsed_fraction": None,
+            "left_right_ordering_agreement": None,
+        }
+
+    fp = np.asarray(fp_values, dtype=np.float64)
+    exported = np.asarray(exported_values, dtype=np.float64)
+    sign_flip_rate = float(
+        np.mean([x_sign(float(a)) != x_sign(float(b)) for a, b in zip(fp, exported)])
+    )
+
+    correlation = None
+    if fp.size >= 2 and float(np.std(fp)) > 0.0 and float(np.std(exported)) > 0.0:
+        correlation = float(np.corrcoef(fp, exported)[0, 1])
+
+    slope = None
+    denom = float(np.dot(fp, fp))
+    if denom > 0.0:
+        slope = float(np.dot(fp, exported) / denom)
+
+    collapse_mask = np.abs(fp) > 0.5
+    collapsed_fraction = None
+    if np.any(collapse_mask):
+        collapsed_fraction = float(np.mean(np.abs(exported[collapse_mask]) < 0.25))
+
+    return {
+        "count": int(fp.size),
+        "sign_flip_rate": sign_flip_rate,
+        "correlation": correlation,
+        "slope": slope,
+        "collapsed_fraction": collapsed_fraction,
+        "left_right_ordering_agreement": ordering_agreement(fp, exported),
+    }
+
+
+def anti_collapse_sort_key(metrics: dict[str, Any] | None) -> tuple[float, float, float, float, float]:
+    metrics = metrics or {}
+    sign_flip_rate = float(metrics.get("sign_flip_rate") or 1.0)
+    collapsed_fraction = float(metrics.get("collapsed_fraction") or 1.0)
+    correlation = float(metrics.get("correlation") or -1.0)
+    slope = float(metrics.get("slope") or 0.0)
+    ordering = float(metrics.get("left_right_ordering_agreement") or 0.0)
+    return (
+        sign_flip_rate,
+        collapsed_fraction,
+        -correlation,
+        abs(slope - 1.0),
+        -ordering,
+    )
+
+
 def compare_decoded_payloads(left: dict[str, Any] | None, right: dict[str, Any] | None) -> dict[str, Any] | None:
     if left is None or right is None:
         return None
@@ -711,6 +800,181 @@ def channel_outlier_report(value: Any) -> dict[str, Any] | None:
     }
 
 
+def _conv_output_channel_abs_max(module) -> np.ndarray:
+    weight = np.asarray(module.weight.detach().cpu().numpy(), dtype=np.float64)
+    channel_abs_max = np.max(np.abs(weight), axis=(1, 2, 3))
+    if getattr(module, "bias", None) is not None:
+        bias = np.asarray(module.bias.detach().cpu().numpy(), dtype=np.float64).reshape(-1)
+        channel_abs_max = np.maximum(channel_abs_max, np.abs(bias))
+    return channel_abs_max
+
+
+def _conv_input_channel_abs_max(module) -> np.ndarray:
+    weight = np.asarray(module.weight.detach().cpu().numpy(), dtype=np.float64)
+    return np.max(np.abs(weight), axis=(0, 2, 3))
+
+
+def _channel_max_ratio(left: np.ndarray, right: np.ndarray) -> dict[str, Any]:
+    safe_left = np.maximum(np.asarray(left, dtype=np.float64), 1e-12)
+    safe_right = np.maximum(np.asarray(right, dtype=np.float64), 1e-12)
+    ratio = np.maximum(safe_left / safe_right, safe_right / safe_left)
+    return {
+        "stats": tensor_stats(ratio),
+        "max": float(np.max(ratio)),
+        "median": float(np.median(ratio)),
+        "mean": float(np.mean(ratio)),
+    }
+
+
+def stage4_1_add_branch_alignment_report(
+    model,
+    calib_samples: list[dict[str, Any]],
+) -> dict[str, Any]:
+    branch_samples = collect_integer_add_branch_samples(model, calib_samples, "stage4.1.add")
+    main_tensor = np.concatenate(branch_samples["main"], axis=0) if branch_samples.get("main") else np.asarray([], dtype=np.float64)
+    skip_tensor = np.concatenate(branch_samples["skip"], axis=0) if branch_samples.get("skip") else np.asarray([], dtype=np.float64)
+    output_tensor = (
+        np.concatenate(branch_samples["output"], axis=0)
+        if branch_samples.get("output")
+        else np.asarray([], dtype=np.float64)
+    )
+    main_abs_mean = float(np.mean(np.abs(main_tensor))) if main_tensor.size else None
+    skip_abs_mean = float(np.mean(np.abs(skip_tensor))) if skip_tensor.size else None
+    main_abs_max = float(np.max(np.abs(main_tensor))) if main_tensor.size else None
+    skip_abs_max = float(np.max(np.abs(skip_tensor))) if skip_tensor.size else None
+    return {
+        "main_stats": tensor_stats(main_tensor),
+        "skip_stats": tensor_stats(skip_tensor),
+        "output_stats": tensor_stats(output_tensor),
+        "main_to_skip_abs_mean_ratio": (
+            None
+            if main_abs_mean is None or skip_abs_mean is None
+            else float(main_abs_mean) / max(float(skip_abs_mean), 1e-12)
+        ),
+        "main_to_skip_abs_max_ratio": (
+            None
+            if main_abs_max is None or skip_abs_max is None
+            else float(main_abs_max) / max(float(skip_abs_max), 1e-12)
+        ),
+        "main_outlier_channels": channel_outlier_report(main_tensor),
+        "skip_outlier_channels": channel_outlier_report(skip_tensor),
+    }
+
+
+def stage4_1_conv_pair_equalization_report(model) -> dict[str, Any]:
+    conv1 = resolve_dotted_module(model, "stage4.1.conv1")
+    conv2 = resolve_dotted_module(model, "stage4.1.conv2")
+    if not isinstance(conv1, torch.nn.Conv2d) or not isinstance(conv2, torch.nn.Conv2d):
+        raise TypeError("stage4.1 conv pair equalization expects Conv2d modules for conv1 and conv2.")
+    conv1_out = _conv_output_channel_abs_max(conv1)
+    conv2_in = _conv_input_channel_abs_max(conv2)
+    scales = np.sqrt(np.maximum(conv2_in, 1e-12) / np.maximum(conv1_out, 1e-12))
+    return {
+        "pair": ["stage4.1.conv1", "stage4.1.conv2"],
+        "conv1_output_channel_abs_max": tensor_stats(conv1_out),
+        "conv2_input_channel_abs_max": tensor_stats(conv2_in),
+        "channel_max_ratio_before": _channel_max_ratio(conv1_out, conv2_in),
+        "suggested_scale_stats": tensor_stats(scales),
+        "top_channels_by_mismatch": [
+            {
+                "channel": int(idx),
+                "conv1_out_abs_max": float(conv1_out[idx]),
+                "conv2_in_abs_max": float(conv2_in[idx]),
+                "scale": float(scales[idx]),
+                "ratio": float(
+                    max(
+                        float(conv1_out[idx]) / max(float(conv2_in[idx]), 1e-12),
+                        float(conv2_in[idx]) / max(float(conv1_out[idx]), 1e-12),
+                    )
+                ),
+            }
+            for idx in np.argsort(
+                np.maximum(
+                    np.maximum(conv1_out, 1e-12) / np.maximum(conv2_in, 1e-12),
+                    np.maximum(conv2_in, 1e-12) / np.maximum(conv1_out, 1e-12),
+                )
+            )[::-1][:5]
+        ],
+    }
+
+
+def apply_stage4_1_conv_pair_cross_layer_equalization(
+    model,
+    *,
+    scale_min: float = 0.25,
+    scale_max: float = 4.0,
+) -> dict[str, Any]:
+    conv1 = resolve_dotted_module(model, "stage4.1.conv1")
+    conv2 = resolve_dotted_module(model, "stage4.1.conv2")
+    if not isinstance(conv1, torch.nn.Conv2d) or not isinstance(conv2, torch.nn.Conv2d):
+        raise TypeError("stage4.1 conv pair equalization expects Conv2d modules for conv1 and conv2.")
+
+    conv1_out_before = _conv_output_channel_abs_max(conv1)
+    conv2_in_before = _conv_input_channel_abs_max(conv2)
+    raw_scales = np.sqrt(np.maximum(conv2_in_before, 1e-12) / np.maximum(conv1_out_before, 1e-12))
+    clipped_scales = np.clip(raw_scales, float(scale_min), float(scale_max))
+
+    scale_tensor = torch.as_tensor(
+        clipped_scales,
+        dtype=conv1.weight.dtype,
+        device=conv1.weight.device,
+    )
+    with torch.no_grad():
+        conv1.weight.mul_(scale_tensor.view(-1, 1, 1, 1))
+        if conv1.bias is not None:
+            conv1.bias.mul_(scale_tensor)
+        conv2.weight.div_(scale_tensor.view(1, -1, 1, 1))
+
+    conv1_out_after = _conv_output_channel_abs_max(conv1)
+    conv2_in_after = _conv_input_channel_abs_max(conv2)
+    return {
+        "patch_name": "stage4_1_conv_pair_cross_layer_equalization",
+        "pair": ["stage4.1.conv1", "stage4.1.conv2"],
+        "scale_min": float(scale_min),
+        "scale_max": float(scale_max),
+        "raw_scale_stats": tensor_stats(raw_scales),
+        "applied_scale_stats": tensor_stats(clipped_scales),
+        "channel_max_ratio_before": _channel_max_ratio(conv1_out_before, conv2_in_before),
+        "channel_max_ratio_after": _channel_max_ratio(conv1_out_after, conv2_in_after),
+        "top_channels_by_applied_scale": [
+            {
+                "channel": int(idx),
+                "scale": float(clipped_scales[idx]),
+                "raw_scale": float(raw_scales[idx]),
+                "conv1_out_abs_max_before": float(conv1_out_before[idx]),
+                "conv2_in_abs_max_before": float(conv2_in_before[idx]),
+                "conv1_out_abs_max_after": float(conv1_out_after[idx]),
+                "conv2_in_abs_max_after": float(conv2_in_after[idx]),
+            }
+            for idx in np.argsort(np.abs(np.log2(np.maximum(clipped_scales, 1e-12))))[::-1][:5]
+        ],
+    }
+
+
+def apply_model_patch_overrides(
+    model,
+    policy_overrides: dict[str, dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    overrides = deepcopy(policy_overrides or {})
+    if not overrides:
+        return []
+
+    reports: list[dict[str, Any]] = []
+    if "stage4_1_conv_pair_cross_layer_equalization" in overrides:
+        config = deepcopy(overrides.pop("stage4_1_conv_pair_cross_layer_equalization") or {})
+        reports.append(
+            apply_stage4_1_conv_pair_cross_layer_equalization(
+                model,
+                scale_min=float(config.get("scale_min", 0.25)),
+                scale_max=float(config.get("scale_max", 4.0)),
+            )
+        )
+
+    if overrides:
+        raise ValueError(f"Unsupported model patch overrides: {sorted(overrides.keys())}")
+    return reports
+
+
 def tap_context_from_model(model_id, head_eps_in: float | None) -> dict[str, dict[str, Any]]:
     context = stage4_1_path_quant_context(model_id)
     global_pool = resolve_dotted_module(model_id, "global_pool")
@@ -749,59 +1013,31 @@ def build_local_tap_records(
     stage4_add_tensors = id_add_audit["tensors"].get("stage4.1.add", {})
     add_scale = (id_add_audit["reports"].get("stage4.1.add") or {}).get("scale_selection") or {}
 
-    fq_conv1 = np.asarray(fq_probe["tensors"]["stage4_1_conv1"], dtype=np.float64)
-    fq_conv2 = np.asarray(fq_probe["tensors"]["stage4_1_conv2"], dtype=np.float64)
     fq_add = np.asarray(fq_probe["tensors"]["stage4_1_add"], dtype=np.float64)
+    fq_next_input = np.asarray(fq_probe["tensors"]["stage4_1_out_relu"], dtype=np.float64)
     fq_global = np.asarray(fq_probe["tensors"]["global_pool_post_requant"], dtype=np.float64)
     fq_head = np.asarray(fq_probe["tensors"]["head_input"], dtype=np.float64)
-    fq_output = np.asarray(semantic_output(fq_probe["tensors"]["model_output"], "fq"), dtype=np.float64)
 
-    id_conv1_ctx = context_map.get("stage4.1.conv1") or {}
-    id_conv2_ctx = context_map.get("stage4.1.conv2") or {}
+    add_ctx = context_map.get("stage4.1.add") or {}
+    next_ctx = context_map.get("stage4.1.out_relu") or {}
     global_ctx = context_map.get("global_pool") or {}
     head_ctx = context_map.get("head") or {}
 
-    conv1_eps = id_conv1_ctx.get("eps_out")
-    conv2_eps = id_conv2_ctx.get("eps_out")
     global_eps = global_ctx.get("eps_out") if global_ctx.get("eps_out") not in (None, 0.0) else head_eps_in
-    final_eps = head_ctx.get("eps_out")
 
     tap_rows = [
-        {
-            "label": "stage4.1.conv1",
-            "operator_name": "stage4.1.conv1",
-            "fq_tensor": fq_conv1,
-            "id_tensor": np.asarray(id_probe["tensors"]["stage4_1_conv1"], dtype=np.float64) * float(conv1_eps or 1.0),
-            "operator_context": id_conv1_ctx,
-            "clip_bounds": None,
-            "factor_audit": {
-                "bias_report": make_json_ready(id_conv1_ctx.get("bias_report")),
-                "outlier_channels": channel_outlier_report(fq_conv1),
-            },
-        },
-        {
-            "label": "stage4.1.conv2",
-            "operator_name": "stage4.1.conv2",
-            "fq_tensor": fq_conv2,
-            "id_tensor": np.asarray(id_probe["tensors"]["stage4_1_conv2"], dtype=np.float64) * float(conv2_eps or 1.0),
-            "operator_context": id_conv2_ctx,
-            "clip_bounds": None,
-            "factor_audit": {
-                "bias_report": make_json_ready(id_conv2_ctx.get("bias_report")),
-                "outlier_channels": channel_outlier_report(fq_conv2),
-            },
-        },
         {
             "label": "stage4.1.add pre-requant",
             "operator_name": "stage4.1.add",
             "fq_tensor": fq_add,
             "id_tensor": np.asarray(stage4_add_tensors["pre_requant_semantic"], dtype=np.float64),
-            "operator_context": add_scale,
+            "operator_context": add_ctx or add_scale,
             "clip_bounds": make_json_ready(add_scale.get("clip_bounds_semantic_equivalent")),
             "factor_audit": {
                 "branch_eps_ratio": add_scale.get("branch_eps_ratio"),
                 "output_lsb_per_input_lsb": add_scale.get("output_lsb_per_input_lsb"),
                 "input_lsb_per_output_lsb": add_scale.get("input_lsb_per_output_lsb"),
+                "branch_inputs": make_json_ready((id_add_audit["reports"].get("stage4.1.add") or {}).get("branch_inputs")),
             },
         },
         {
@@ -819,7 +1055,17 @@ def build_local_tap_records(
                     np.asarray(stage4_add_tensors["pre_requant_semantic"], dtype=np.float64),
                     np.asarray(stage4_add_tensors["post_requant_semantic"], dtype=np.float64),
                 ),
+                "branch_inputs": make_json_ready((id_add_audit["reports"].get("stage4.1.add") or {}).get("branch_inputs")),
             },
+        },
+        {
+            "label": "stage4.1.out_relu input",
+            "operator_name": "stage4.1.out_relu",
+            "fq_tensor": fq_next_input,
+            "id_tensor": np.asarray(id_probe["tensors"]["stage4_1_out_relu"], dtype=np.float64) * float(next_ctx.get("eps_out") or 1.0),
+            "operator_context": next_ctx,
+            "clip_bounds": None,
+            "factor_audit": {},
         },
         {
             "label": "global pool",
@@ -842,23 +1088,6 @@ def build_local_tap_records(
             "factor_audit": {
                 "outlier_channels": channel_outlier_report(fq_head),
             },
-        },
-        {
-            "label": "final outputs",
-            "operator_name": "head",
-            "fq_tensor": fq_output,
-            "id_tensor": np.asarray(semantic_output(id_probe["tensors"]["model_output"], "id"), dtype=np.float64),
-            "operator_context": {
-                "module_class": head_ctx.get("module_class"),
-                "eps_in": head_ctx.get("eps_in"),
-                "eps_out": final_eps,
-                "zero_point": None,
-                "mul": head_ctx.get("mul"),
-                "shift": head_ctx.get("shift"),
-                "D": head_ctx.get("D"),
-            },
-            "clip_bounds": None,
-            "factor_audit": {},
         },
     ]
 
@@ -975,66 +1204,72 @@ def build_models_for_policy(
     calib_samples: list[dict[str, Any]],
     spec: PolicySpec,
 ):
-    patch_integer_add_scale_selection(
+    with integer_add_scale_selection_scope(
         HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY,
         spec.integer_add_operator_overrides,
-    )
-
-    model_fp = prepare_model_fp(export_args, device)
-    dummy_input = torch.randn(
-        1,
-        export_args.input_channels,
-        export_args.height,
-        export_args.width,
-        device=device,
-    )
-
-    def build_quant_base():
-        model_quant = nemo.transform.quantize_pact(deepcopy(model_fp), dummy_input=dummy_input)
-        model_quant.to(device).eval()
-        repair_hybrid_follow_fused_quant_graph(model_quant)
-        model_quant.change_precision(bits=export_args.bits, scale_weights=True, scale_activations=True)
-        run_activation_calibration(model_quant, calib_samples)
-        activation_override_report = apply_activation_alpha_overrides(
-            model_quant,
-            spec.activation_overrides,
+    ):
+        model_fp = prepare_model_fp(export_args, device)
+        model_patch_report = apply_model_patch_overrides(
+            model_fp,
+            spec.model_patch_overrides,
         )
-        model_quant._sweep_activation_override_report = activation_override_report
-        return model_quant
+        dummy_input = torch.randn(
+            1,
+            export_args.input_channels,
+            export_args.height,
+            export_args.width,
+            device=device,
+        )
 
-    model_fq = build_quant_base()
+        def build_quant_base():
+            model_quant = nemo.transform.quantize_pact(deepcopy(model_fp), dummy_input=dummy_input)
+            model_quant.to(device).eval()
+            repair_hybrid_follow_fused_quant_graph(model_quant)
+            model_quant.change_precision(bits=export_args.bits, scale_weights=True, scale_activations=True)
+            run_activation_calibration(model_quant, calib_samples)
+            activation_override_report = apply_activation_alpha_overrides(
+                model_quant,
+                spec.activation_overrides,
+            )
+            model_quant._sweep_activation_override_report = activation_override_report
+            return model_quant
 
-    model_id = build_quant_base()
-    try:
-        model_id.reset_alpha_weights()
-    except Exception:
-        pass
-    repair_hybrid_follow_fused_quant_graph(model_id)
-    model_id.qd_stage(eps_in=export_args.eps_in)
-    repair_hybrid_follow_fused_quant_graph(model_id)
-    model_id.id_stage()
-    normalize_integer_requant_tensors(model_id)
-    conv_bias_report = integerize_deploy_conv_biases(
-        model_id,
-        policy_overrides=spec.conv_bias_overrides,
-        collect_reports=True,
-    )
-    model_id.eval()
+        model_fq = build_quant_base()
 
-    head_eps_in = resolve_hybrid_follow_head_input_eps(model_id)
-    context_map = tap_context_from_model(model_id, head_eps_in)
+        model_id = build_quant_base()
+        try:
+            model_id.reset_alpha_weights()
+        except Exception:
+            pass
+        repair_hybrid_follow_fused_quant_graph(model_id)
+        model_id.qd_stage(eps_in=export_args.eps_in)
+        repair_hybrid_follow_fused_quant_graph(model_id)
+        model_id.id_stage()
+        normalize_integer_requant_tensors(model_id)
+        conv_bias_report = integerize_deploy_conv_biases(
+            model_id,
+            default_scale_source=HYBRID_FOLLOW_CONV_BIAS_SCALE_SOURCE,
+            default_rounding_mode=HYBRID_FOLLOW_CONV_BIAS_ROUNDING,
+            policy_overrides=spec.conv_bias_overrides,
+            collect_reports=True,
+        )
+        model_id.eval()
 
-    return {
-        "model_fp": model_fp,
-        "model_fq": model_fq,
-        "model_id": model_id,
-        "head_eps_in": head_eps_in,
-        "context_map": context_map,
-        "conv_bias_report": conv_bias_report,
-        "activation_override_report": make_json_ready(
-            getattr(model_id, "_sweep_activation_override_report", [])
-        ),
-    }
+        head_eps_in = resolve_hybrid_follow_head_input_eps(model_id)
+        context_map = tap_context_from_model(model_id, head_eps_in)
+
+        return {
+            "model_fp": model_fp,
+            "model_fq": model_fq,
+            "model_id": model_id,
+            "head_eps_in": head_eps_in,
+            "context_map": context_map,
+            "conv_bias_report": conv_bias_report,
+            "model_patch_report": make_json_ready(model_patch_report),
+            "activation_override_report": make_json_ready(
+                getattr(model_id, "_sweep_activation_override_report", [])
+            ),
+        }
 
 
 def evaluate_policy_trial(
@@ -1173,6 +1408,25 @@ def evaluate_policy_trial(
         x_errors = [float(row["per_head_abs_error"]["x_abs_diff"]) for row in batch_rows if row["per_head_abs_error"]]
         size_errors = [float(row["per_head_abs_error"]["size_abs_diff"]) for row in batch_rows if row["per_head_abs_error"]]
         vis_errors = [float(row["per_head_abs_error"]["vis_conf_abs_diff"]) for row in batch_rows if row["per_head_abs_error"]]
+        fp_x_values = [
+            float(((row.get("stage_outputs") or {}).get("fp") or {}).get("decoded", {}).get("x_offset"))
+            for row in batch_rows
+            if ((row.get("stage_outputs") or {}).get("fp") or {}).get("decoded") is not None
+        ]
+        onnx_x_values = [
+            float(((row.get("stage_outputs") or {}).get("onnx") or {}).get("decoded", {}).get("x_offset"))
+            for row in batch_rows
+            if ((row.get("stage_outputs") or {}).get("onnx") or {}).get("decoded") is not None
+        ]
+        application_x_values = [
+            float(((row.get("stage_outputs") or {}).get("application") or {}).get("decoded", {}).get("x_offset"))
+            for row in batch_rows
+            if ((row.get("stage_outputs") or {}).get("application") or {}).get("decoded") is not None
+        ]
+        anti_collapse = {
+            "onnx": summarize_anti_collapse(fp_x_values, onnx_x_values),
+            "application": summarize_anti_collapse(fp_x_values, application_x_values),
+        }
 
         trial.update(
             {
@@ -1200,6 +1454,7 @@ def evaluate_policy_trial(
                         "deploy_vs_onnx_semantic_ok_count": len(batch_rows) - deploy_vs_onnx_warn_count,
                         "deploy_vs_onnx_warn_count": deploy_vs_onnx_warn_count,
                     },
+                    "anti_collapse": make_json_ready(anti_collapse),
                     "images": make_json_ready(batch_rows),
                     "onnx_path": str(onnx_path),
                 },
@@ -1209,14 +1464,12 @@ def evaluate_policy_trial(
     except Exception as exc:
         trial["error"] = f"{type(exc).__name__}: {exc}"
         return trial
-    finally:
-        patch_integer_add_scale_selection(HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY)
 
 
 def operator_from_first_bad(first_bad: dict[str, Any], requested_operator: str) -> str:
     if requested_operator != "auto":
         return requested_operator
-    return str(first_bad.get("operator_name") or "stage4.1.add")
+    return "stage4.1.add"
 
 
 def add_baseline_comparisons(trials: dict[str, dict[str, Any]], baseline_name: str) -> None:
@@ -1682,6 +1935,8 @@ def rank_candidates(
         vs_baseline = dataset.get("vs_baseline") or {}
         hard_agg = hard_case_dataset.get("aggregate") or {}
         hard_vs_baseline = hard_case_dataset.get("vs_baseline") or {}
+        anti_collapse = batch_report.get("anti_collapse") or {}
+        onnx_anti_collapse = anti_collapse.get("onnx") or {}
         ranked.append(
             {
                 "policy": policy_name,
@@ -1694,11 +1949,13 @@ def rank_candidates(
                 "hard_case_mean_score": hard_agg.get("score_mean"),
                 "hard_case_wins": int(hard_vs_baseline.get("wins") or 0),
                 "hard_case_losses": int(hard_vs_baseline.get("losses") or 0),
+                "onnx_anti_collapse": make_json_ready(onnx_anti_collapse),
             }
         )
     ranked.sort(
         key=lambda item: (
             item["target_mean_abs_diff"],
+            anti_collapse_sort_key(item.get("onnx_anti_collapse")),
             item["batch_mean_score"],
             -item["wins"],
             item["deploy_vs_onnx_warn_count"],
@@ -1793,11 +2050,14 @@ def make_recommendation(
     rep16_vs_baseline = selected_rep16.get("vs_baseline") or {}
     hard_agg = selected_hard.get("aggregate") or {}
     hard_vs_baseline = selected_hard.get("vs_baseline") or {}
+    baseline_anti = (((baseline.get("batch_report") or {}).get("anti_collapse") or {}).get("onnx") or {})
+    selected_anti = (((selected.get("batch_report") or {}).get("anti_collapse") or {}).get("onnx") or {})
 
     improved_local = top["target_mean_abs_diff"] < baseline_target_mean - 1e-12
     improved_rep16 = float(rep16_agg.get("score_mean") or 0.0) < baseline_mean - 1e-12
     non_losing_rep16 = int(rep16_vs_baseline.get("wins") or 0) >= int(rep16_vs_baseline.get("losses") or 0)
     deploy_matches_onnx = int(rep16_agg.get("deploy_vs_onnx_warn_count") or 0) == 0
+    improved_anti_collapse = anti_collapse_sort_key(selected_anti) <= anti_collapse_sort_key(baseline_anti)
 
     improved_hard_case = True
     non_losing_hard_case = True
@@ -1805,14 +2065,15 @@ def make_recommendation(
         improved_hard_case = float(hard_agg.get("score_mean") or 0.0) <= float(baseline_hard_mean) + 1e-12
         non_losing_hard_case = int(hard_vs_baseline.get("wins") or 0) >= int(hard_vs_baseline.get("losses") or 0)
 
-    if improved_local and improved_rep16 and non_losing_rep16 and improved_hard_case and non_losing_hard_case and deploy_matches_onnx:
+    if improved_local and improved_rep16 and non_losing_rep16 and improved_hard_case and non_losing_hard_case and deploy_matches_onnx and improved_anti_collapse:
         return {
             "action": "patch this single operator with this single policy",
             "operator_name": target_operator_name,
             "policy": top["policy"],
             "reason": (
                 f"{top['policy']} lowered the earliest local drift around {target_label or target_operator_name}, "
-                "improved rep16 mean final-output score, held the hard-case subset, and preserved deploy==ONNX."
+                "improved rep16 mean final-output score, improved or held x anti-collapse metrics, "
+                "held the hard-case subset, and preserved deploy==ONNX."
             ),
         }
 
@@ -1824,6 +2085,7 @@ def make_recommendation(
         and improved_hard_case
         and non_losing_hard_case
         and deploy_matches_onnx
+        and improved_anti_collapse
         and int(rep16_vs_baseline.get("wins") or 0) > int(rep16_vs_baseline.get("losses") or 0)
         and float(rep16_agg.get("score_mean") or 0.0) <= baseline_mean * 0.95
     )
@@ -1918,6 +2180,16 @@ def local_operator_sweep_markdown(
                     ),
                 ]
             )
+            add_scale = local.get("integer_add_scale_selection") or {}
+            if add_scale:
+                lines.append(
+                    "- stage4.1.add scale: eps_out=`{}` D=`{}` shift=`{}` mul=`{}`".format(
+                        add_scale.get("eps_out"),
+                        add_scale.get("D"),
+                        add_scale.get("shift"),
+                        add_scale.get("mul"),
+                    )
+                )
             if trial.get("search_context"):
                 lines.append(f"- search context: `{trial['search_context']}`")
             lines.extend(
@@ -1989,8 +2261,20 @@ def batch_score_compare_markdown(
 
     selected_name = recommendation.get("policy") or (ranking[0]["policy"] if ranking else baseline_name)
     selected_trial = trials.get(selected_name) or {}
+    anti_collapse = (selected_trial.get("batch_report") or {}).get("anti_collapse") or {}
+    onnx_anti_collapse = anti_collapse.get("onnx") or {}
     lines.extend(
         [
+            "",
+            "## Anti-Collapse (onnx vs fp x)",
+            "",
+            "- sign_flip_rate=`{}` corr=`{}` slope=`{}` collapsed_fraction=`{}` left_right_ordering_agreement=`{}`".format(
+                onnx_anti_collapse.get("sign_flip_rate"),
+                onnx_anti_collapse.get("correlation"),
+                onnx_anti_collapse.get("slope"),
+                onnx_anti_collapse.get("collapsed_fraction"),
+                onnx_anti_collapse.get("left_right_ordering_agreement"),
+            ),
             "",
             f"## Stage Table ({selected_name})",
             "",
@@ -2076,7 +2360,6 @@ def main() -> None:
     ensure_output_dir(output_dir, overwrite=args.overwrite)
 
     patch_model_to_graph_compat()
-    patch_integer_add_scale_selection(HYBRID_FOLLOW_INTEGER_ADD_SCALE_POLICY)
 
     device = torch.device("cpu")
     export_args = build_export_args(args, ckpt_path, calib_dir)
@@ -2123,7 +2406,7 @@ def main() -> None:
 
     baseline_first_bad = (baseline_trial.get("local_report") or {}).get("first_bad_tap") or {}
     operator_under_test = operator_from_first_bad(baseline_first_bad, args.operator)
-    target_label = baseline_first_bad.get("label")
+    target_label = "stage4.1.add post-requant"
     hard_case_names = select_hard_case_names(
         (baseline_trial.get("batch_report") or {}).get("images") or [],
         args.hard_case_count,
@@ -2131,7 +2414,7 @@ def main() -> None:
     attach_dataset_views_to_trial(baseline_trial, hard_case_names)
 
     reference_models = build_models_for_policy(export_args, device, calib_samples, baseline_spec)
-    activation_modules = [spec["activation_module"] for spec in ACTIVATION_REGION_SPECS.values()]
+    activation_modules = [ACTIVATION_REGION_SPECS["add_activation"]["activation_module"]]
     activation_sample_map = collect_module_output_samples(
         reference_models["model_fq"],
         calib_samples,
@@ -2149,16 +2432,6 @@ def main() -> None:
     ]
 
     group_configs = {
-        "conv1_activation": {
-            "operator_name": "stage4.1.conv1",
-            "target_label": "stage4.1.conv1",
-            "policy_names": {"current"},
-        },
-        "conv2_activation": {
-            "operator_name": "stage4.1.conv2",
-            "target_label": "stage4.1.conv2",
-            "policy_names": {"current"},
-        },
         "add_activation": {
             "operator_name": "stage4.1.add",
             "target_label": "stage4.1.add post-requant",
@@ -2174,18 +2447,19 @@ def main() -> None:
     specs_by_name: dict[str, PolicySpec] = {baseline_spec.name: baseline_spec}
     individual_specs: list[PolicySpec] = []
     activation_policy_catalog = {}
-    for region_key, region_spec in ACTIVATION_REGION_SPECS.items():
-        module = resolve_dotted_module(reference_models["model_fq"], region_spec["activation_module"])
-        policy_reports = activation_policy_reports(
-            activation_sample_map[region_spec["activation_module"]],
-            module,
-        )
-        activation_policy_catalog[region_key] = make_json_ready(policy_reports)
-        specs = build_activation_policy_specs(region_key, region_spec, policy_reports)
-        individual_specs.extend(specs)
-        for spec in specs:
-            specs_by_name[spec.name] = spec
-            group_configs[spec.group_name]["policy_names"].add(spec.name)
+    region_key = "add_activation"
+    region_spec = ACTIVATION_REGION_SPECS[region_key]
+    module = resolve_dotted_module(reference_models["model_fq"], region_spec["activation_module"])
+    policy_reports = activation_policy_reports(
+        activation_sample_map[region_spec["activation_module"]],
+        module,
+    )
+    activation_policy_catalog[region_key] = make_json_ready(policy_reports)
+    specs = build_activation_policy_specs(region_key, region_spec, policy_reports)
+    individual_specs.extend(specs)
+    for spec in specs:
+        specs_by_name[spec.name] = spec
+        group_configs[spec.group_name]["policy_names"].add(spec.name)
 
     add_scale_reports = build_add_scale_policy_reports(add_branch_samples, add_eps_in_list)
     add_scale_catalog = make_json_ready(add_scale_reports)
@@ -2214,8 +2488,6 @@ def main() -> None:
 
     group_rankings: dict[str, list[dict[str, Any]]] = {}
     selected_specs: dict[str, Optional[PolicySpec]] = {
-        "conv1_activation": None,
-        "conv2_activation": None,
         "add_activation": None,
         "add_scale": None,
     }
@@ -2232,11 +2504,62 @@ def main() -> None:
         if winner_name != "current":
             selected_specs[group_name] = specs_by_name[winner_name]
 
-    microblock_specs = build_microblock_specs(
-        selected_specs,
-        target_operator_name=operator_under_test,
-        target_label=target_label,
+    microblock_specs: list[PolicySpec] = []
+    add_activation_override = (
+        deepcopy(selected_specs["add_activation"].activation_overrides)
+        if selected_specs["add_activation"] is not None
+        else {}
     )
+    add_scale_override = (
+        deepcopy(selected_specs["add_scale"].integer_add_operator_overrides)
+        if selected_specs["add_scale"] is not None
+        else {}
+    )
+    if add_activation_override or add_scale_override:
+        microblock_specs.append(
+            PolicySpec(
+                name="microblock_add_only",
+                description="Patch stage4.1.add only with the current local winners.",
+                operator_name=operator_under_test,
+                family="microblock",
+                group_name="microblock",
+                target_label=target_label,
+                patched_regions=["add"],
+                activation_overrides=add_activation_override,
+                integer_add_operator_overrides=add_scale_override,
+                search_context={
+                    "add_activation_winner": None if selected_specs["add_activation"] is None else selected_specs["add_activation"].name,
+                    "add_scale_winner": None if selected_specs["add_scale"] is None else selected_specs["add_scale"].name,
+                },
+            )
+        )
+    matched_scale_ablation_spec = PolicySpec(
+        name="ablation_matched_scale_residual_add",
+        description="Local matched-scale residual add variant around stage4.1.add only.",
+        operator_name=operator_under_test,
+        family="architecture_ablation",
+        group_name="architecture_ablation",
+        target_label=target_label,
+        patched_regions=["add"],
+        activation_overrides=deepcopy(add_activation_override),
+        integer_add_operator_overrides={"stage4.1.add": "max_branch"},
+        search_context={"variant": "matched_scale_residual_add"},
+    )
+    architecture_ablation_trials: dict[str, dict[str, Any]] = {"current": baseline_trial}
+    architecture_ablation_trials[matched_scale_ablation_spec.name] = evaluate_policy_trial(
+        export_args,
+        device,
+        calib_samples,
+        matched_scale_ablation_spec,
+        known_bad_sample=known_bad_sample,
+        batch_samples=batch_samples,
+        application_map=application_map,
+        output_dir=output_dir,
+        thresholds=thresholds,
+        weights=weights,
+    )
+    attach_dataset_views_to_trial(architecture_ablation_trials[matched_scale_ablation_spec.name], hard_case_names)
+    add_baseline_comparisons(architecture_ablation_trials, baseline_name="current")
     microblock_trials: dict[str, dict[str, Any]] = {"current": baseline_trial}
     for spec in microblock_specs:
         microblock_trials[spec.name] = evaluate_policy_trial(
@@ -2268,16 +2591,10 @@ def main() -> None:
         target_label=target_label,
     )
 
-    training_command = (
-        "python train.py --model-type hybrid_follow "
-        f"--init-ckpt {ckpt_path.relative_to(PROJECT_DIR)} "
-        "--stage4-heads-only --quant-aware-finetune "
-        "--activation-range-regularization --output_dir training/hybrid_follow_qat_stage4_heads"
-    )
     training_branch = {
-        "enabled": True,
-        "triggered": recommendation.get("action") != "patch this single operator with this single policy",
-        "command": training_command,
+        "enabled": False,
+        "triggered": False,
+        "command": None,
     }
 
     local_payload = {
@@ -2289,6 +2606,7 @@ def main() -> None:
         "activation_policy_catalog": activation_policy_catalog,
         "add_scale_catalog": add_scale_catalog,
         "group_rankings": group_rankings,
+        "architecture_ablation": make_json_ready(architecture_ablation_trials),
         "groups": make_json_ready(
             {
                 group_name: {

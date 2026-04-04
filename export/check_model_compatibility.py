@@ -15,6 +15,9 @@ from typing import Any
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+EXPORTER_DIR = PROJECT_ROOT / "nemo"
+if str(EXPORTER_DIR) not in sys.path:
+    sys.path.insert(0, str(EXPORTER_DIR))
 
 
 @dataclass
@@ -74,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--model-type",
-        choices=["ssd", "hybrid_follow"],
+        choices=["ssd", "hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"],
         default="hybrid_follow",
     )
     parser.add_argument("--ckpt", type=str, default=None)
@@ -87,6 +90,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--eps-in", type=float, default=1.0 / 255.0)
     parser.add_argument("--stage", choices=["fp", "fq", "qd", "id"], default="id")
     parser.add_argument("--calib-dir", type=str, default=None)
+    parser.add_argument("--calib-manifest", type=str, default=None)
     parser.add_argument("--calib-tensor", type=str, default=None)
     parser.add_argument("--calib-batches", type=int, default=32)
     parser.add_argument(
@@ -136,6 +140,7 @@ def build_export_stage_args(args: argparse.Namespace) -> SimpleNamespace:
     return SimpleNamespace(
         model_type=args.model_type,
         calib_dir=args.calib_dir,
+        calib_manifest=args.calib_manifest,
         calib_tensor=args.calib_tensor,
         calib_batches=compat_batches,
         calib_seed=args.calib_seed,
@@ -156,14 +161,19 @@ def analyze_python_model(args: argparse.Namespace) -> ScopeReport:
 
     import nemo
 
+    from models.follow_model_factory import follow_model_kwargs_from_metadata
+    from utils.follow_task import is_follow_model_type
     from export_nemo_quant import (
         build_model,
         iter_calib_batches,
         load_checkpoint,
+        load_checkpoint_payload,
         maybe_convert_hybrid_follow_to_export_head,
         maybe_fuse_hybrid_follow_for_export,
+        maybe_fuse_quant_native_follow_for_export,
         normalize_integer_requant_tensors,
         patch_model_to_graph_compat,
+        prepare_quant_native_follow_qd,
         repair_hybrid_follow_fused_quant_graph,
     )
 
@@ -171,12 +181,21 @@ def analyze_python_model(args: argparse.Namespace) -> ScopeReport:
     image_size = (args.height, args.width)
     device = torch.device("cpu")
 
+    build_kwargs = {}
+    if is_follow_model_type(args.model_type) and args.ckpt:
+        build_kwargs = follow_model_kwargs_from_metadata(load_checkpoint_payload(args.ckpt, device))
     model = build_model(
         args.model_type,
         args.num_classes,
         args.width_mult,
         image_size,
         args.input_channels,
+        follow_head_type=build_kwargs.get("follow_head_type"),
+        stage4_variant=build_kwargs.get("stage4_variant"),
+        stage4_1_ablation=build_kwargs.get("stage4_variant", "none"),
+        stage_channels=build_kwargs.get("stage_channels"),
+        stem_channels=build_kwargs.get("stem_channels", 16),
+        stem_mode=build_kwargs.get("stem_mode"),
     )
     if args.ckpt:
         model = load_checkpoint(model, args.ckpt, device)
@@ -271,6 +290,7 @@ def analyze_python_model(args: argparse.Namespace) -> ScopeReport:
         "MaxPool1d",
         "MaxPool2d",
         "PACT_IntegerAdd",
+        "PassthroughAdd",
         "ReLU",
         "ReLU6",
     }
@@ -380,6 +400,7 @@ def analyze_python_model(args: argparse.Namespace) -> ScopeReport:
     try:
         export_model = maybe_fuse_hybrid_follow_for_export(model)
         export_model = maybe_convert_hybrid_follow_to_export_head(export_model)
+        export_model = maybe_fuse_quant_native_follow_for_export(export_model)
         export_model.to(device).eval()
         dummy_input = torch.randn(
             1,
@@ -412,9 +433,21 @@ def analyze_python_model(args: argparse.Namespace) -> ScopeReport:
             pass
 
         if args.stage in {"qd", "id"}:
+            qd_kwargs = {}
             if args.model_type == "hybrid_follow":
                 repair_hybrid_follow_fused_quant_graph(model_q)
-            model_q.qd_stage(eps_in=args.eps_in)
+            else:
+                compat_calib_samples = [
+                    {"tensor": tensor}
+                    for tensor in iter_calib_batches(compat_args, image_size, device)
+                ]
+                qd_kwargs.update(
+                    prepare_quant_native_follow_qd(
+                        model_q,
+                        calib_samples=compat_calib_samples,
+                    )
+                )
+            model_q.qd_stage(eps_in=args.eps_in, **qd_kwargs)
             report.add(
                 "info",
                 "PY.QD_STAGE_OK",

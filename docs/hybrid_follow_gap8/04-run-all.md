@@ -10,7 +10,7 @@ For `MODEL_TYPE=hybrid_follow`, the script does all of the following:
 2. Selects the best available `hybrid_follow` checkpoint for deployment.
 3. Selects a representative calibration image directory, preferring COCO validation images over diagnostic `top_fn` or `top_fp` folders.
 4. Runs a PyTorch compatibility preflight before export starts.
-5. Exports the model through `export_nemo_quant.py`.
+5. Exports the model through `nemo/export_nemo_quant.py`.
 6. Simplifies and cleans the ONNX for DORY.
 7. Runs an ONNX compatibility check on both the raw and DORY-clean graphs.
 8. Generates DORY IO artifacts and weight text dumps.
@@ -192,7 +192,7 @@ If no representative calibration images exist, the export falls back to random c
 
 ## Hybrid-Follow Export Notes
 
-The current repo-local export path is the one implemented in `export_nemo_quant.py` today.
+The current repo-local export path is the one implemented in `nemo/export_nemo_quant.py` today.
 
 Important consequences:
 
@@ -232,7 +232,7 @@ The most important success condition for deployment is that these files exist af
 After generation, the next step is:
 
 ```bash
-./run_aideck_val.sh
+./run_val.sh aideck
 ```
 
 That build-and-validate flow is documented in [05-run-aideck-val.md](05-run-aideck-val.md).

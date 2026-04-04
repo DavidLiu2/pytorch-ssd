@@ -13,6 +13,7 @@ from pathlib import Path, PureWindowsPath
 from statistics import mean, median
 from typing import Any
 
+import numpy as np
 import torch
 from PIL import Image, ImageDraw, ImageFont
 
@@ -21,7 +22,7 @@ PROJECT_DIR = SCRIPT_DIR.parent
 if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
 
-from inference_follow_demo import load_checkpoint as demo_load_checkpoint  # noqa: E402
+from inference_follow_demo import build_model_from_checkpoint  # noqa: E402
 from inference_follow_demo import preprocess_image as demo_preprocess_image  # noqa: E402
 from models.hybrid_follow_net import HybridFollowNet  # noqa: E402
 from visualize_hybrid_follow_prediction import (  # noqa: E402
@@ -98,7 +99,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--platform",
         default="gvsoc",
-        help="Platform forwarded to run_real_image_val.sh.",
+        help="Platform forwarded to the real-image validation script.",
     )
     parser.add_argument(
         "--annotations",
@@ -120,6 +121,16 @@ def parse_args() -> argparse.Namespace:
         "--python",
         default=None,
         help="Python interpreter used for the local stage-drift runs.",
+    )
+    parser.add_argument(
+        "--trace-layer-outputs",
+        action="store_true",
+        help="Enable per-layer GVSOC byte tracing during real-image validation.",
+    )
+    parser.add_argument(
+        "--layer-manifest",
+        default="export/hybrid_follow/gap8_layer_manifest.json",
+        help="Combined GAP8/DORY layer manifest used to decode runtime traces.",
     )
     return parser.parse_args()
 
@@ -214,8 +225,7 @@ def resolve_stage_drift_python(requested: str | Path | None) -> Path:
 
 def load_demo_model(ckpt_path: Path) -> tuple[HybridFollowNet, torch.device]:
     device = torch.device("cpu")
-    model = HybridFollowNet(input_channels=1, image_size=(128, 128)).to(device)
-    demo_load_checkpoint(model, ckpt_path, device)
+    model = build_model_from_checkpoint(ckpt_path, device)
     model.eval()
     return model, device
 
@@ -276,6 +286,8 @@ def run_stage_drift(
     onnx_path: Path,
     golden_path: Path,
     gvsoc_json_path: Path,
+    gvsoc_log_path: Path | None,
+    layer_manifest_path: Path | None,
     output_dir: Path,
 ) -> tuple[subprocess.CompletedProcess[str], dict[str, Any]]:
     cmd = [
@@ -294,9 +306,11 @@ def run_stage_drift(
         "--output-dir",
         str(output_dir),
         "--overwrite",
-        "--nemo-stage",
-        "skip",
     ]
+    if gvsoc_log_path is not None and gvsoc_log_path.is_file():
+        cmd.extend(["--gvsoc-log", str(gvsoc_log_path)])
+    if layer_manifest_path is not None and layer_manifest_path.is_file():
+        cmd.extend(["--layer-manifest", str(layer_manifest_path)])
     write_json(
         output_dir / "stage_drift.command.json",
         {
@@ -329,6 +343,8 @@ def run_real_image_validation(
     app_dir: Path,
     platform: str,
     limit: int | None,
+    trace_layer_outputs: bool,
+    layer_manifest: Path | None,
 ) -> subprocess.CompletedProcess[str]:
     run_script_wsl = to_wsl_path(run_script)
     command = [
@@ -349,6 +365,10 @@ def run_real_image_validation(
     ]
     if limit is not None:
         command.extend(["--limit", str(limit)])
+    if trace_layer_outputs:
+        command.extend(["--trace-layer-outputs"])
+    if layer_manifest is not None:
+        command.extend(["--layer-manifest", shlex.quote(to_wsl_path(layer_manifest))])
 
     return subprocess.run(
         ["wsl.exe", "bash", "-lc", " ".join(command)],
@@ -541,6 +561,137 @@ def summarize_metric(values: list[float]) -> dict[str, Any]:
     }
 
 
+def x_sign(value: float) -> int:
+    if value > 0.0:
+        return 1
+    if value < 0.0:
+        return -1
+    return 0
+
+
+def ordering_agreement(fp_values: np.ndarray, quantized_values: np.ndarray) -> float | None:
+    if fp_values.size < 2 or quantized_values.size != fp_values.size:
+        return None
+    agree = 0
+    total = 0
+    for left_idx in range(fp_values.size):
+        for right_idx in range(left_idx + 1, fp_values.size):
+            fp_delta = float(fp_values[left_idx] - fp_values[right_idx])
+            if abs(fp_delta) < 1e-9:
+                continue
+            quant_delta = float(quantized_values[left_idx] - quantized_values[right_idx])
+            total += 1
+            if x_sign(fp_delta) == x_sign(quant_delta):
+                agree += 1
+    if total == 0:
+        return None
+    return float(agree) / float(total)
+
+
+def summarize_anti_collapse(fp_values: list[float], quantized_values: list[float]) -> dict[str, Any]:
+    if not fp_values or not quantized_values or len(fp_values) != len(quantized_values):
+        return {
+            "count": 0,
+            "sign_flip_rate": None,
+            "correlation": None,
+            "slope": None,
+            "collapsed_fraction": None,
+            "left_right_ordering_agreement": None,
+        }
+
+    fp = np.asarray(fp_values, dtype=np.float64)
+    quant = np.asarray(quantized_values, dtype=np.float64)
+    sign_flip_rate = float(
+        sum(x_sign(float(fp_value)) != x_sign(float(quant_value)) for fp_value, quant_value in zip(fp, quant))
+    ) / float(len(fp))
+
+    correlation = None
+    if fp.size >= 2 and float(np.std(fp)) > 0.0 and float(np.std(quant)) > 0.0:
+        correlation = float(np.corrcoef(fp, quant)[0, 1])
+
+    slope = None
+    denom = float(np.dot(fp, fp))
+    if denom > 0.0:
+        slope = float(np.dot(fp, quant) / denom)
+
+    collapse_mask = np.abs(fp) > 0.5
+    collapsed_fraction = None
+    if np.any(collapse_mask):
+        collapsed_fraction = float(
+            np.mean(np.abs(quant[collapse_mask]) < 0.25)
+        )
+
+    return {
+        "count": int(fp.size),
+        "sign_flip_rate": sign_flip_rate,
+        "correlation": correlation,
+        "slope": slope,
+        "collapsed_fraction": collapsed_fraction,
+        "left_right_ordering_agreement": ordering_agreement(fp, quant),
+    }
+
+
+def pair_bucket_from_pairwise(pairwise: dict[str, Any]) -> tuple[str, float]:
+    ordered = [
+        ("fp_to_fq", "FP->FQ"),
+        ("fq_to_id", "FQ->ID"),
+        ("id_to_onnx", "ID/ONNX export"),
+        ("onnx_to_golden", "ID/ONNX export"),
+        ("golden_to_gvsoc", "golden->GVSOC runtime"),
+    ]
+    for key, bucket in ordered:
+        report = pairwise.get(key) or {}
+        if report.get("status") != "warn":
+            continue
+        decoded = report.get("decoded_abs_diff") or {}
+        severity = float(
+            decoded.get("x_offset", 0.0)
+            + decoded.get("size_proxy", 0.0)
+            + decoded.get("visibility_confidence", 0.0)
+        )
+        return bucket, severity
+    return "none", 0.0
+
+
+def summarize_dominant_issue(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    buckets = {
+        "FP->FQ": {"count": 0, "severity_values": []},
+        "FQ->ID": {"count": 0, "severity_values": []},
+        "ID/ONNX export": {"count": 0, "severity_values": []},
+        "golden->GVSOC runtime": {"count": 0, "severity_values": []},
+        "none": {"count": 0, "severity_values": []},
+    }
+    for row in rows:
+        bucket, severity = pair_bucket_from_pairwise(row.get("pairwise") or {})
+        buckets[bucket]["count"] += 1
+        buckets[bucket]["severity_values"].append(float(severity))
+
+    summary_buckets = {}
+    dominant_bucket = "none"
+    dominant_rank = (-1, -1.0)
+    for bucket, payload in buckets.items():
+        values = [float(value) for value in payload["severity_values"]]
+        mean_severity = float(np.mean(values)) if values else 0.0
+        summary_buckets[bucket] = {
+            "count": int(payload["count"]),
+            "mean_severity": mean_severity if values else None,
+        }
+        if bucket == "none":
+            continue
+        rank = (int(payload["count"]), float(mean_severity))
+        if rank > dominant_rank:
+            dominant_rank = rank
+            dominant_bucket = bucket
+
+    if dominant_rank[0] <= 0:
+        dominant_bucket = "none"
+
+    return {
+        "dominant_bucket": dominant_bucket,
+        "buckets": summary_buckets,
+    }
+
+
 def write_summary_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     fieldnames = [
         "index",
@@ -633,6 +784,9 @@ def build_markdown_summary(summary: dict[str, Any]) -> str:
     metric_demo_vs_app = summary["metrics"]["demo_vs_gvsoc"]
     metric_pytorch_vs_onnx = summary["metrics"]["pytorch_vs_onnx"]
     metric_onnx_vs_gvsoc = summary["metrics"]["onnx_vs_gvsoc"]
+    anti_collapse = summary["metrics"].get("anti_collapse") or {}
+    dominant_issue = summary["metrics"].get("dominant_issue") or {}
+    runtime_first_mismatch = summary["metrics"].get("runtime_first_mismatch") or {}
 
     lines = [
         "# Hybrid Follow Application vs Checkpoint",
@@ -662,11 +816,63 @@ def build_markdown_summary(summary: dict[str, Any]) -> str:
             f"gt0.10={metric_onnx_vs_gvsoc['count_gt_0_10']}/{metric_onnx_vs_gvsoc['count']}"
         ),
         "",
-        "## Per Image",
+        "## Anti-Collapse (x)",
         "",
-        "| image | demo x | pytorch x | onnx x | application x | |demo-app| | drift onset |",
-        "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
     ]
+
+    for stage_name in ("fq", "id", "onnx", "gvsoc"):
+        stage_metrics = anti_collapse.get(stage_name) or {}
+        if not stage_metrics or not stage_metrics.get("count"):
+            lines.append(f"- {stage_name}: unavailable")
+            continue
+        correlation = stage_metrics.get("correlation")
+        slope = stage_metrics.get("slope")
+        collapsed_fraction = stage_metrics.get("collapsed_fraction")
+        lines.append(
+            "- {}: sign_flip_rate={} corr={} slope={} collapsed_fraction={} left_right_ordering_agreement={}".format(
+                stage_name,
+                "n/a" if stage_metrics.get("sign_flip_rate") is None else f"{float(stage_metrics['sign_flip_rate']):.3f}",
+                "n/a" if correlation is None else f"{float(correlation):.3f}",
+                "n/a" if slope is None else f"{float(slope):.3f}",
+                "n/a" if collapsed_fraction is None else f"{float(collapsed_fraction):.3f}",
+                "n/a"
+                if stage_metrics.get("left_right_ordering_agreement") is None
+                else f"{float(stage_metrics['left_right_ordering_agreement']):.3f}",
+            )
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Dominant Issue",
+            "",
+            f"- Dominant bucket: `{dominant_issue.get('dominant_bucket')}`",
+            "",
+            "## Runtime First Mismatch",
+            "",
+            f"- Samples with a deployed layer mismatch: `{runtime_first_mismatch.get('count')}`",
+        ]
+    )
+    for bucket_name, bucket_payload in (dominant_issue.get("buckets") or {}).items():
+        lines.append(
+            "- {}: count={} mean_severity={}".format(
+                bucket_name,
+                int(bucket_payload.get("count") or 0),
+                "n/a"
+                if bucket_payload.get("mean_severity") is None
+                else f"{float(bucket_payload['mean_severity']):.6f}",
+            )
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Per Image",
+            "",
+            "| image | demo x | pytorch x | onnx x | application x | |demo-app| | drift onset |",
+            "| --- | ---: | ---: | ---: | ---: | ---: | --- |",
+        ]
+    )
 
     for row in summary["results"]:
         lines.append(
@@ -707,6 +913,7 @@ def main() -> int:
     run_script = resolve_repo_path(args.run_script)
     app_dir = resolve_repo_path(args.app_dir)
     annotations_path = resolve_repo_path(args.annotations)
+    layer_manifest_path = resolve_repo_path(args.layer_manifest)
     python_exe = resolve_stage_drift_python(args.python)
 
     if ckpt_path is None or not ckpt_path.is_file():
@@ -742,6 +949,8 @@ def main() -> int:
         app_dir=app_dir,
         platform=args.platform,
         limit=args.limit,
+        trace_layer_outputs=bool(args.trace_layer_outputs),
+        layer_manifest=layer_manifest_path,
     )
     (results_dir / "run_real_image_val.stdout.txt").write_text(validation_result.stdout, encoding="utf-8")
     (results_dir / "run_real_image_val.stderr.txt").write_text(validation_result.stderr, encoding="utf-8")
@@ -749,7 +958,7 @@ def main() -> int:
     validation_summary_path = application_validation_dir / "summary.json"
     if not validation_summary_path.is_file():
         raise FileNotFoundError(
-            f"Validation summary not found after run_real_image_val.sh completed: {validation_summary_path}"
+            f"Validation summary not found after the real-image validation script completed: {validation_summary_path}"
         )
     validation_summary = json.loads(validation_summary_path.read_text(encoding="utf-8"))
     validation_rows = validation_summary.get("results", [])
@@ -787,15 +996,19 @@ def main() -> int:
             onnx_path=onnx_path,
             golden_path=golden_path,
             gvsoc_json_path=gvsoc_json_path,
+            gvsoc_log_path=(sample_dir / "run_aideck_val.log"),
+            layer_manifest_path=layer_manifest_path if layer_manifest_path is not None and layer_manifest_path.is_file() else None,
             output_dir=stage_drift_dir,
         )
 
         stages = stage_drift_report["stages"]
-        pytorch_stage = compact_stage(stages.get("pytorch"))
+        fp_stage = compact_stage(stages.get("fp") or stages.get("pytorch"))
+        fq_stage = compact_stage(stages.get("fq"))
+        id_stage = compact_stage(stages.get("id"))
         onnx_stage = compact_stage(stages.get("onnx"))
         gvsoc_stage = compact_stage(stages.get("gvsoc"))
         golden_stage = compact_stage(stages.get("golden"))
-        if pytorch_stage is None or onnx_stage is None or gvsoc_stage is None or golden_stage is None:
+        if fp_stage is None or fq_stage is None or id_stage is None or onnx_stage is None or gvsoc_stage is None or golden_stage is None:
             raise RuntimeError(f"Missing required stages in {stage_drift_dir / 'stage_drift_report.json'}")
 
         comparison_overlay_path = comparison_overlay_dir / f"{index:04d}_{sanitize_name(image_path.stem)}.png"
@@ -804,7 +1017,7 @@ def main() -> int:
             output_path=comparison_overlay_path,
             annotations_path=annotations_path,
             checkpoint_demo=checkpoint_demo,
-            pytorch_stage=pytorch_stage,
+            pytorch_stage=fp_stage,
             onnx_stage=onnx_stage,
             application_stage=gvsoc_stage,
             drift_message=stage_drift_report["drift_onset"]["message"],
@@ -812,12 +1025,12 @@ def main() -> int:
         overlay_paths.append(comparison_overlay_path)
 
         x_abs_diff = {
-            "demo_vs_pytorch": abs(checkpoint_demo["x_offset"] - clamp_unit(pytorch_stage["x_offset_raw"])),
+            "demo_vs_pytorch": abs(checkpoint_demo["x_offset"] - clamp_unit(fp_stage["x_offset_raw"])),
             "demo_vs_onnx": abs(checkpoint_demo["x_offset"] - clamp_unit(onnx_stage["x_offset_raw"])),
             "demo_vs_gvsoc": abs(checkpoint_demo["x_offset"] - clamp_unit(gvsoc_stage["x_offset_raw"])),
-            "pytorch_vs_onnx": abs(float(pytorch_stage["x_offset_raw"]) - float(onnx_stage["x_offset_raw"])),
+            "pytorch_vs_onnx": abs(float(fp_stage["x_offset_raw"]) - float(onnx_stage["x_offset_raw"])),
             "onnx_vs_gvsoc": abs(float(onnx_stage["x_offset_raw"]) - float(gvsoc_stage["x_offset_raw"])),
-            "pytorch_vs_gvsoc": abs(float(pytorch_stage["x_offset_raw"]) - float(gvsoc_stage["x_offset_raw"])),
+            "pytorch_vs_gvsoc": abs(float(fp_stage["x_offset_raw"]) - float(gvsoc_stage["x_offset_raw"])),
         }
 
         result_row = {
@@ -831,13 +1044,17 @@ def main() -> int:
             "comparison_overlay_path": str(comparison_overlay_path),
             "checkpoint_demo": checkpoint_demo,
             "stage_outputs": {
-                "pytorch": pytorch_stage,
+                "pytorch": fp_stage,
+                "fp": fp_stage,
+                "fq": fq_stage,
+                "id": id_stage,
                 "onnx": onnx_stage,
                 "golden": golden_stage,
                 "gvsoc": gvsoc_stage,
             },
             "drift_onset": stage_drift_report["drift_onset"],
             "pairwise": stage_drift_report["pairwise"],
+            "runtime_layer_compare": stage_drift_report.get("runtime_layer_compare"),
             "x_abs_diff": x_abs_diff,
             "gt_x_offset": overlay_metadata["gt_x_offset"],
             "gt_size_proxy": overlay_metadata["gt_size_proxy"],
@@ -855,6 +1072,38 @@ def main() -> int:
         "onnx_vs_gvsoc": summarize_metric([row["x_abs_diff"]["onnx_vs_gvsoc"] for row in results]),
         "pytorch_vs_gvsoc": summarize_metric([row["x_abs_diff"]["pytorch_vs_gvsoc"] for row in results]),
     }
+    fp_values = [float(row["stage_outputs"]["fp"]["x_offset_raw"]) for row in results]
+    metrics["anti_collapse"] = {
+        "fq": summarize_anti_collapse(
+            fp_values,
+            [float(row["stage_outputs"]["fq"]["x_offset_raw"]) for row in results],
+        ),
+        "id": summarize_anti_collapse(
+            fp_values,
+            [float(row["stage_outputs"]["id"]["x_offset_raw"]) for row in results],
+        ),
+        "onnx": summarize_anti_collapse(
+            fp_values,
+            [float(row["stage_outputs"]["onnx"]["x_offset_raw"]) for row in results],
+        ),
+        "gvsoc": summarize_anti_collapse(
+            fp_values,
+            [float(row["stage_outputs"]["gvsoc"]["x_offset_raw"]) for row in results],
+        ),
+    }
+    runtime_first_mismatches = [
+        {
+            "image_name": row["image_name"],
+            "first_divergent_layer": (row.get("runtime_layer_compare") or {}).get("first_divergent_layer"),
+        }
+        for row in results
+        if (row.get("runtime_layer_compare") or {}).get("first_divergent_layer") is not None
+    ]
+    metrics["runtime_first_mismatch"] = {
+        "count": len(runtime_first_mismatches),
+        "images": runtime_first_mismatches,
+    }
+    metrics["dominant_issue"] = summarize_dominant_issue(results)
 
     contact_sheet_path = results_dir / "comparison_contact_sheet.png"
     build_contact_sheet(overlay_paths, contact_sheet_path)

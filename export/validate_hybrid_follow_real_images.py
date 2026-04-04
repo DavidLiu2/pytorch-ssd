@@ -59,10 +59,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--run-script",
-        default="run_aideck_val.sh",
-        help="Path to the existing AI-deck validation script.",
+        default="tools/run_aideck_val_impl.sh",
+        help="Path to the AI-Deck validation script.",
     )
-    parser.add_argument("--platform", default="gvsoc", help="Validation platform passed to run_aideck_val.sh.")
+    parser.add_argument("--platform", default="gvsoc", help="Validation platform passed to the AI-Deck validation script.")
     parser.add_argument("--limit", type=int, default=None, help="Optional maximum number of images to run.")
     parser.add_argument(
         "--overwrite",
@@ -124,6 +124,22 @@ def parse_args() -> argparse.Namespace:
         default="skip",
         choices=["auto", "skip", "fq", "qd", "id"],
         help="Optional in-memory NEMO stage used by the stage-drift tool.",
+    )
+    parser.add_argument(
+        "--trace-layer-outputs",
+        action="store_true",
+        help="Enable per-layer GVSOC byte tracing for targeted debug runs.",
+    )
+    parser.add_argument(
+        "--trace-layer-output-bytes-per-line",
+        type=int,
+        default=64,
+        help="Chunk size for per-layer GVSOC byte trace lines.",
+    )
+    parser.add_argument(
+        "--layer-manifest",
+        default="export/hybrid_follow/gap8_layer_manifest.json",
+        help="Combined GAP8/DORY layer manifest used to decode runtime traces.",
     )
     return parser.parse_args()
 
@@ -197,6 +213,9 @@ def run_validation_case(
     input_hex: Path,
     gvsoc_log_copy: Path,
     platform: str,
+    trace_layer_outputs: bool,
+    trace_layer_output_bytes_per_line: int,
+    layer_manifest: Path | None,
 ) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["HOST_APP_DIR"] = str(app_dir)
@@ -206,6 +225,10 @@ def run_validation_case(
     env["RUN_LOG_NAME"] = "run_gvsoc.log"
     env["PLATFORM"] = platform
     env["VERIFY_AFTER_RUN"] = "1"
+    env["HOST_TRACE_LAYER_OUTPUTS"] = "1" if trace_layer_outputs else "0"
+    env["HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE"] = str(trace_layer_output_bytes_per_line)
+    if layer_manifest is not None:
+        env["HOST_LAYER_MANIFEST"] = str(layer_manifest)
     shell_script = run_script.name if os.name == "nt" else str(run_script)
 
     return subprocess.run(
@@ -246,6 +269,8 @@ def run_stage_drift_case(
     output_dir: Path,
     nemo_stage: str,
     gvsoc_json: Path | None = None,
+    gvsoc_log: Path | None = None,
+    layer_manifest: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
     cmd = [
         str(stage_drift_python),
@@ -266,6 +291,10 @@ def run_stage_drift_case(
     ]
     if gvsoc_json is not None and gvsoc_json.is_file():
         cmd.extend(["--gvsoc-json", str(gvsoc_json)])
+    if gvsoc_log is not None and gvsoc_log.is_file():
+        cmd.extend(["--gvsoc-log", str(gvsoc_log)])
+    if layer_manifest is not None and layer_manifest.is_file():
+        cmd.extend(["--layer-manifest", str(layer_manifest)])
     return subprocess.run(
         cmd,
         cwd=str(PROJECT_DIR),
@@ -345,6 +374,7 @@ def main() -> int:
     app_dir = (PROJECT_DIR / args.app_dir).resolve()
     run_script = (PROJECT_DIR / args.run_script).resolve()
     onnx_path = (PROJECT_DIR / args.onnx).resolve()
+    layer_manifest = (PROJECT_DIR / args.layer_manifest).resolve() if args.layer_manifest else None
     stage_drift_python = resolve_stage_drift_python(args.stage_drift_python) if args.stage_drift else None
     stage_drift_ckpt = (PROJECT_DIR / args.stage_drift_ckpt).resolve() if args.stage_drift else None
 
@@ -390,6 +420,9 @@ def main() -> int:
             input_hex=Path(artifacts.input_hex),
             gvsoc_log_copy=gvsoc_log_path,
             platform=args.platform,
+            trace_layer_outputs=bool(args.trace_layer_outputs),
+            trace_layer_output_bytes_per_line=int(args.trace_layer_output_bytes_per_line),
+            layer_manifest=layer_manifest,
         )
         runner_log_path.write_text(result.stdout + result.stderr, encoding="utf-8")
 
@@ -433,7 +466,7 @@ def main() -> int:
             status = "fail"
 
         if result.returncode != 0 and status == "pass":
-            mismatch = "run_aideck_val.sh returned a non-zero exit code."
+            mismatch = "The AI-Deck validation script returned a non-zero exit code."
             status = "fail"
 
         elapsed_seconds = time.time() - case_start
@@ -472,6 +505,8 @@ def main() -> int:
                 output_dir=stage_drift_dir,
                 nemo_stage=args.stage_drift_nemo_stage,
                 gvsoc_json=actual_tensor_path if actual_tensor_path.is_file() else None,
+                gvsoc_log=gvsoc_log_path if gvsoc_log_path.is_file() else None,
+                layer_manifest=layer_manifest if layer_manifest is not None and layer_manifest.is_file() else None,
             )
             stage_drift_status = "ok" if drift_result.returncode == 0 else "fail"
             if drift_result.returncode != 0:

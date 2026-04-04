@@ -15,12 +15,14 @@ PATCH_TEMPLATE_FILES = (
     "inc/app_config.h",
     "inc/pulp_nn_kernels.h",
     "inc/printf.h",
-    "src/network.c",
     "src/pulp_nn_add.c",
     "src/pulp_nn_conv_Ho_parallel.c",
     "src/pulp_nn_linear_out_32.c",
     "src/pulp_nn_matmul.c",
     "src/pulp_nn_utils.c",
+)
+
+OPTIONAL_GENERATED_TEMPLATE_FILES = (
     "src/Convolution1.c",
     "src/Convolution3.c",
     "src/Convolution6.c",
@@ -33,14 +35,6 @@ PATCH_TEMPLATE_FILES = (
     "src/Convolution22.c",
     "src/Convolution24.c",
     "src/Convolution27.c",
-    "src/ReluQAddition4.c",
-    "src/ReluQAddition7.c",
-    "src/ReluQAddition11.c",
-    "src/ReluQAddition14.c",
-    "src/ReluQAddition18.c",
-    "src/ReluQAddition21.c",
-    "src/ReluQAddition25.c",
-    "src/ReluQAddition28.c",
 )
 
 
@@ -89,8 +83,17 @@ def restore_template_patch_files(app_dir: Path, template_app_dir: Path) -> list[
         target_path = app_dir / rel_path
         if not source_path.exists():
             raise FileNotFoundError(f"Missing template runtime file: {source_path}")
-        if not target_path.exists():
-            raise FileNotFoundError(f"Missing generated runtime file: {target_path}")
+        expected = source_path.read_bytes()
+        current = target_path.read_bytes() if target_path.exists() else None
+        if current != expected:
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            target_path.write_bytes(expected)
+            changed.append(str(target_path))
+    for rel_path in OPTIONAL_GENERATED_TEMPLATE_FILES:
+        source_path = template_app_dir / rel_path
+        target_path = app_dir / rel_path
+        if not source_path.exists() or not target_path.exists():
+            continue
         expected = source_path.read_bytes()
         current = target_path.read_bytes()
         if current != expected:
@@ -99,13 +102,25 @@ def restore_template_patch_files(app_dir: Path, template_app_dir: Path) -> list[
     return changed
 
 
+def patch_network_source(app_dir: Path) -> list[str]:
+    path = app_dir / "src" / "network.c"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing generated network source: {path}")
+    current = path.read_text(encoding="utf-8")
+    updated = current.replace("unsigned int args[4];", "unsigned int args[5];")
+    if updated == current:
+        return []
+    path.write_bytes(updated.replace("\n", "\r\n").encode("utf-8"))
+    return [str(path)]
+
+
 def rewrite_add_wrappers(app_dir: Path) -> list[str]:
     changed = []
     for layer_id, (helper_name, x2_type, num_elements) in sorted(RAW_WRAPPERS.items()):
         path = app_dir / "src" / f"ReluQAddition{layer_id}.c"
-        expected = wrapper_source(layer_id, helper_name, x2_type, num_elements)
         if not path.exists():
-            raise FileNotFoundError(f"Missing generated wrapper: {path}")
+            continue
+        expected = wrapper_source(layer_id, helper_name, x2_type, num_elements)
         current = path.read_text(encoding="utf-8")
         if current != expected:
             path.write_bytes(expected.replace("\n", "\r\n").encode("utf-8"))
@@ -129,6 +144,11 @@ def verify_runtime_patch_set(app_dir: Path) -> dict:
     inc_dir = app_dir / "inc"
 
     errors: list[str] = []
+    active_raw_wrapper_layers = sorted(
+        layer_id
+        for layer_id in RAW_WRAPPERS
+        if (src_dir / f"ReluQAddition{layer_id}.c").exists()
+    )
 
     errors.extend(
         verify_file_contains(
@@ -179,7 +199,8 @@ def verify_runtime_patch_set(app_dir: Path) -> dict:
         )
     )
 
-    for layer_id, (helper_name, _x2_type, _num_elements) in sorted(RAW_WRAPPERS.items()):
+    for layer_id in active_raw_wrapper_layers:
+        helper_name, _x2_type, _num_elements = RAW_WRAPPERS[layer_id]
         errors.extend(
             verify_file_contains(
                 src_dir / f"ReluQAddition{layer_id}.c",
@@ -197,7 +218,7 @@ def verify_runtime_patch_set(app_dir: Path) -> dict:
 
     return {
         "application_dir": str(app_dir),
-        "raw_wrapper_layers": sorted(RAW_WRAPPERS.keys()),
+        "raw_wrapper_layers": active_raw_wrapper_layers,
         "errors": errors,
         "ok": not errors,
     }
@@ -237,6 +258,7 @@ def main() -> int:
     changed_files: list[str] = []
     if not args.check_only:
         changed_files.extend(restore_template_patch_files(app_dir, template_app_dir))
+        changed_files.extend(patch_network_source(app_dir))
         changed_files.extend(rewrite_add_wrappers(app_dir))
         changed_files = sorted(set(changed_files))
 

@@ -1,0 +1,1806 @@
+{
+  "count": 128,
+  "calib_dir": "data/rep_images",
+  "calib_tensor": null,
+  "calib_batches_requested": 128,
+  "calib_seed": 0,
+  "source_kinds": [
+    "calib_dir_image"
+  ],
+  "aggregate_checksum_sha256": "866b51ee2859ef510df26d85477acc5dd7d5264fc94d8a535e2f4a844414a41d",
+  "samples": [
+    {
+      "index": 0,
+      "source": "data/rep_images/rep_0225_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0225_c1.png",
+      "source_checksum_sha256": "3f3e4a6813c1aed4a0fd3052b6fa204420723a487bb2ba0bfea2a4cea0d1341f",
+      "tensor_checksum_sha256": "d6b8d65777738dcf0a12243d85d730b62be18f60f73102082715f0fedf0e9e0c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 1,
+      "source": "data/rep_images/rep_0051_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0051_c1.png",
+      "source_checksum_sha256": "69bcaa7a451d2627afb0064d4968c77e58e8c7ba50a93e01a0aadcc439079aff",
+      "tensor_checksum_sha256": "916b3a609ecb3fb5d09f6ac7b061b53caf929a7a4c112231171d8828eb1a352a",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 2,
+      "source": "data/rep_images/rep_0030_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0030_c1.png",
+      "source_checksum_sha256": "66152d0dd9c5c10c5c6408142b868f13906f0e3c0430f9351808f8c3ca8f2cb1",
+      "tensor_checksum_sha256": "10aa1840ae69957045b34a0f3e5f6f45b7414acf9d2f6b97fd1bfe2b941326a6",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 3,
+      "source": "data/rep_images/rep_0025_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0025_c2.png",
+      "source_checksum_sha256": "8267739888b9bb2127e7c6f5dc9caebce1c41bc3f05b54c45078d560b8a7b4ba",
+      "tensor_checksum_sha256": "7945f1442cba16e1677b3718b3f40425df9ceb195c05c177b64b64453589c0d7",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 4,
+      "source": "data/rep_images/rep_0097_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0097_c1.png",
+      "source_checksum_sha256": "7ad4bc8e2db5f8283877ed97a336d56d6ce6ca2a9a8bc6b1c5de08a1921f6c16",
+      "tensor_checksum_sha256": "e26e985bb08eb63135223842df1ad3190680d98f27450c4efee7e7c77cd8d24c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 5,
+      "source": "data/rep_images/rep_0335_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0335_c1.png",
+      "source_checksum_sha256": "2116fed061c03acd1d6318bacf191beb95570ced87485de2d29b0d7065e3033b",
+      "tensor_checksum_sha256": "25ff92e2163d33a599b8cb817bbb3d5462bc9768cd0b59ae3fbae301d64f7b96",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 6,
+      "source": "data/rep_images/rep_0381.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0381.png",
+      "source_checksum_sha256": "198fe7c30f0fe7c194a7a717a45bac65106bd574f909fadb061fb6026bafbefb",
+      "tensor_checksum_sha256": "4493f2bf83c8fd3c93b594b5a413940b868c48d9ef81a5f499fe5c8d3306ec38",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 7,
+      "source": "data/rep_images/rep_0160.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0160.png",
+      "source_checksum_sha256": "a9ac985766509231ffb98ee1a51d8207ca2940b986ad7f058c6ae124e6fa41e6",
+      "tensor_checksum_sha256": "0324339e835407eaec59acbecc3cf281dd2436f1b565bc6cfc7ecd81e2473c3c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 8,
+      "source": "data/rep_images/rep_0204_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0204_c1.png",
+      "source_checksum_sha256": "4e5f558fac2a5ff09c79a768fcde47832053b305a8244e0782b372111f5fe663",
+      "tensor_checksum_sha256": "79bf0c79e697291e6778c5c7c12fcbe90dc3ddf380141a1a7c6170b382eb5f27",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 9,
+      "source": "data/rep_images/rep_0063_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0063_c1.png",
+      "source_checksum_sha256": "5520116e77a5b8e68bf48e65dd77d6e99d1b181bb2322546565e81ba28ac7829",
+      "tensor_checksum_sha256": "bafabfc2cf7b0727ea03d5c6e5293511c650af8bb05d01e2f975255b35406008",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 10,
+      "source": "data/rep_images/rep_0158_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0158_c1.png",
+      "source_checksum_sha256": "b9a8c2fe1050a375befc13f1b93cbe27181f31cdd5ed285a96337ddae0917029",
+      "tensor_checksum_sha256": "16eefbb524f30b92e9721223e77e3aff2a90564774469a53649f03fa23897b46",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 11,
+      "source": "data/rep_images/rep_0139_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0139_c1.png",
+      "source_checksum_sha256": "326e2541d0bead54bc83dd1836a944bb63c2b36f8c39a017c2f3279dadd41dc9",
+      "tensor_checksum_sha256": "daf72e9f3d82755815a4e8aeff4a978a742684dd18a44eeb489e74a8c726f4ab",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 12,
+      "source": "data/rep_images/rep_0291_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0291_c1.png",
+      "source_checksum_sha256": "e8cba598da363bd6b753158f28736be0a81dfe4614aa227505755a16e281198f",
+      "tensor_checksum_sha256": "9d0e02c6d82690f6037445bbd07e7649b3e9dd696f2a3ff4150eca0e7f8d764e",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 13,
+      "source": "data/rep_images/rep_0002_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0002_c1.png",
+      "source_checksum_sha256": "f77eb7511b783352da25536722bf50add4b1df62a8ae2c817e38d43ba9c0497d",
+      "tensor_checksum_sha256": "7a2c02e310d9564e618a552178fcc4cb7985db7096028d4ae601cd30032a2db5",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 14,
+      "source": "data/rep_images/rep_0178.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0178.png",
+      "source_checksum_sha256": "63d036b06f1f8461c0d4053b5a981ea5d20b4e682059d8520daf0d604a6d9eeb",
+      "tensor_checksum_sha256": "43906a35d2db74e2f8c6c935071ee6998ccf7752b1aab1abd1eca0dfb8c4ba2e",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 15,
+      "source": "data/rep_images/rep_0199.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0199.png",
+      "source_checksum_sha256": "555cffccd30a495c2344379dad548d3999541acf9c8553994576acabd2f45d6b",
+      "tensor_checksum_sha256": "f72b772f9b040eb4baa09c1c080d0df00d479393c88e562df162469653608205",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 16,
+      "source": "data/rep_images/rep_0034.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0034.png",
+      "source_checksum_sha256": "e56f6c32c2914d22bf272bda3a714f7642ec372771a84d10db59adc4a6bd4209",
+      "tensor_checksum_sha256": "e023588be40db90fa8e91e5098ac832e4575ad7a94675f52ceacd69b4b7a2f88",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 17,
+      "source": "data/rep_images/rep_0077_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0077_c1.png",
+      "source_checksum_sha256": "d44a9c1b19e6b5f563adc9eaf069498f928624e6f1b9670cc522e5c20cf6643d",
+      "tensor_checksum_sha256": "cc7cf010504874de2a22f4c69714b7bfe416358b9060b55a819a1721ccd83851",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 18,
+      "source": "data/rep_images/rep_0009_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0009_c1.png",
+      "source_checksum_sha256": "5d2815a7f0a9fa4ff312b311212f25e36033ddc50cfbccda5563b4482841c260",
+      "tensor_checksum_sha256": "e617d3fd35aaca5fde675d7c4898ddde94c49178d88def88229514b799c12460",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 19,
+      "source": "data/rep_images/rep_0175_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0175_c2.png",
+      "source_checksum_sha256": "3ab13d4c98357654973aed0703c4d9d561740f67ef7a654a85de93b1d95369aa",
+      "tensor_checksum_sha256": "50666027a05ef2e1841d62129c1a8484bd8031cbe7b533f59273c2f28b263d62",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 20,
+      "source": "data/rep_images/rep_0018.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0018.png",
+      "source_checksum_sha256": "a4caee91def8e1b2e97b9a9d1ee5a4163463a8f2cbe6e9a345173b4eb2d24a16",
+      "tensor_checksum_sha256": "07dca821fde55629efc4f7d13a6f7c28b7bdffd3268f7f0aec9bb27e90cab712",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 21,
+      "source": "data/rep_images/rep_0361.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0361.png",
+      "source_checksum_sha256": "54c952210a224fda5db7f4fb929d73251c704661e0a35e7a409698dc7fcb165a",
+      "tensor_checksum_sha256": "58db88481901c100413781272188e0a3f0292eb3290c8b2329d66c5e63bb2bd3",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 22,
+      "source": "data/rep_images/rep_0334_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0334_c1.png",
+      "source_checksum_sha256": "d9547c50dec7803b65efd9c84813ccb8421f826d4650188ee41472cab8992e17",
+      "tensor_checksum_sha256": "10e8daa4bfcf6ae5268a98ae87a9175699a55989d684f6681c4b4cad1f3b22ea",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 23,
+      "source": "data/rep_images/rep_0359_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0359_c1.png",
+      "source_checksum_sha256": "c411fd25b0e7428acaaee71dcd6b7173026486ea454b933374e447233eea0040",
+      "tensor_checksum_sha256": "ec1f1b7e6700f9d626c7a32bf6f7b93aa8ab8d798753709b3b1ca3b9d4ef1431",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 24,
+      "source": "data/rep_images/rep_0231_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0231_c2.png",
+      "source_checksum_sha256": "e0d45b4564b36106cdb72248ca6a81962da2a229c9a20a60b35725e7374d531c",
+      "tensor_checksum_sha256": "dbf48cffb7e9ce51d6333be48775615b6869344d5f86790c9be5677e2803c75c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 25,
+      "source": "data/rep_images/rep_0368_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0368_c1.png",
+      "source_checksum_sha256": "557d1e8bd1bcc90bbce3155e634510a99eebe629db6db9a6e6cac67a1033de97",
+      "tensor_checksum_sha256": "df2c6bd2f6e147b2df6be723a58511267e0a4bf8fb1ec8ca49957d132cee21bb",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 26,
+      "source": "data/rep_images/rep_0365.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0365.png",
+      "source_checksum_sha256": "28db5758c588f20f046cb9e79bb90e7b62138bdeb586a7e1d439270f018c7ba3",
+      "tensor_checksum_sha256": "ca063a2c88421620aa604696a5a2622c18f0eb9a8cabf75aebd5c3c247d483ba",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 27,
+      "source": "data/rep_images/rep_0399.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0399.png",
+      "source_checksum_sha256": "bed992beec0d6618987d0b14de2d8ea826fa03c385d1cff2da7c07c9022c4b2f",
+      "tensor_checksum_sha256": "27021d6536a5464bf7784e3f4ea79433cc098c0a3c9a3fd45ecbdaf221211296",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 28,
+      "source": "data/rep_images/rep_0047_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0047_c1.png",
+      "source_checksum_sha256": "3a2ec2f849d4be46496f6c4ce191055faddb6fd5b2ae81d891d608cc5e6495fc",
+      "tensor_checksum_sha256": "6210a9e77502a19aa6f8502588cf6ba11509bb17fda029814ef4ea0881929f02",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 29,
+      "source": "data/rep_images/rep_0245.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0245.png",
+      "source_checksum_sha256": "b0f05f6a1dd683389f4dfdeb3d06930a400d6d81b02c80c55c0f2b270b28677f",
+      "tensor_checksum_sha256": "09db9db4bf6c9bbc1c9772ce1128c7243dca8803595ca9a2f53c69919e85a49b",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 30,
+      "source": "data/rep_images/rep_0250_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0250_c1.png",
+      "source_checksum_sha256": "6565b9b9ad3a42ad027513edca16c48717cc42c3f11a700a5353e30a9f0d4578",
+      "tensor_checksum_sha256": "1791dca77f8e3bc57625f2b4df0bc4a8c1447cf668a30d04028367b426f878b7",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 31,
+      "source": "data/rep_images/rep_0110.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0110.png",
+      "source_checksum_sha256": "78d07fdb917f5a9bbd4a74d97b629b252a757d6a69fe1da9e1a14009e4e8d98e",
+      "tensor_checksum_sha256": "5914721b3ac0be66b1a9dd70fb1a7f8465fef7ed75f6fcb695b5776bfae5fb48",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 32,
+      "source": "data/rep_images/rep_0049.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0049.png",
+      "source_checksum_sha256": "5a86bed2b3313ea43aeed37725bc015475f60444ce3e7b1dd3d049c7f27c99a3",
+      "tensor_checksum_sha256": "73124f562b3903baeb9f5c88ce2a751f6f15e31335f093ba9be2f7cde74dd14f",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 33,
+      "source": "data/rep_images/rep_0040.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0040.png",
+      "source_checksum_sha256": "03ad53bf42bcd39b62570d2d7ba38301efabbd5f6f4ddc38f9992fa18696bf2b",
+      "tensor_checksum_sha256": "e0014d57ebcb7fa088f391e03fdb078a9f45a2d9050ad648ef5499b28a123d34",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 34,
+      "source": "data/rep_images/rep_0312.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0312.png",
+      "source_checksum_sha256": "8817e4e6f09d5ac0b49caa96b559812e038cdec4f7d1bb4cc680eba122920d7d",
+      "tensor_checksum_sha256": "d28987f979f78aaf76e37fde029ab190f35bc93c7663c3c7a904a94a7dac0543",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 35,
+      "source": "data/rep_images/rep_0020.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0020.png",
+      "source_checksum_sha256": "889219af4fce0ab2170b6b6557b387c40e4eea9319f68583f64906d6ea60c0a4",
+      "tensor_checksum_sha256": "9ba33e931c87a45b9ebeb9618a7fda5880e43f38eb32ebf606d0f03648613876",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 36,
+      "source": "data/rep_images/rep_0242_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0242_c1.png",
+      "source_checksum_sha256": "05e39405752594f8ebdf488b9a72f45e7f48e8f5cd429aac1fc5ee6834517275",
+      "tensor_checksum_sha256": "90020843fcfaa95dd40629b43823c0f01780f3aab07951d357414b6af4670890",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 37,
+      "source": "data/rep_images/rep_0210.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0210.png",
+      "source_checksum_sha256": "3d4b7775863a86fd8ae366f93794cea9aa6dbd36bcf39eb84f428dfe0cc609b4",
+      "tensor_checksum_sha256": "93b106600c324831d944289e550047a18224ae3eee7da7b8e2df9a8d5cc0bc79",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 38,
+      "source": "data/rep_images/rep_0179_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0179_c1.png",
+      "source_checksum_sha256": "79e939f0f2f39526b40f451817aa97053f65cc894235866f474cb606e9e7e199",
+      "tensor_checksum_sha256": "2420602ada9971f7065763827d997d1f374b914b1e012287b87c0d865eda5e11",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 39,
+      "source": "data/rep_images/rep_0127.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0127.png",
+      "source_checksum_sha256": "34620cbbbb87fce4b4ff34faf3dfe1bbdbbdb042d2b28a689483d02f019e2cf6",
+      "tensor_checksum_sha256": "8e75751ae1cbf376fe70e7f8090de70797295b169e5e4610772104c58462f3ce",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 40,
+      "source": "data/rep_images/rep_0239_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0239_c1.png",
+      "source_checksum_sha256": "8faa85493c314995a8b4917ea980eae62163ad362ec18dd841b971e31ae4ec30",
+      "tensor_checksum_sha256": "188e0812194861b1decb0da867dcabd2c7f3f4fcb46badd7e3cd233e7ac905af",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 41,
+      "source": "data/rep_images/rep_0184_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0184_c2.png",
+      "source_checksum_sha256": "bf7b9bd3b7f0a4599c505c7269642369b4cea60e35db79465bf3d35303b98158",
+      "tensor_checksum_sha256": "97cbef0bf36ee1b8a7876b736f2fd596930e438759c8aef6f8b57f4272626924",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 42,
+      "source": "data/rep_images/rep_0083.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0083.png",
+      "source_checksum_sha256": "f08e23393209c188e3f646ed89809713a2f210af3babadf8b68bf973708d3e9d",
+      "tensor_checksum_sha256": "9cf5df7ee3af08b2d76f202212c2e1305d57bb3dfc44bf733ba8113e37f21b6c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 43,
+      "source": "data/rep_images/rep_0195_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0195_c1.png",
+      "source_checksum_sha256": "290a6d1c51fe5ab75ebdc1b5a2a926ab7b448465aa3ee07627e42fd16ddce725",
+      "tensor_checksum_sha256": "1577dbbe8fd0137dfd951c54f1020494703264bb3ce7865f8a1623f60f5eee39",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 44,
+      "source": "data/rep_images/rep_0266_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0266_c1.png",
+      "source_checksum_sha256": "54ce9dd7d9f494647f875fb39bf10b093331e9883a1d1b1524149dbe995ccc41",
+      "tensor_checksum_sha256": "06e40350fdb17b00648163e23f321f7662e8d30a4fbb41cb49a1c6067a44f574",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 45,
+      "source": "data/rep_images/rep_0092_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0092_c1.png",
+      "source_checksum_sha256": "68cb58fcfc89ba5f1c25a9375ce8823cf4769af1a9a1a8c30de3988d5b889610",
+      "tensor_checksum_sha256": "f8cc5b089ddf2526ad6d25d57d4b670b9e6f7e3e75676d307cf25635ee9a066c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 46,
+      "source": "data/rep_images/rep_0342_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0342_c2.png",
+      "source_checksum_sha256": "7050965c6873b55388787e2b5bd34a306caa442989878d182be610026d06e071",
+      "tensor_checksum_sha256": "7cb97e8165b5c39e275d9669984c998e08789c0ab5c51f688caf582f95413dcd",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 47,
+      "source": "data/rep_images/rep_0380_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0380_c1.png",
+      "source_checksum_sha256": "1c6db94c2ceb3bff5911c3872d07a1570af0e540cdc92a4f8ca64f808baaa6de",
+      "tensor_checksum_sha256": "a09458fd6fdf894de38a7f0689bdc6cc5b3602466cb49429266318359c78a787",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 48,
+      "source": "data/rep_images/rep_0221.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0221.png",
+      "source_checksum_sha256": "3838d66a391c30ebcee7dcb9a7011d49f9721ebcd7e5b1f38e049077572d2e40",
+      "tensor_checksum_sha256": "14809a2b89653e5671031c118d4fc3e546bafe68404347e1bdbc7d5f88969a50",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 49,
+      "source": "data/rep_images/rep_0036.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0036.png",
+      "source_checksum_sha256": "741225543e4e8898dc51612f9bfc715ab8fe34fe19a79f362c87a4799858bcdf",
+      "tensor_checksum_sha256": "8104d9a13eb74a26e08b19a335a8deff3d6c500452864b72d55390681ecb61d1",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 50,
+      "source": "data/rep_images/rep_0046.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0046.png",
+      "source_checksum_sha256": "72aa16c2b0025153af9c06920a0607f397ccbbfa6aec2a2caf04472a9f6309d4",
+      "tensor_checksum_sha256": "69aa2d49f4153934ef8ce505ee092ea4c047cafbf8dd902934639dbf412b1965",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 51,
+      "source": "data/rep_images/rep_0198.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0198.png",
+      "source_checksum_sha256": "11fc8159dfc944c3ccd82862246fb646f725134c983b101f3de35fbe88cd3c26",
+      "tensor_checksum_sha256": "f2dacbe606ee23c3467d85e6bb2d13c5be8ba1b08bb6223aea1100d674c774c9",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 52,
+      "source": "data/rep_images/rep_0203_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0203_c1.png",
+      "source_checksum_sha256": "9528f9bb718e041166179014bb2fa77b4480b8c2b4bcefe27d39c371f60d8cc2",
+      "tensor_checksum_sha256": "fdeb9f1ebc74cdb2c949c8623b71c2cca77365a082395a9f40f23822f6950b20",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 53,
+      "source": "data/rep_images/rep_0148_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0148_c2.png",
+      "source_checksum_sha256": "d7311c5756d55a313ad3bfb57a821c36271660b241db281e8bb02cc3ad3c602b",
+      "tensor_checksum_sha256": "74799ef7bcf751dccca1b432d71bf41d70a92e832e9e69feb9826f9d456e3932",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 54,
+      "source": "data/rep_images/rep_0004_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0004_c2.png",
+      "source_checksum_sha256": "7d2977415a7050136a31d25ccdb900ce42e25b4f657c7c8aec8ab016dbd6c8d5",
+      "tensor_checksum_sha256": "d8df783b60f8243b26705499e0c82347f1164bb58f1de55dc7b753b439e55642",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 55,
+      "source": "data/rep_images/rep_0054_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0054_c1.png",
+      "source_checksum_sha256": "4d5472e641cf2e31606cfd04f0db7ec30fd00dd4ed74e5e5741f560b18258279",
+      "tensor_checksum_sha256": "e2cb1ebdb9c78986b79a7399d4e7e64dbcef4ba5ba1b1711fb9022e98b83a636",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 56,
+      "source": "data/rep_images/rep_0122.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0122.png",
+      "source_checksum_sha256": "9688e18b36a2b4c4beab2dfd22f5555b1205e4a1dfca0b1aed78eb1353457ca6",
+      "tensor_checksum_sha256": "9000694be135be1cf3eece01207fd7babf888fa12fedea0daff3f69bb89cbfa3",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 57,
+      "source": "data/rep_images/rep_0146.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0146.png",
+      "source_checksum_sha256": "58d330bea2396b520cba461e8b3db08c47a258eecbe523548c0476538504a56d",
+      "tensor_checksum_sha256": "49177eb2d07cda965704c827b7451b5fe3ec51bbbb56e6ebb6229ed6364f2476",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 58,
+      "source": "data/rep_images/rep_0383.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0383.png",
+      "source_checksum_sha256": "188d64741fa2e81a5487ac7a764cc77934ab5f5866c60c1925f1326402ac5778",
+      "tensor_checksum_sha256": "96c9b5033fddc03d76758b134993c489c87d8786f42e952bba93a4e5586089cc",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 59,
+      "source": "data/rep_images/rep_0231.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0231.png",
+      "source_checksum_sha256": "76da68a077d0d20c29687e6bbd1c5a753e4e4646b55b3489f8e0113c5da457cb",
+      "tensor_checksum_sha256": "ace34765473a839798465d5aa7092cf9b862ff0d43a808560dafcc62a6c3581f",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 60,
+      "source": "data/rep_images/rep_0228_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0228_c1.png",
+      "source_checksum_sha256": "279c3cd8db5e25b1c7086440180a0d93a2e34fa1aba6b60323840c0b9330a534",
+      "tensor_checksum_sha256": "c85406dea34c9a66e042486229845e3a0640e750eb384c436db6b06d1817bc89",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 61,
+      "source": "data/rep_images/rep_0104_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0104_c1.png",
+      "source_checksum_sha256": "cabaca0c085c63de7d63b1f347323ad89e3b0380f4218232c7bde1af33bc94ba",
+      "tensor_checksum_sha256": "f769767ed3ba3b511566393bc506991062e7a2ac391eb2b0dd810f9feeb783a5",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 62,
+      "source": "data/rep_images/rep_0088.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0088.png",
+      "source_checksum_sha256": "9dbae54a0fc161ca8aad8886df40d682b84069d6b5002240a103167e1d0a20c6",
+      "tensor_checksum_sha256": "cda507a034fc9fbb48bafcfa42f78bdad6c0e04f3259ea095884c968154d10ae",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 63,
+      "source": "data/rep_images/rep_0339_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0339_c1.png",
+      "source_checksum_sha256": "b4b4116fd01386d8f0b967715ef5b74928c84837c3f1fc8a6a5670d59b477967",
+      "tensor_checksum_sha256": "daab68fc116b4e03fe6b0b3e511b63178217f1646070fc2bc18a72aab4e524d4",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 64,
+      "source": "data/rep_images/rep_0168.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0168.png",
+      "source_checksum_sha256": "169de13da77c6675cbdb37847bb689b297a51d169131e72d9ad47e4cef52687e",
+      "tensor_checksum_sha256": "aad1036c73bedd89d0acb230456b0b58d6ea00df27c3378d78e897e5f6c74439",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 65,
+      "source": "data/rep_images/rep_0042_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0042_c1.png",
+      "source_checksum_sha256": "6385466cefb33901636a6a91d3d29b56774823e180a489d5cb4b50191411a3af",
+      "tensor_checksum_sha256": "b106924f82b02e41422f9ea3a26544ba0b11a1f38e113fcc14b6d6af79648761",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 66,
+      "source": "data/rep_images/rep_0335.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0335.png",
+      "source_checksum_sha256": "abbd8b12ebada9d5df2c7cf3fc4f9deb6f8ab7ce16f57463bfa7e083ec36f324",
+      "tensor_checksum_sha256": "5e9b9c524534ed48c29e06b1fdd2984ee44e7347daa5f8313ceabde5a4e11fa8",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 67,
+      "source": "data/rep_images/rep_0281.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0281.png",
+      "source_checksum_sha256": "c626485b1609067f570f03d323044758cf4f1ec4c0429859130ada77de21d49f",
+      "tensor_checksum_sha256": "037d6cf438ce2b85525d980d45e65dc54c0ef6f113bc77471bcd10b2f662c22c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 68,
+      "source": "data/rep_images/rep_0322_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0322_c1.png",
+      "source_checksum_sha256": "6fee1cbb32994fb1d43afa9f1b375bbd182c2eff07dce7b753b62595f88ec09d",
+      "tensor_checksum_sha256": "25fe79dc515514b0310d25c6e4e0f8758e56232e73888573ef36cf5a2f43f2c9",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 69,
+      "source": "data/rep_images/rep_0241_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0241_c1.png",
+      "source_checksum_sha256": "089470c4fd45daac8f3cea4ba0e06cae8ace0c1879b9dd154e0c3f2dbdae4959",
+      "tensor_checksum_sha256": "1b1817ce5aa1118f1c5f6761a646e2411be2ec0ceda1aee0de807298fa49e4b4",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 70,
+      "source": "data/rep_images/rep_0176.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0176.png",
+      "source_checksum_sha256": "3e2ae06d91a6921e441e75b09bcc4751f0df6aa11188b34a457f14969335a4dc",
+      "tensor_checksum_sha256": "c131be307efafa22a63d87cbc3e925a603bfb6e1aa7eefe2b4d6e02570e58ffa",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 71,
+      "source": "data/rep_images/rep_0344_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0344_c2.png",
+      "source_checksum_sha256": "7cceae11b63c50dfa5b21cc8a69148cbcb86a23bae990ee0a447a4fcb0321013",
+      "tensor_checksum_sha256": "9ebabd363ec32dc66305e13273313ec287f232dace97ef1b5f84642dffff68ab",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 72,
+      "source": "data/rep_images/rep_0137_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0137_c1.png",
+      "source_checksum_sha256": "318218da149c780ced1949cf3cfb64caddbea5014319880ea80f382d6fbe6e4d",
+      "tensor_checksum_sha256": "4494c57c69508c8b0073543a2c4df90002ddb44363901fa27038fb62a007fe87",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 73,
+      "source": "data/rep_images/rep_0389.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0389.png",
+      "source_checksum_sha256": "1c6e1d73c7c4d0eca73a8cd8b667045dcdcd85ad6b7be73e785d7ab9abd229cd",
+      "tensor_checksum_sha256": "457f4743115e8bb370b4ed7b37310871d9abf331b72618bfc27f2e217e6dcafb",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 74,
+      "source": "data/rep_images/rep_0080.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0080.png",
+      "source_checksum_sha256": "cf00bad25efcb88dc6eb5ddd751fd8ae8e1ba27872d67792616b79f2fd48673a",
+      "tensor_checksum_sha256": "9a26b49fced7d51ac603e2b4e875dfe36c73b432b550c9154186c8ed851e91aa",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 75,
+      "source": "data/rep_images/rep_0148_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0148_c1.png",
+      "source_checksum_sha256": "ceb6ff1834307aa9da6bc9b075525512373d12abb62c13aa761e5e5a5c54bed8",
+      "tensor_checksum_sha256": "113d95358ca0b547ca4fe8af02372a429418e8dcf724d2b5ec74fb0ba297b187",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 76,
+      "source": "data/rep_images/rep_0379_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0379_c1.png",
+      "source_checksum_sha256": "d44d5632af9a464445de41686d2e2844a0aed27f798d6d4bd31bbf8b65771ba2",
+      "tensor_checksum_sha256": "aa3a7264e469bbf9f77934bf2a628d238c5cf23f6a6b6f03696504d9aa9c5cc9",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 77,
+      "source": "data/rep_images/rep_0391.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0391.png",
+      "source_checksum_sha256": "c5322d6bf86b18466b9a1435729cf93acf9a33f4f69e1a3486f7cf4b93536e26",
+      "tensor_checksum_sha256": "86601ae8f303e3f916dd27c6cb73dc2581219f4a588686499a21bb4450102c47",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 78,
+      "source": "data/rep_images/rep_0100_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0100_c1.png",
+      "source_checksum_sha256": "eaeb6abbfd0392a9261903f44a652ce2a08956014442971c089f274c2b80de38",
+      "tensor_checksum_sha256": "642d5c5af59255a9fe4c88a41d872d629cf02d72b0089f980cd67782b9a74989",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 79,
+      "source": "data/rep_images/rep_0212.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0212.png",
+      "source_checksum_sha256": "a8edf5bcdf1b3938071952dccced8642e859d686520e3ae3e318cefa8178ccfc",
+      "tensor_checksum_sha256": "ec3edfc2c8ec59b2cf6215b1172610b96ade528553a7b11d40edf273f395bc57",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 80,
+      "source": "data/rep_images/rep_0374.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0374.png",
+      "source_checksum_sha256": "340fad81e288ae13ab5f8c30169b246ab79172df49b93b6696c7d349dbf19894",
+      "tensor_checksum_sha256": "f40ef2412eaeeb16f6afe24e5c772168a773d39bc6bbdce125319749dbc6c05b",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 81,
+      "source": "data/rep_images/rep_0151_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0151_c2.png",
+      "source_checksum_sha256": "862b49d8a58b8e349b04f123b09275dd16cab6290ef8c96bdf031216a6ecce57",
+      "tensor_checksum_sha256": "451efaed724622dfd620cd89468db1fe3cd4215e7e2ea95eee405a30e5f9289b",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 82,
+      "source": "data/rep_images/rep_0361_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0361_c1.png",
+      "source_checksum_sha256": "30a5c052e742a29e57f25ebf100a753eb2973fc3d2dae7122d9d17de63e8995d",
+      "tensor_checksum_sha256": "848fde6163b73cdc651fd629dea2c9e4a1d74f89ff637b137c60e7a95478bf65",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 83,
+      "source": "data/rep_images/rep_0330.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0330.png",
+      "source_checksum_sha256": "5e3e924b38a929780e8e2c77ec1a1defbede8f419d4763b170333baffd9b3121",
+      "tensor_checksum_sha256": "6a4becf1efa8159615f07e1eefd40182fed207674eb3ab5605d906c6d9f5d286",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 84,
+      "source": "data/rep_images/rep_0390.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0390.png",
+      "source_checksum_sha256": "50edc7b58386c8655be8e5f36bd47ae28aa7b60a3a02c941ed31b11fbeea59e2",
+      "tensor_checksum_sha256": "f8b828712602d957ac7f50665099c033e2d542a8a1daeda53b50a593e797a0d1",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 85,
+      "source": "data/rep_images/rep_0362.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0362.png",
+      "source_checksum_sha256": "1fd8ca0a7ca867d8f64b9b9eb18eeea5752136c61aea6d4c6831f597f6640292",
+      "tensor_checksum_sha256": "149ed477d87e7d10be414cb006d212758c252d2629271fc4a1a423692a193143",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 86,
+      "source": "data/rep_images/rep_0151.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0151.png",
+      "source_checksum_sha256": "2f33766774999d5e0776fa344a163856704228262422ab512ee9bd4d031c401e",
+      "tensor_checksum_sha256": "63c3165ba11f5fd5ecbbbcf89710b45308f862c90d09be2dd5f23419c2c6b5a2",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 87,
+      "source": "data/rep_images/rep_0183.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0183.png",
+      "source_checksum_sha256": "1dcb143961e50ac2048189e6cda85bdf6f823573a977378dbaa640e6de353dd9",
+      "tensor_checksum_sha256": "b1df553db6d7dcdea844d110f5f70327e80a377be9ba635fa2787ad4132ea698",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 88,
+      "source": "data/rep_images/rep_0304_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0304_c1.png",
+      "source_checksum_sha256": "71d4a2f09eacf85b492e0d70dda0721a2beff465cc8e7a158a53e89715960d30",
+      "tensor_checksum_sha256": "deb5cc50182b6f581a2ff0dc150e51fbbd7c095ff1c5bf6c11ae0b3d2811ac48",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 89,
+      "source": "data/rep_images/rep_0147_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0147_c2.png",
+      "source_checksum_sha256": "6300eaec879a81e871aaa36b52670bc9ff0c4b3c3e4c2fa946e192abac3e9299",
+      "tensor_checksum_sha256": "243e7b948c605f45dd95b397a6f5effb09c11c418c7068f0e05c27e7c13bb03d",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 90,
+      "source": "data/rep_images/rep_0199_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0199_c2.png",
+      "source_checksum_sha256": "d11558859bb0f0dbcbd20c227857e7c16ae20e4fcb8bccb2b378a0e67a82d9db",
+      "tensor_checksum_sha256": "8f3811d602f1139479510d96f095b22451da0e9d31530c50b6b1eee4a0afc740",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 91,
+      "source": "data/rep_images/rep_0222_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0222_c1.png",
+      "source_checksum_sha256": "3272c4c783af8e259f143e7dbf51bb243a738645db9670982cb21855c8a5ff5f",
+      "tensor_checksum_sha256": "9d7a5b1cb78551128c673ab49cdd54cd2a9eacd04962c1db1eeb7f3856694985",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 92,
+      "source": "data/rep_images/rep_0352_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0352_c2.png",
+      "source_checksum_sha256": "61cf981f08e789c08f3350ef5a0ac9eb8d50ceccd6c75d0ee38315739a07eeb9",
+      "tensor_checksum_sha256": "0a7a1da3d3343f017684f9e9c35af82ffabc2a9807edae3812520af6957b880d",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 93,
+      "source": "data/rep_images/rep_0084.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0084.png",
+      "source_checksum_sha256": "46c840c5e98eadb1d49e838a5f029fae040c0e9f5be87bc4e054111b1875a7b5",
+      "tensor_checksum_sha256": "b9e6ff2f8254e1d72229fbbbf7df98076c5d7386c5a93a0476d82e5126a43664",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 94,
+      "source": "data/rep_images/rep_0060_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0060_c1.png",
+      "source_checksum_sha256": "71f11878debfe85257fc9730b79b0a45bcd13f891a32aea77192bee3bcdb6245",
+      "tensor_checksum_sha256": "10789d70c759f023cd1a428214addce108f21bf854710da8952a4d8c6c545803",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 95,
+      "source": "data/rep_images/rep_0135_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0135_c1.png",
+      "source_checksum_sha256": "a9bd527d295c8256823d6848fbf3a63a12c976a8b60ea574ebf0ec4fea57a65c",
+      "tensor_checksum_sha256": "8c4aba9fd452dac0f83355c881dd930eb04a46eec70085f2b864d8ecd26f4dca",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 96,
+      "source": "data/rep_images/rep_0236.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0236.png",
+      "source_checksum_sha256": "f0e48e1b139e1b5302b36125a8d26bda465de63fd22758929b5d95b195d23b6d",
+      "tensor_checksum_sha256": "46339576d319ead41826b97e16533320b1e9a847b02e2d9cf132d6d1e1b3e332",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 97,
+      "source": "data/rep_images/rep_0240.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0240.png",
+      "source_checksum_sha256": "75fcd8eceabc6986957527f211920d9999318f0d05fdc20bb432c4c367f8c6ad",
+      "tensor_checksum_sha256": "4c4e88bdec65d52c6e0f9ad2c765bfac76612cf89c08363cbde5ab92aa89b51e",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 98,
+      "source": "data/rep_images/rep_0400_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0400_c1.png",
+      "source_checksum_sha256": "c1a273a87565c925a2daa2ebc72633fa23462c17375c429d2e773d7ece11c678",
+      "tensor_checksum_sha256": "d490f69e0e390e097d456788b0faf56f2a41f956a8e6bdae2dc9fa7d71434780",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 99,
+      "source": "data/rep_images/rep_0128_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0128_c1.png",
+      "source_checksum_sha256": "4bd2bf61ceace9e5e42235c25bf39b00cdf9adca9b40333106c2fd3dd0c76093",
+      "tensor_checksum_sha256": "8b377789b8adfef4f3f22383ce566f9fae67402c7cb9c2cf2b6205f8106b5ba3",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 100,
+      "source": "data/rep_images/rep_0003.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0003.png",
+      "source_checksum_sha256": "a8d2bcb61cd20cd330b5456ff64d287461bb58a21adca79c023d3843138d51fd",
+      "tensor_checksum_sha256": "86972959d322c9600f246caff3ba2b01c3aea5e846ef40799831803ff5ffbf0c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 101,
+      "source": "data/rep_images/rep_0286_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0286_c2.png",
+      "source_checksum_sha256": "40fc48de69ba966a226afcb530d3020ae9cf279545723af40d1bd6c9021efa40",
+      "tensor_checksum_sha256": "601ee796b13bcfd165c8de4cca4a4f2bfc090c75b7abba6478233d9981fa4e21",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 102,
+      "source": "data/rep_images/rep_0102_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0102_c2.png",
+      "source_checksum_sha256": "65718f822ded2306149c0a8ab851cdb99ab7dcb43469ebe893fe6e8cdefa357c",
+      "tensor_checksum_sha256": "f273a24c3f05425a2ecbefe16628a77569b61ee54e14df97d6d25770d825b0a7",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 103,
+      "source": "data/rep_images/rep_0382_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0382_c1.png",
+      "source_checksum_sha256": "610ca8350925f73e3b30e092a88a8e16f1dc0e640a3284cace502095b05a26ae",
+      "tensor_checksum_sha256": "a1162ffb6298f2e33d2f6ab625b30333840c2220b5075144fab26e39d97fcfc8",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 104,
+      "source": "data/rep_images/rep_0289_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0289_c2.png",
+      "source_checksum_sha256": "3992477bbc5ed15f64843aeb89a1fc8085f7906f64d25203285bf60574f9b501",
+      "tensor_checksum_sha256": "3282765031b24f4de38f86f2189f677e1392dc36de412d22efe577d6fdf53e2a",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 105,
+      "source": "data/rep_images/rep_0150.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0150.png",
+      "source_checksum_sha256": "fd186674ac5884d217d3225b2588989202cbebb444724d17f89a624074b201eb",
+      "tensor_checksum_sha256": "68689f3b367c1de87be448da4d632005657a72e909263913a4ae3c4519008c2e",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 106,
+      "source": "data/rep_images/rep_0003_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0003_c1.png",
+      "source_checksum_sha256": "737eec2b6220cb64965b7de5619deed67974f2f7a674358bc2dc8e470d92baee",
+      "tensor_checksum_sha256": "3dd0b266458240ab08170f6dc91274740a92a7109089525717f770bcfd25aba6",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 107,
+      "source": "data/rep_images/rep_0312_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0312_c1.png",
+      "source_checksum_sha256": "ef7c2b6e37a24cd8cdd828d48309cc95c08e256e3b912c478857d9f7d73083c6",
+      "tensor_checksum_sha256": "1e9a033d7414c6608a49cc84a2f38154054ea73510cf13e4e6ff223346b7e36c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 108,
+      "source": "data/rep_images/rep_0103_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0103_c1.png",
+      "source_checksum_sha256": "def475fa70e400d412cb0e4313efe0b75acf83a5a26473dec1f5ee14b8252ed8",
+      "tensor_checksum_sha256": "0ed6ddbc73a3278ef10081510a5722db2f441f0dcdfc751c4240dd99383a1c7f",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 109,
+      "source": "data/rep_images/rep_0137_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0137_c2.png",
+      "source_checksum_sha256": "2282801698e8159de14da551c30e5a041586c2e1ead543eda2b1bdf9ad0bc35f",
+      "tensor_checksum_sha256": "1c8c6d7a80943f64ea72f319ee06a0bd846ea664db4f853ad3e86ff527060604",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 110,
+      "source": "data/rep_images/rep_0078_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0078_c1.png",
+      "source_checksum_sha256": "bbb1aff3e18dfc97bc2405471ca06019afd150846916add70b853723d5339f13",
+      "tensor_checksum_sha256": "3f9fadd9cb28bf513c7ee931a10097098a34e32096bbfc31e3fa62ffe5f11f13",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 111,
+      "source": "data/rep_images/rep_0032_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0032_c2.png",
+      "source_checksum_sha256": "29a803bafd663c8cb9b732d5609efd6f258cd6e1cccee63aca2dcdc00b5ac142",
+      "tensor_checksum_sha256": "bcefbc8012fc96d21442b8f29332d21520fc8630fb40150283676c3d3f477847",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 112,
+      "source": "data/rep_images/rep_0201_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0201_c1.png",
+      "source_checksum_sha256": "749d962d6b967429aea679380d7352918d8d7c188967bb48c8c9ed43f05f1862",
+      "tensor_checksum_sha256": "68bf217921ed5e2547a5947e3014d79f875bc76d40e03f531099df31a7163b5c",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 113,
+      "source": "data/rep_images/rep_0022_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0022_c1.png",
+      "source_checksum_sha256": "8de3c13ff6eaa90cf38374dbd37d170f53ff30021366e8a63c5e221270af7bae",
+      "tensor_checksum_sha256": "366e2e95784ecb5ae5452277f0b031fc146cf20410a2f4429c360081e38c05c4",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 114,
+      "source": "data/rep_images/rep_0089.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0089.png",
+      "source_checksum_sha256": "1c87ae887eba3bc6431ef9f88140784facbe22e139e037a6d5b4f1f6dee35306",
+      "tensor_checksum_sha256": "bc83a4757bf79c5226b1a58274099248e71d8c7df2464053b86345d2cdc20f52",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 115,
+      "source": "data/rep_images/rep_0052_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0052_c1.png",
+      "source_checksum_sha256": "feff658af211233cee25598f29beac3c52bf0e55ec7779e75bc64f3561817922",
+      "tensor_checksum_sha256": "038889ec49775c934e70d025bd32341dba20e54fcfc8a569ceb6a5899b32ff2d",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 116,
+      "source": "data/rep_images/rep_0246.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0246.png",
+      "source_checksum_sha256": "e58edee0952adefb78f85c678f7bdf191b3749d5ec69e415791bcc02b22f2ccb",
+      "tensor_checksum_sha256": "02e27dce7ee3af6b6c4b2d59f4b116402ad4a62068a652ba1b35c2fa0392fe08",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 117,
+      "source": "data/rep_images/rep_0022.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0022.png",
+      "source_checksum_sha256": "a263500b25310c0b2e0e4eb0a7ab3e39cb4a452f3f53b7d7d6625b7810b0307e",
+      "tensor_checksum_sha256": "933c3cf47f6419fda4fc8faee1db6510b1233c344d0c8347ef0d0924f5576c20",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 118,
+      "source": "data/rep_images/rep_0350_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0350_c1.png",
+      "source_checksum_sha256": "f5520b9060ff668c99ac12b3b3ce3ee759224c73bff76180b7dde50217fc2bcc",
+      "tensor_checksum_sha256": "1894190d9f8fb2c53eb68302f00cb39a5f906f687c8cd165a0278c7c6f7c09b0",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 119,
+      "source": "data/rep_images/rep_0016_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0016_c2.png",
+      "source_checksum_sha256": "604ea12e0ff8fa14be542ee33267429e2cc6cab6eee3f9640a1dd580b5f7341e",
+      "tensor_checksum_sha256": "e2ef724234a7c1c5d8b13ff2dad805c51e8a587c38bb158d74842ad121788547",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 120,
+      "source": "data/rep_images/rep_0163_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0163_c2.png",
+      "source_checksum_sha256": "776e091413510d04f648c07ce5de8869206a6c606ac954389307483e219995c6",
+      "tensor_checksum_sha256": "2be009ee08586f1969be3708f6899521c64938aac75bd3c14023886ff3ade19e",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 121,
+      "source": "data/rep_images/rep_0284_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0284_c1.png",
+      "source_checksum_sha256": "5d40519f5c23e2749af66b3ce342715b36e4f5327fffff7c4baef1104626ab2e",
+      "tensor_checksum_sha256": "185ccfe1db991db6c9880c5ab705ac833ce63843105fd112b28baae85e4af9b8",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 122,
+      "source": "data/rep_images/rep_0306_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0306_c1.png",
+      "source_checksum_sha256": "5193d1f5e3a4c602c43a35fc2fab1e93850845fee24e6bc645c48ccc5bf48407",
+      "tensor_checksum_sha256": "41f0e7047f52b2bdc5bfffd50f24a41658a5291ca61beadc24511664bdd3a963",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 123,
+      "source": "data/rep_images/rep_0055_c1.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0055_c1.png",
+      "source_checksum_sha256": "500af6c4739b37cb6c6396972c1c1d75e9130e55e324c1375e66d590987edd94",
+      "tensor_checksum_sha256": "d586ef71bfa2139818e418d8cf4e0f7d73f69709a779b368bfbf928a281a5e0d",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 124,
+      "source": "data/rep_images/rep_0296_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0296_c2.png",
+      "source_checksum_sha256": "a533be5a6190bd7bfbe45d208c9ee46053fc9b68d2748b29d3822b260b170b4a",
+      "tensor_checksum_sha256": "82a732cf97940fb7006897edec5ba29b5ad2d0f88ab37c17cb5ea770d79fa0ee",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 125,
+      "source": "data/rep_images/rep_0209.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0209.png",
+      "source_checksum_sha256": "0ef35dd3b4448a9dde7a009bec7e2992affb09682bb7cc25d42224a949cfca7b",
+      "tensor_checksum_sha256": "96920176ee0d19f229ebc2f98557c14d792125f699518f8caf264179678e1c51",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 126,
+      "source": "data/rep_images/rep_0159.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0159.png",
+      "source_checksum_sha256": "d411530ec16a30ea146f23bafa4c60ce1925e0dea4e607402f3b62e8309e39e4",
+      "tensor_checksum_sha256": "f78abcd700dfe5d9f1b040336a4f91cc9b1b5e48b2c492e4fc08f6dcd97a1c11",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 127,
+      "source": "data/rep_images/rep_0140_c2.png",
+      "source_kind": "calib_dir_image",
+      "source_path": "data/rep_images/rep_0140_c2.png",
+      "source_checksum_sha256": "8495fcb93945caeca2b3359ba0c2f22a733f606018d874c5735de27c0fb37fea",
+      "tensor_checksum_sha256": "7058253da9350f1fd0440619b468b89c45de5bb6956c978d66c5e2a2a08e9611",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    }
+  ],
+  "artifact_path": "export/dronet_lite_follow/dronet_lite_follow_quant_calibration.json"
+}

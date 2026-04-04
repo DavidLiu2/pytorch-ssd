@@ -1,0 +1,169 @@
+{
+  "quantized_model": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/plain_follow_dory.onnx",
+  "input_file": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/input.txt",
+  "output_file": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/output.txt",
+  "golden_activations": [
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer0.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer1.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer2.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer3.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer4.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer5.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer6.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer7.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer8.txt"
+  ],
+  "layers": [
+    {
+      "index": 0,
+      "tensor_name": "66",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer0.txt",
+      "shape": [
+        1,
+        16,
+        64,
+        64
+      ],
+      "element_count": 65536,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 1,
+      "tensor_name": "78",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer1.txt",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "element_count": 24576,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 2,
+      "tensor_name": "90",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer2.txt",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "element_count": 24576,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 3,
+      "tensor_name": "102",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer3.txt",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "element_count": 8192,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 4,
+      "tensor_name": "114",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer4.txt",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "element_count": 8192,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 5,
+      "tensor_name": "126",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer5.txt",
+      "shape": [
+        1,
+        48,
+        8,
+        8
+      ],
+      "element_count": 3072,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 6,
+      "tensor_name": "138",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer6.txt",
+      "shape": [
+        1,
+        48,
+        8,
+        8
+      ],
+      "element_count": 3072,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 7,
+      "tensor_name": "147",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer7.txt",
+      "shape": [
+        1,
+        48
+      ],
+      "element_count": 48,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 8,
+      "tensor_name": "148",
+      "path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer8.txt",
+      "shape": [
+        1,
+        14
+      ],
+      "element_count": 14,
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    }
+  ],
+  "weight_files": [
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_000_stem.conv.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_001_stage1.downsample.conv.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_002_stage1.refine.conv.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_003_stage2.downsample.conv.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_004_stage2.refine.conv.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_005_stage3.downsample.conv.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_006_stage3.refine.conv.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_007_output_head.weight.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_008_output_head.bias.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_009_59.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_010_61.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_011_71.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_012_73.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_013_83.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_014_85.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_015_95.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_016_97.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_017_107.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_018_109.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_019_119.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_020_121.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_021_131.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_022_133.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_023_140.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_024_142.txt",
+    "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/weights_txt/weight_025_144.txt"
+  ],
+  "num_layers": 9
+}

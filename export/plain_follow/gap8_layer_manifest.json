@@ -1,0 +1,165 @@
+{
+  "dory_manifest": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/nemo_dory_artifacts.json",
+  "network_header": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/application/inc/network.h",
+  "num_layers": 9,
+  "layers": [
+    {
+      "index": 0,
+      "layer_name": "ReluConvolution0",
+      "runtime_byte_count": 65536,
+      "element_count": 65536,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer0.txt",
+      "tensor_name": "66",
+      "shape": [
+        1,
+        16,
+        64,
+        64
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 1,
+      "layer_name": "ReluConvolution1",
+      "runtime_byte_count": 24576,
+      "element_count": 24576,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer1.txt",
+      "tensor_name": "78",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 2,
+      "layer_name": "ReluConvolution2",
+      "runtime_byte_count": 24576,
+      "element_count": 24576,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer2.txt",
+      "tensor_name": "90",
+      "shape": [
+        1,
+        24,
+        32,
+        32
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 3,
+      "layer_name": "ReluConvolution3",
+      "runtime_byte_count": 8192,
+      "element_count": 8192,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer3.txt",
+      "tensor_name": "102",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 4,
+      "layer_name": "ReluConvolution4",
+      "runtime_byte_count": 8192,
+      "element_count": 8192,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer4.txt",
+      "tensor_name": "114",
+      "shape": [
+        1,
+        32,
+        16,
+        16
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 5,
+      "layer_name": "ReluConvolution5",
+      "runtime_byte_count": 3072,
+      "element_count": 3072,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer5.txt",
+      "tensor_name": "126",
+      "shape": [
+        1,
+        48,
+        8,
+        8
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 6,
+      "layer_name": "ReluConvolution6",
+      "runtime_byte_count": 3072,
+      "element_count": 3072,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer6.txt",
+      "tensor_name": "138",
+      "shape": [
+        1,
+        48,
+        8,
+        8
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 7,
+      "layer_name": "ReluPooling7",
+      "runtime_byte_count": 48,
+      "element_count": 48,
+      "element_width_bytes": 1,
+      "runtime_dtype": "uint8",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer7.txt",
+      "tensor_name": "147",
+      "shape": [
+        1,
+        48
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    },
+    {
+      "index": 8,
+      "layer_name": "FullyConnected8",
+      "runtime_byte_count": 56,
+      "element_count": 14,
+      "element_width_bytes": 4,
+      "runtime_dtype": "int32_le",
+      "golden_path": "/mnt/c/Users/yxl21/Documents/School/DroneRS/pytorch_ssd/export/plain_follow/out_layer8.txt",
+      "tensor_name": "148",
+      "shape": [
+        1,
+        14
+      ],
+      "original_dtype": "float32",
+      "original_itemsize_bytes": 4
+    }
+  ]
+}

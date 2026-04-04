@@ -42,11 +42,12 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
   DEFAULT_DORY_APP_DIR="${PROJECT_ROOT}/application"
   DEFAULT_RUN_DORY="1"
   DEFAULT_SYNC_TO_CRAZYFLIE="0"
-  DEFAULT_RUN_STAGE_DRIFT="1"
-  DEFAULT_RUN_QUANT_POLICY_SWEEP="1"
+  DEFAULT_RUN_STAGE_DRIFT="0"
+  DEFAULT_RUN_QUANT_POLICY_SWEEP="0"
   DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="1"
   DEFAULT_RAW_RESIDUAL_PATCH_REPORT="export/hybrid_follow/gap8_raw_residual_patch_report.json"
   DEFAULT_RAW_RESIDUAL_TEMPLATE_APP_DIR="${PROJECT_ROOT}/export/hybrid_follow/gap8_runtime_patch_template"
+  DEFAULT_GAP8_LAYER_MANIFEST="export/hybrid_follow/gap8_layer_manifest.json"
   DEFAULT_STAGE_DRIFT_IMAGE="training/hybrid_follow/eval_epoch_015/top_fn/01_p0.0114_000000132408.jpg"
   DEFAULT_STAGE_DRIFT_OUTPUT_DIR="export/hybrid_follow/stage_drift/run_all"
   DEFAULT_STAGE_DRIFT_NEMO_STAGE="auto"
@@ -84,6 +85,7 @@ else
   DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="0"
   DEFAULT_RAW_RESIDUAL_PATCH_REPORT="export/gap8_raw_residual_patch_report.json"
   DEFAULT_RAW_RESIDUAL_TEMPLATE_APP_DIR=""
+  DEFAULT_GAP8_LAYER_MANIFEST="export/gap8_layer_manifest.json"
   DEFAULT_STAGE_DRIFT_IMAGE=""
   DEFAULT_STAGE_DRIFT_OUTPUT_DIR="export/stage_drift/run_all"
   DEFAULT_STAGE_DRIFT_NEMO_STAGE="skip"
@@ -107,6 +109,7 @@ INPUT_HEIGHT="${INPUT_HEIGHT:-${DEFAULT_INPUT_HEIGHT}}"
 INPUT_WIDTH="${INPUT_WIDTH:-${DEFAULT_INPUT_WIDTH}}"
 INPUT_CHANNELS="${INPUT_CHANNELS:-${DEFAULT_INPUT_CHANNELS}}"
 CALIB_DIR="${CALIB_DIR:-${DEFAULT_CALIB_DIR}}"
+CALIB_MANIFEST="${CALIB_MANIFEST:-}"
 CALIB_BATCHES="${CALIB_BATCHES:-128}"
 COMPAT_CALIB_BATCHES="${COMPAT_CALIB_BATCHES:-8}"
 RUN_DORY="${RUN_DORY:-${DEFAULT_RUN_DORY}}"
@@ -119,6 +122,7 @@ RUN_QUANT_POLICY_SWEEP="${RUN_QUANT_POLICY_SWEEP:-${DEFAULT_RUN_QUANT_POLICY_SWE
 REAPPLY_GAP8_RAW_RESIDUAL_PATCHES="${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES:-${DEFAULT_REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}}"
 RAW_RESIDUAL_PATCH_REPORT="${RAW_RESIDUAL_PATCH_REPORT:-${DEFAULT_RAW_RESIDUAL_PATCH_REPORT}}"
 RAW_RESIDUAL_TEMPLATE_APP_DIR="${RAW_RESIDUAL_TEMPLATE_APP_DIR:-${DEFAULT_RAW_RESIDUAL_TEMPLATE_APP_DIR}}"
+GAP8_LAYER_MANIFEST="${GAP8_LAYER_MANIFEST:-${DEFAULT_GAP8_LAYER_MANIFEST}}"
 STAGE_DRIFT_IMAGE="${STAGE_DRIFT_IMAGE:-${DEFAULT_STAGE_DRIFT_IMAGE}}"
 STAGE_DRIFT_OUTPUT_DIR="${STAGE_DRIFT_OUTPUT_DIR:-${DEFAULT_STAGE_DRIFT_OUTPUT_DIR}}"
 STAGE_DRIFT_NEMO_STAGE="${STAGE_DRIFT_NEMO_STAGE:-${DEFAULT_STAGE_DRIFT_NEMO_STAGE}}"
@@ -207,7 +211,7 @@ ensure_module_or_sync_requirements() {
   local module_name="$1"
   local req_file="$2"
   local py_bin="$3"
-  if ! "$py_bin" -c "import ${module_name}" >/dev/null 2>&1; then
+  if ! "$py_bin" -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('${module_name}') is not None else 1)" >/dev/null 2>&1; then
     echo "=== Module '${module_name}' missing in active env; syncing ${req_file} ==="
     if [ -f "$req_file" ]; then
       "$py_bin" -m pip install -r "$req_file"
@@ -235,7 +239,32 @@ ensure_nemo_requirement_sync() {
 
   local req_url
   req_url="${req_line#*@ }"
-  if ! "$py_bin" -c "import inspect; import nemo.transf.deploy as d; import sys; sys.exit(0 if 'if eps_in_new is None:' in inspect.getsource(d._set_eps_in_pact) else 1)" >/dev/null 2>&1; then
+  if ! "$py_bin" - <<'PY' >/dev/null 2>&1
+from pathlib import Path
+import site
+import sys
+
+needle = "if eps_in_new is None:"
+candidates = []
+for site_dir in site.getsitepackages():
+    candidates.append(Path(site_dir) / "nemo" / "transf" / "deploy.py")
+
+try:
+    user_site = site.getusersitepackages()
+except Exception:
+    user_site = None
+
+if user_site:
+    candidates.append(Path(user_site) / "nemo" / "transf" / "deploy.py")
+
+for candidate in candidates:
+    if candidate.is_file():
+        text = candidate.read_text(encoding="utf-8", errors="ignore")
+        raise SystemExit(0 if needle in text else 1)
+
+raise SystemExit(1)
+PY
+  then
     echo "=== pytorch-nemo missing expected deploy fix; syncing ${req_file} ==="
     "$py_bin" -m pip install --upgrade --force-reinstall --no-deps "$req_url"
   fi
@@ -484,12 +513,14 @@ if [ "${MODEL_TYPE}" = "hybrid_follow" ]; then
     echo "[run_all] Bootstrap checkpoint created: ${CKPT}"
   fi
 
-  if [ -z "${CALIB_DIR}" ]; then
+  if [ -z "${CALIB_DIR}" ] && [ -z "${CALIB_MANIFEST}" ]; then
     if HYBRID_CALIB_DIR="$(select_hybrid_follow_calib_dir)"; then
       CALIB_DIR="${HYBRID_CALIB_DIR}"
       echo "[run_all] Using hybrid_follow calibration dir: ${CALIB_DIR}"
     else
-      echo "[run_all] No hybrid_follow calibration images found; export will fall back to random calibration."
+      echo "ERROR: hybrid_follow export requires real calibration data."
+      echo "Set CALIB_DIR to a directory of representative images, CALIB_MANIFEST to an ordered calibration manifest, or provide --calib-tensor through the exporter."
+      exit 1
     fi
   fi
 
@@ -519,6 +550,9 @@ if [ "${RUN_COMPAT_CHECKS}" = "1" ]; then
   if [ -n "${CALIB_DIR}" ]; then
     COMPAT_CMD+=(--calib-dir "${CALIB_DIR}")
   fi
+  if [ -n "${CALIB_MANIFEST}" ]; then
+    COMPAT_CMD+=(--calib-manifest "${CALIB_MANIFEST}")
+  fi
 
   if [ -n "${MEAN}" ] || [ -n "${STD}" ]; then
     if [ -z "${MEAN}" ] || [ -z "${STD}" ]; then
@@ -532,7 +566,7 @@ if [ "${RUN_COMPAT_CHECKS}" = "1" ]; then
 fi
 
 NEMO_CMD=(
-  export_nemo_quant.py
+  nemo/export_nemo_quant.py
   --model-type "${MODEL_TYPE}"
   --ckpt "${CKPT}"
   --out "${OUT_ONNX}"
@@ -554,6 +588,9 @@ fi
 
 if [ -n "${CALIB_DIR}" ]; then
   NEMO_CMD+=(--calib-dir "${CALIB_DIR}")
+fi
+if [ -n "${CALIB_MANIFEST}" ]; then
+  NEMO_CMD+=(--calib-manifest "${CALIB_MANIFEST}")
 fi
 
 # If training used mean/std normalization, set both MEAN and STD.
@@ -707,6 +744,7 @@ DORY_WEIGHTS_TXT_DIR_ABS="$(abspath_with_python "$DORY_PY" "${DORY_WEIGHTS_TXT_D
 DORY_ARTIFACT_MANIFEST_ABS="$(abspath_with_python "$DORY_PY" "${DORY_ARTIFACT_MANIFEST}")"
 CRAZYFLIE_APP_DIR_ABS="$(abspath_with_python "$DORY_PY" "${CRAZYFLIE_APP_DIR}")"
 RAW_RESIDUAL_PATCH_REPORT_ABS="$(abspath_with_python "$DORY_PY" "${RAW_RESIDUAL_PATCH_REPORT}")"
+GAP8_LAYER_MANIFEST_ABS="$(abspath_with_python "$DORY_PY" "${GAP8_LAYER_MANIFEST}")"
 
 mkdir -p "$(dirname "${DORY_CONFIG_GEN}")"
 mkdir -p "${DORY_APP_DIR}"
@@ -807,6 +845,16 @@ if [ "${REAPPLY_GAP8_RAW_RESIDUAL_PATCHES}" = "1" ]; then
     --application-dir "${DORY_APP_DIR_ABS}" \
     --template-application-dir "${RAW_RESIDUAL_TEMPLATE_APP_DIR}" \
     --json-out "${RAW_RESIDUAL_PATCH_REPORT_ABS}"
+fi
+
+GAP8_LAYER_MANIFEST_TOOL="${PROJECT_ROOT}/export/build_gap8_layer_manifest.py"
+if [ -f "${GAP8_LAYER_MANIFEST_TOOL}" ] && [ -f "${DORY_ARTIFACT_MANIFEST}" ] && [ -f "${DORY_NETWORK_H}" ]; then
+  mkdir -p "$(dirname "${GAP8_LAYER_MANIFEST}")"
+  echo "[run_all] Building GAP8 layer manifest ..."
+  "$DORY_PY" "${GAP8_LAYER_MANIFEST_TOOL}" \
+    --dory-manifest "${DORY_ARTIFACT_MANIFEST_ABS}" \
+    --network-header "${DORY_NETWORK_H}" \
+    --output-json "${GAP8_LAYER_MANIFEST_ABS}"
 fi
 
 if [ "${SYNC_TO_CRAZYFLIE}" = "1" ]; then

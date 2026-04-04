@@ -16,6 +16,24 @@ def _build_consumers(graph):
     return consumers
 
 
+def _prune_unused_initializers(graph):
+    used = set()
+    for node in graph.node:
+        for inp in node.input:
+            if inp:
+                used.add(inp)
+    for out in graph.output:
+        if out.name:
+            used.add(out.name)
+
+    kept = [init for init in graph.initializer if init.name in used]
+    removed = len(graph.initializer) - len(kept)
+    if removed:
+        del graph.initializer[:]
+        graph.initializer.extend(kept)
+    return removed
+
+
 def _pick_non_const_input(inputs, init_names):
     if len(inputs) != 2:
         return None
@@ -97,6 +115,9 @@ def strip_affine_mul_add(model):
     graph.node.extend(new_nodes)
 
     print(f"Removed {removed_count} nodes from affine Mul->Add pairs")
+    pruned_initializers = _prune_unused_initializers(graph)
+    if pruned_initializers:
+        print(f"Pruned {pruned_initializers} unused initializers")
     return model
 
 

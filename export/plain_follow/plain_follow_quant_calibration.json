@@ -1,0 +1,238 @@
+{
+  "count": 16,
+  "calib_dir": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324",
+  "calib_tensor": null,
+  "calib_batches_requested": 128,
+  "calib_seed": 0,
+  "source_kinds": [
+    "calib_dir_image"
+  ],
+  "aggregate_checksum_sha256": "71b907a41e00affe74ac1b1b6f7661049326082ce0a12068fb8a496ca1525a72",
+  "samples": [
+    {
+      "index": 0,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/11_negative_000000488736.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/11_negative_000000488736.jpg",
+      "source_checksum_sha256": "b2eee8c0e4cc6cdec6f57577a3f165400a98e936280670c70152b48046dd2234",
+      "tensor_checksum_sha256": "a790a98ff1cc2dc6008b97172169708ff135ef98d10315207b050b8dcb2d2ee4",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 1,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/15_negative_000000531495.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/15_negative_000000531495.jpg",
+      "source_checksum_sha256": "a4a47dfe4a345352293822ce4c33e13e02978b1f050c265e1abc9618b74f1cc4",
+      "tensor_checksum_sha256": "9a0ff34c004888e677e98f38bd8476945b266256f3a735c83f23dca8b33bd6d9",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 2,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/06_visible_000000502168.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/06_visible_000000502168.jpg",
+      "source_checksum_sha256": "77bb47642ea5f7438a8d98a17b48b1df6e8d3a3b824af7b9b814c6197dd62dd5",
+      "tensor_checksum_sha256": "acb32af20c35033076208ff19f394e7236e12d364aafc1cd08c52c3b2435f262",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 3,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/02_visible_000000510095.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/02_visible_000000510095.jpg",
+      "source_checksum_sha256": "40eea5adaa2072c80f28e81c22546c7610bfafef193732da6b4639b1bc5f1add",
+      "tensor_checksum_sha256": "d9a3519a304e857329e178284e7700f995888d8ebdc1228047f839d6e6718285",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 4,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/10_visible_000000567011.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/10_visible_000000567011.jpg",
+      "source_checksum_sha256": "f52ff0a96efaf136300ad289e5e7a4c944596fe16f4276bb5c41ffbe0a6b657d",
+      "tensor_checksum_sha256": "bcc1fa4ac4e1ecbb51e773e20a4038cb2145c16811719285cf7eda529e4da0f1",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 5,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/03_visible_000000244496.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/03_visible_000000244496.jpg",
+      "source_checksum_sha256": "f7320cc3413587c90b0ee5952765fd1f707e8d90bc6050f18585f61176975e93",
+      "tensor_checksum_sha256": "3cba555d4fa7a777c9b0720764356ef04017960303da24fa5f9cbe967120a162",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 6,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/04_visible_000000094944.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/04_visible_000000094944.jpg",
+      "source_checksum_sha256": "a3fdb98ece1ececeadca3a00c1dc4ef0cb609bb2efd164d58907fbe65a0fb3cf",
+      "tensor_checksum_sha256": "02ccdeb8f13556ac487a95349df55afc921fc4fd195339b7285712a451a847ed",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 7,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/12_negative_000000383621.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/12_negative_000000383621.jpg",
+      "source_checksum_sha256": "62182742874ac702f4d8ea7f70e0b69e313e431cee701ae33513390f9228c4a7",
+      "tensor_checksum_sha256": "160481bc0ed17c3482b9ff0e330cfa0eefcc2d54e2e549e48dec1c8432fd4500",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 8,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/14_negative_000000429598.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/14_negative_000000429598.jpg",
+      "source_checksum_sha256": "cf692837b22f590cc75ed7eb9bcabd26772c71e924a35506df081b0956755bb2",
+      "tensor_checksum_sha256": "ea7a6dd3884c6bea327cb5456101cc2bd01e5f317cbf7de57860f59276624c90",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 9,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/08_visible_000000331604.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/08_visible_000000331604.jpg",
+      "source_checksum_sha256": "2a81535ca1b02d682c5e06e61dd743ab5356801e410870dc08e9c90f5bb6eaa1",
+      "tensor_checksum_sha256": "8bf6b097b70175c5362ff2c23e04aa2eb137cfd53c69b825b24505ce5e66bbd0",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 10,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/09_visible_000000436738.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/09_visible_000000436738.jpg",
+      "source_checksum_sha256": "91da0eb090acbd725757ca27f956fd72ef680ec2ebaf5377b2a647ddb5428168",
+      "tensor_checksum_sha256": "8d0eb75483cecb5c5478d47163f5b4a2507cb0bd84715f1fe1e5467270115b00",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 11,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/05_visible_000000236308.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/05_visible_000000236308.jpg",
+      "source_checksum_sha256": "d23d2d9abf2b356fa57fbedc886c462be5bbef2a93f3ebc5b37af1bc0437bb5d",
+      "tensor_checksum_sha256": "fd83390bc6211679f202ba33c3c84585851355ed8bd1742d7a51474e11ed499a",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 12,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/01_visible_000000121031.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/01_visible_000000121031.jpg",
+      "source_checksum_sha256": "b69d698c609263408bf76aa99d43deb0d9e6172c820e6c7fd31c402db1551fb2",
+      "tensor_checksum_sha256": "c90ccedefdddfa62854177729a7c98f4ce3088f4cec5f1c36227effa3f802647",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 13,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/07_visible_000000039785.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/07_visible_000000039785.jpg",
+      "source_checksum_sha256": "887b76f9732bdbb0038f0338cd1a687b49623114352bdde634a3a25a12454b99",
+      "tensor_checksum_sha256": "d5d931453b604716dd968567b82d4ac0ea7248ac0d992fe7ee2fac8ccc0589d9",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 14,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/16_negative_000000006723.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/16_negative_000000006723.jpg",
+      "source_checksum_sha256": "1d3ba71e9002721a2bc18791f3c86578d6de38fb61640803657276d53e73663f",
+      "tensor_checksum_sha256": "6cf3c86109f266e25298c85f312537f7cdaeb48c7bb446a85105470a1e1ee191",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    },
+    {
+      "index": 15,
+      "source": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/13_negative_000000540502.jpg",
+      "source_kind": "calib_dir_image",
+      "source_path": "logs/hybrid_follow_val/1_real_image_validation/input_sets/representative16_20260324/13_negative_000000540502.jpg",
+      "source_checksum_sha256": "7ef4ffab3b5669c369836d31d5e6443b59ce41a3506fbc2de448ca573d95775c",
+      "tensor_checksum_sha256": "c73985188828d08391e519cbbebda70fd91cfbb2cf56e2bc2c2ce6188caa8aa2",
+      "tensor_shape": [
+        1,
+        1,
+        128,
+        128
+      ]
+    }
+  ],
+  "artifact_path": "export/plain_follow/plain_follow_quant_calibration.json"
+}

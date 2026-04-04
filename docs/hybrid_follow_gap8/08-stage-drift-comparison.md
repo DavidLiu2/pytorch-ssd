@@ -67,17 +67,17 @@ Useful env vars:
 - `STAGE_DRIFT_OUTPUT_DIR=export/hybrid_follow/stage_drift/run_all`
 - `STAGE_DRIFT_NEMO_STAGE=auto`
 
-`run_aideck_val.sh` now accepts optional env hooks so a caller can attach stage drift to a runtime validation sample:
+`run_val.sh aideck` now accepts optional env hooks so a caller can attach stage drift to a runtime validation sample:
 
 - `RUN_STAGE_DRIFT_DEBUG=1`
 - `HOST_STAGE_DRIFT_IMAGE=<image>`
 - `HOST_STAGE_DRIFT_OUTPUT_DIR=<sample-dir/stage_drift>`
 - `HOST_FINAL_TENSOR_JSON=<sample-dir/gvsoc_final_tensor.json>`
 
-`run_real_image_val.sh` now enables stage drift by default and forwards env-based overrides into the batch validator:
+`run_val.sh real` now enables stage drift by default and forwards env-based overrides into the batch validator:
 
 ```bash
-STAGE_DRIFT_NEMO_STAGE=skip ./run_real_image_val.sh ...
+STAGE_DRIFT_NEMO_STAGE=skip ./run_val.sh real ...
 ```
 
 That writes a per-sample `stage_drift/` directory beside the normal validation artifacts.
@@ -85,7 +85,7 @@ That writes a per-sample `stage_drift/` directory beside the normal validation a
 To disable it for a batch run:
 
 ```bash
-STAGE_DRIFT=0 ./run_real_image_val.sh ...
+STAGE_DRIFT=0 ./run_val.sh real ...
 ```
 
 ## Output Layout
