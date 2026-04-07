@@ -161,22 +161,26 @@ Interpretation:
 
 `plain_follow` is part of the quant-native family and uses the same shared tooling:
 
+- production wrapper: [../../run_plain_follow.sh](../../run_plain_follow.sh)
+- release driver: [../../export/run_plain_follow_release.py](../../export/run_plain_follow_release.py)
 - evaluator: [../../export/evaluate_quant_native_follow.py](../../export/evaluate_quant_native_follow.py)
 - float overlays: [../../export/validate_follow_rep16_overlays.py](../../export/validate_follow_rep16_overlays.py)
+- pre/post overlays: [../../export/compare_quant_native_follow_rep16_overlays.py](../../export/compare_quant_native_follow_rep16_overlays.py)
 
-Checked-in `plain_follow` quant/export artifacts now include:
+The current production path is:
 
-- baseline compare: [../../logs/plain_follow_quant_val/baseline_compare/summary.md](../../logs/plain_follow_quant_val/baseline_compare/summary.md)
-- improved no-fusion compare: [../../logs/plain_follow_quant_val/no_fusion_compare/summary.md](../../logs/plain_follow_quant_val/no_fusion_compare/summary.md)
-- QD to ID operator sweep: [../../logs/plain_follow_quant_val/qd_id_operator_sweep/study_summary.md](../../logs/plain_follow_quant_val/qd_id_operator_sweep/study_summary.md)
-- stem integerization study: [../../logs/plain_follow_quant_val/stem_integerization_study/study_summary.md](../../logs/plain_follow_quant_val/stem_integerization_study/study_summary.md)
-- bin-head quantization explanation: [../../logs/plain_follow_quant_val/bin_head_quantization_explanation.md](../../logs/plain_follow_quant_val/bin_head_quantization_explanation.md)
+1. Build a deployment-matched calibration manifest from COCO val.
+2. Materialize a local validation bundle containing `rep16`, `hard_case`, and extra ranked COCO val images.
+3. Run float overlays on `rep16`, `hard_case`, and the expanded pack.
+4. Run the canonical ONNX export/eval on the expanded pack plus hard-case subset.
+5. Run pre/post overlay comparisons on `rep16` and `hard_case`.
+6. Read the consolidated release summary under `logs/plain_follow_prod`.
 
 So the safe summary today is:
 
 - the model architecture is export-oriented,
-- the float checkpoint is validated on rep16,
-- the repo now includes a checked-in `plain_follow` quantization/debug trail, with the current earliest major drift appearing on the QD to ID transition and the first true semantic break localizing to the first activation path.
+- the float checkpoint is already strong enough to promote into a production-style validation flow,
+- the supported path is now the dedicated plain_follow wrapper rather than the older one-off study scripts.
 
 ## When To Reach For It
 

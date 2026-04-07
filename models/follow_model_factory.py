@@ -15,6 +15,7 @@ from models.hybrid_follow_net import (
 from models.quant_native_follow_net import (
     DEFAULT_QUANT_NATIVE_FOLLOW_STEM_MODE,
     DroNetLiteFollowNet,
+    PlainFollowBinNet,
     PlainFollowNet,
     PlainFollowV2Net,
     PlainFollowTinyNet,
@@ -121,6 +122,8 @@ def build_follow_model(
     }
     if model_type == "plain_follow":
         return PlainFollowNet(**common_kwargs)
+    if model_type == "plain_follow_bin":
+        return PlainFollowBinNet(**common_kwargs)
     if model_type == "plain_follow_v2":
         return PlainFollowV2Net(**common_kwargs)
     if model_type == "plain_follow_tiny":

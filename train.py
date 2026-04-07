@@ -79,7 +79,7 @@ def parse_args():
         "--model-type",
         type=str,
         default="hybrid_follow",
-        choices=["ssd", "hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"],
+        choices=["ssd", "hybrid_follow", "plain_follow", "plain_follow_bin", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"],
     )
     ap.add_argument(
         "--follow-head-type",
@@ -334,7 +334,7 @@ def _copy_loss_weights(weights: dict[str, float] | None) -> dict[str, float] | N
 
 
 def build_follow_training_policy(args) -> dict[str, Any]:
-    if args.model_type in {"plain_follow", "plain_follow_v2", "plain_follow_tiny"}:
+    if args.model_type in {"plain_follow", "plain_follow_bin", "plain_follow_v2", "plain_follow_tiny"}:
         visible_fraction = _clamp_unit_interval(
             args.follow_visible_fraction,
             default=0.60,

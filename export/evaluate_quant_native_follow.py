@@ -127,6 +127,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True, help="Directory for outputs and reports.")
     parser.add_argument("--rep16-dir", default=str(DEFAULT_REP16_DIR))
     parser.add_argument("--hard-case-dir", default=str(DEFAULT_HARD_CASE_DIR))
+    parser.add_argument(
+        "--primary-dataset-label",
+        default="rep16",
+        help="Label used for the main evaluation set in summaries.",
+    )
+    parser.add_argument(
+        "--secondary-dataset-label",
+        default="hard_case",
+        help="Label used for the hard-case subset in summaries.",
+    )
     parser.add_argument("--annotations", default=str(DEFAULT_ANNOTATIONS))
     parser.add_argument("--calib-dir", default=str(DEFAULT_REP16_DIR))
     parser.add_argument("--calib-manifest", default=None)
@@ -1444,8 +1454,10 @@ def tensor_rows(stage_rows: list[np.ndarray]) -> torch.Tensor:
 
 def build_summary_markdown(summary: dict[str, Any]) -> str:
     float_metrics = summary["float_validation"]
-    rep16 = summary["datasets"]["rep16"]["onnx"]
-    hard_case = summary["datasets"]["hard_case"]["onnx"]
+    primary_label = str(summary.get("primary_dataset_label") or "rep16")
+    secondary_label = str(summary.get("secondary_dataset_label") or "hard_case")
+    primary_metrics = (summary["datasets"].get(primary_label) or {}).get("onnx") or {}
+    secondary_metrics = (summary["datasets"].get(secondary_label) or {}).get("onnx") or {}
     earliest = summary["quant_fidelity"]["earliest_bad_boundary"]
     qd_id_operator = (summary["quant_fidelity"].get("qd_to_id_operator_report") or {}).get("first_bad_operator") or {}
     pipeline = summary["pipeline_complexity"]
@@ -1466,16 +1478,16 @@ def build_summary_markdown(summary: dict[str, Any]) -> str:
         f"- size_mae: `{float_metrics.get('size_mae')}`",
         f"- no_person_fp_rate: `{float_metrics.get('no_person_fp_rate')}`",
         "",
-        "## Quantized Rep16",
-        f"- onnx follow_score: `{rep16.get('follow_score')}`",
-        f"- onnx x_mae: `{rep16.get('x_mae')}`",
-        f"- onnx size_mae: `{rep16.get('size_mae')}`",
-        f"- onnx no_person_fp_rate: `{rep16.get('no_person_fp_rate')}`",
+        f"## Quantized {primary_label}",
+        f"- onnx follow_score: `{primary_metrics.get('follow_score')}`",
+        f"- onnx x_mae: `{primary_metrics.get('x_mae')}`",
+        f"- onnx size_mae: `{primary_metrics.get('size_mae')}`",
+        f"- onnx no_person_fp_rate: `{primary_metrics.get('no_person_fp_rate')}`",
         "",
-        "## Hard Case",
-        f"- onnx follow_score: `{hard_case.get('follow_score')}`",
-        f"- onnx x_mae: `{hard_case.get('x_mae')}`",
-        f"- onnx size_mae: `{hard_case.get('size_mae')}`",
+        f"## {secondary_label}",
+        f"- onnx follow_score: `{secondary_metrics.get('follow_score')}`",
+        f"- onnx x_mae: `{secondary_metrics.get('x_mae')}`",
+        f"- onnx size_mae: `{secondary_metrics.get('size_mae')}`",
         "",
         "## Quant Fidelity",
         f"- earliest bad boundary: `{(earliest or {}).get('boundary_name')}`",
@@ -1594,6 +1606,10 @@ def main() -> None:
     ckpt_path = Path(args.ckpt).expanduser().resolve()
     rep16_dir = Path(args.rep16_dir).expanduser().resolve()
     hard_case_dir = Path(args.hard_case_dir).expanduser().resolve()
+    primary_dataset_label = str(args.primary_dataset_label or "rep16")
+    secondary_dataset_label = str(args.secondary_dataset_label or "hard_case")
+    if primary_dataset_label == secondary_dataset_label:
+        raise ValueError("Primary and secondary dataset labels must be different.")
     annotations_path = Path(args.annotations).expanduser().resolve()
 
     metadata = load_checkpoint_payload(ckpt_path, torch.device("cpu"))
@@ -1673,8 +1689,8 @@ def main() -> None:
 
     dataset_views: dict[str, Any] = {}
     for dataset_name, index_mask in (
-        ("rep16", [True] * len(sample_rows)),
-        ("hard_case", [row["hard_case"] for row in sample_rows]),
+        (primary_dataset_label, [True] * len(sample_rows)),
+        (secondary_dataset_label, [row["hard_case"] for row in sample_rows]),
     ):
         selected = [idx for idx, keep in enumerate(index_mask) if keep]
         stage_metrics = {}
@@ -1787,6 +1803,8 @@ def main() -> None:
         "checkpoint_path": str(ckpt_path),
         "model_type": model_type,
         "follow_head_type": follow_head_type,
+        "primary_dataset_label": primary_dataset_label,
+        "secondary_dataset_label": secondary_dataset_label,
         "output_metadata": follow_output_metadata(model_type=model_type, head_type=follow_head_type),
         "parameter_count": parameter_count,
         "float_validation": float_validation,

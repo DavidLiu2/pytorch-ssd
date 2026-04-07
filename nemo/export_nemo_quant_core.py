@@ -4447,7 +4447,7 @@ def build_arg_parser():
         "--model-type",
         type=str,
         default="hybrid_follow",
-        choices=["ssd", "hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"],
+        choices=["ssd", "hybrid_follow", "plain_follow", "plain_follow_bin", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"],
     )
     parser.add_argument("--ckpt", type=str, default="training/person_ssd_pytorch/ssd_mbv2_raw.pth")
     parser.add_argument("--out", type=str, default="export/ssd_mbv2_nemo_id.onnx")

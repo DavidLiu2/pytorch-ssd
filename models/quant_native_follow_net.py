@@ -246,6 +246,60 @@ class PlainFollowNet(QuantNativeFollowBase):
         return self._pool_and_project(x)
 
 
+class PlainFollowBinNet(QuantNativeFollowBase):
+    def __init__(
+        self,
+        *,
+        input_channels: int = 1,
+        image_size: Tuple[int, int] = (128, 128),
+        follow_head_type: str | None = None,
+        stem_channels: int = 16,
+        stage_channels: Tuple[int, int, int] = (24, 32, 48),
+        stem_mode: str = DEFAULT_QUANT_NATIVE_FOLLOW_STEM_MODE,
+    ) -> None:
+        super().__init__(
+            model_type="plain_follow_bin",
+            input_channels=input_channels,
+            image_size=image_size,
+            follow_head_type=follow_head_type,
+            pool_kernel=8,
+        )
+        self.stem_channels = int(stem_channels)
+        self.stage_channels = tuple(int(value) for value in stage_channels)
+        self.stem_mode = normalize_quant_native_follow_stem_mode(stem_mode)
+
+        if self.stem_mode == DEFAULT_QUANT_NATIVE_FOLLOW_STEM_MODE:
+            self.stem = ConvBNReLU(self.input_channels, self.stem_channels, stride=2)
+        elif self.stem_mode == "delayed_relu":
+            self.stem = DelayedActivationStem(self.input_channels, self.stem_channels, stride=2)
+        else:
+            raise AssertionError(f"Unhandled stem_mode: {self.stem_mode}")
+        self.stage1 = StraightStage(self.stem_channels, self.stage_channels[0])
+        self.stage2 = StraightStage(self.stage_channels[0], self.stage_channels[1])
+        self.stage3 = StraightStage(self.stage_channels[1], self.stage_channels[2])
+        self.global_pool = nn.AvgPool2d(kernel_size=self.pool_kernel, stride=self.pool_kernel, count_include_pad=False)
+        self._init_output_head(self.stage_channels[-1])
+
+    def forward_features(self, x: torch.Tensor) -> Dict[str, torch.Tensor]:
+        features: Dict[str, torch.Tensor] = {}
+        x = self.stem(x)
+        features["stem"] = x
+        x = self.stage1(x)
+        features["stage1"] = x
+        x = self.stage2(x)
+        features["stage2"] = x
+        x = self.stage3(x)
+        features["stage3"] = x
+        return features
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.stem(x)
+        x = self.stage1(x)
+        x = self.stage2(x)
+        x = self.stage3(x)
+        return self._pool_and_project(x)
+
+
 class PlainFollowV2Net(QuantNativeFollowBase):
     def __init__(
         self,
@@ -254,7 +308,7 @@ class PlainFollowV2Net(QuantNativeFollowBase):
         image_size: Tuple[int, int] = (128, 128),
         follow_head_type: str | None = None,
         stem_channels: int = 16,
-        stage_channels: Tuple[int, int, int] = (24, 28, 40),
+        stage_channels: Tuple[int, int, int] = (24, 32, 48),
         stem_mode: str = DEFAULT_QUANT_NATIVE_FOLLOW_STEM_MODE,
     ) -> None:
         super().__init__(

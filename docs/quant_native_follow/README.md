@@ -12,7 +12,6 @@ Both models share the same high-level goal:
 ## Document Map
 
 - [plain_follow.md](plain_follow.md): the simplest quant-native baseline, with no residual adds.
-- [plain_follow_quant_remediation.md](plain_follow_quant_remediation.md): calibration-manifest, stem-specific PTQ, and light-QAT levers for `plain_follow`.
 - [dronet_lite_follow.md](dronet_lite_follow.md): a small residual variant that keeps the export graph much cleaner than `hybrid_follow`.
 - [../hybrid_follow_gap8/README.md](../hybrid_follow_gap8/README.md): older hybrid GAP8 notes for comparison.
 
@@ -49,12 +48,13 @@ As of `2026-03-31`, the repo state is:
 ## Entry Points
 
 - Training: [../../train.py](../../train.py)
+- Production wrapper: [../../run_plain_follow.sh](../../run_plain_follow.sh)
+- Plain-follow release driver: [../../export/run_plain_follow_release.py](../../export/run_plain_follow_release.py)
 - Quant/export validation: [../../export/evaluate_quant_native_follow.py](../../export/evaluate_quant_native_follow.py)
 - Calibration manifest builder: [../../export/build_follow_calibration_manifest.py](../../export/build_follow_calibration_manifest.py)
-- Focused plain-follow improvement loop: [../../export/run_plain_follow_quant_improvement.py](../../export/run_plain_follow_quant_improvement.py)
 - Float rep16 overlays: [../../export/validate_follow_rep16_overlays.py](../../export/validate_follow_rep16_overlays.py)
 - Pre/post-quant rep16 overlays: [../../export/compare_quant_native_follow_rep16_overlays.py](../../export/compare_quant_native_follow_rep16_overlays.py)
-- Wrapper scripts: [../../run_all.sh](../../run_all.sh) and [../../run_val.sh](../../run_val.sh)
+- Legacy/general wrappers: [../../run_all.sh](../../run_all.sh) and [../../run_val.sh](../../run_val.sh)
 
 Historical one-off studies were moved out of the main path into [../../export/archive/README.md](../../export/archive/README.md).
 

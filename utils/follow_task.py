@@ -11,12 +11,14 @@ import torch.nn.functional as F
 FOLLOW_MODEL_TYPES = (
     "hybrid_follow",
     "plain_follow",
+    "plain_follow_bin",
     "plain_follow_v2",
     "plain_follow_tiny",
     "dronet_lite_follow",
 )
 QUANT_NATIVE_FOLLOW_MODEL_TYPES = (
     "plain_follow",
+    "plain_follow_bin",
     "plain_follow_v2",
     "plain_follow_tiny",
     "dronet_lite_follow",
@@ -27,6 +29,7 @@ DEFAULT_QUANT_NATIVE_FOLLOW_HEAD = "xbin9_size_scalar"
 DEFAULT_VIS2_QUANT_NATIVE_FOLLOW_HEAD = "xbin9_size_bucket4_vis2"
 DEFAULT_PLAIN_FOLLOW_TINY_HEAD = DEFAULT_VIS2_QUANT_NATIVE_FOLLOW_HEAD
 VIS2_QUANT_NATIVE_FOLLOW_MODEL_TYPES = (
+    "plain_follow_bin",
     "plain_follow_v2",
     "plain_follow_tiny",
 )
@@ -163,8 +166,8 @@ def follow_model_default_stem_channels(model_type: str) -> int:
 def follow_model_default_stage_channels(model_type: str) -> tuple[int, int, int]:
     if model_type == "plain_follow_tiny":
         return (12, 20, 32)
-    if model_type == "plain_follow_v2":
-        return (24, 28, 40)
+    if model_type in {"plain_follow_bin", "plain_follow_v2"}:
+        return (24, 32, 48)
     if model_type in {"plain_follow", "dronet_lite_follow"}:
         return (24, 32, 48)
     raise ValueError(f"{model_type} does not have quant-native stage channel defaults.")

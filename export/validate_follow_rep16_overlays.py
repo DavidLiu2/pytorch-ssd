@@ -5,10 +5,13 @@ import argparse
 import csv
 import json
 import math
+import os
 import shutil
 import sys
 from pathlib import Path
 from typing import Any
+
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 import torch
 from PIL import Image, ImageDraw, ImageFont
@@ -102,6 +105,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True, help="Directory for overlays and summary files.")
     parser.add_argument("--images-dir", default=str(DEFAULT_REP16_DIR))
     parser.add_argument("--annotations", default=str(DEFAULT_ANN))
+    parser.add_argument(
+        "--dataset-label",
+        default="rep16",
+        help="Label used in summary metadata for the evaluated image set.",
+    )
     parser.add_argument("--vis-thresh", type=float, default=0.5)
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
@@ -503,6 +511,7 @@ def main() -> None:
         "checkpoint_path": str(ckpt_path),
         "model_type": model_type,
         "follow_head_type": head_type,
+        "dataset_label": str(args.dataset_label),
         "images_dir": str(images_dir),
         "annotations": str(annotations_path),
         "image_count": len(rows),

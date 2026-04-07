@@ -5,8 +5,6 @@ This folder holds older experimental helpers that were useful during quantizatio
 Archived scripts:
 
 - `run_quant_native_follow_study.py`
-- `run_plain_follow_qd_id_study.py`
-- `run_plain_follow_stem_integerization_study.py`
 - `run_hybrid_follow_stage4_variant_study.py`
 - `run_hybrid_follow_earliest_bad_op.py`
 - `compare_gap8_final_tensor.py`

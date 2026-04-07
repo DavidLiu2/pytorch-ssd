@@ -86,6 +86,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output-dir", required=True, help="Root output directory.")
     parser.add_argument("--images-dir", default=str(DEFAULT_REP16_DIR))
     parser.add_argument("--annotations", default=str(DEFAULT_ANN))
+    parser.add_argument(
+        "--dataset-label",
+        default="rep16",
+        help="Label used in summary metadata and markdown headings for the compared image set.",
+    )
     parser.add_argument("--vis-thresh", type=float, default=0.5)
     parser.add_argument("--overwrite", action="store_true")
     return parser.parse_args()
@@ -386,12 +391,14 @@ def build_eval_inputs(
 
 
 def build_summary_markdown(summary: dict[str, Any]) -> str:
+    dataset_label = str(summary.get("dataset_label") or "rep16")
+    model_type = str(summary.get("model_type") or "follow_model")
     pre = summary["metrics"]["pre_quant"]
     post = summary["metrics"]["post_quant"]
     drift = summary["metrics"]["pre_to_post"]
     return "\n".join(
         [
-            "# dronet_lite_follow rep16 comparison",
+            f"# {model_type} {dataset_label} comparison",
             "",
             "## Pre-Quant",
             f"- follow_score: `{pre.get('follow_score')}`",
@@ -586,6 +593,7 @@ def main() -> None:
         "onnx_path": str(onnx_path),
         "model_type": model_type,
         "follow_head_type": head_type,
+        "dataset_label": str(args.dataset_label),
         "images_dir": str(images_dir),
         "annotations": str(annotations_path),
         "image_count": len(rows),

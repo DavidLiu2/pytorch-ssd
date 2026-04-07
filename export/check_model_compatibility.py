@@ -77,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--model-type",
-        choices=["ssd", "hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"],
+        choices=["ssd", "hybrid_follow", "plain_follow", "plain_follow_bin", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"],
         default="hybrid_follow",
     )
     parser.add_argument("--ckpt", type=str, default=None)

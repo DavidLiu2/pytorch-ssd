@@ -157,7 +157,7 @@ def get_train_transforms(
     input_channels: int = 1,
     image_size: Tuple[int, int] = (128, 128),
 ):
-    if model_type in {"hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"}:
+    if model_type in {"hybrid_follow", "plain_follow", "plain_follow_bin", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"}:
         if input_channels != 1:
             raise ValueError(f"{model_type} path requires input_channels=1.")
         flip_prob = 0.5
@@ -187,7 +187,7 @@ def get_val_transforms(
     input_channels: int = 1,
     image_size: Tuple[int, int] = (128, 128),
 ):
-    if model_type in {"hybrid_follow", "plain_follow", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"}:
+    if model_type in {"hybrid_follow", "plain_follow", "plain_follow_bin", "plain_follow_v2", "plain_follow_tiny", "dronet_lite_follow"}:
         if input_channels != 1:
             raise ValueError(f"{model_type} path requires input_channels=1.")
         return Compose(
