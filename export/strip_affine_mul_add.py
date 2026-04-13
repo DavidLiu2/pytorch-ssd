@@ -4,6 +4,9 @@ from collections import defaultdict
 import onnx
 
 
+PASSTHROUGH_OPS = {"Cast", "Identity"}
+
+
 def _build_initializer_set(graph):
     return {init.name for init in graph.initializer}
 
@@ -14,6 +17,31 @@ def _build_consumers(graph):
         for inp in node.input:
             consumers[inp].append(node)
     return consumers
+
+
+def _downstream_user_ops(tensor_name, consumers, *, seen_tensors=None, seen_nodes=None):
+    if seen_tensors is None:
+        seen_tensors = set()
+    if seen_nodes is None:
+        seen_nodes = set()
+    if tensor_name in seen_tensors:
+        return set()
+    seen_tensors.add(tensor_name)
+
+    ops = set()
+    for node in consumers.get(tensor_name, []):
+        if id(node) in seen_nodes:
+            continue
+        seen_nodes.add(id(node))
+        ops.add(node.op_type)
+        if node.op_type in PASSTHROUGH_OPS and len(node.output) == 1:
+            ops |= _downstream_user_ops(
+                node.output[0],
+                consumers,
+                seen_tensors=seen_tensors,
+                seen_nodes=seen_nodes,
+            )
+    return ops
 
 
 def _prune_unused_initializers(graph):
@@ -83,10 +111,10 @@ def strip_affine_mul_add(model):
             continue
 
         add_out = add_node.output[0]
-        add_users = consumers.get(add_out, [])
-        user_ops = {n.op_type for n in add_users}
+        user_ops = _downstream_user_ops(add_out, consumers)
 
-        # Keep BNRelu/Requant patterns intact (they consume Add with Mul/Div/Clip/Floor).
+        # Keep BNRelu/Requant patterns intact, even if a Cast/Identity sits between
+        # the affine Add and the requantization chain.
         if any(op in {"Mul", "Div", "Clip", "Floor"} for op in user_ops):
             continue
 

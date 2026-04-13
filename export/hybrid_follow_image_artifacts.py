@@ -7,7 +7,7 @@ import shutil
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 import numpy as np
 import onnx
@@ -44,6 +44,7 @@ class StageArtifacts:
     expected_tensor: list[int]
     preprocess: str
     app_input_hex: str | None = None
+    expected_source: str | None = None
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -131,9 +132,11 @@ def preprocess_image_uint8(
     image_path: Path,
     height: int,
     width: int,
+    *,
+    model_type: str = "hybrid_follow",
 ) -> np.ndarray:
     transform = get_val_transforms(
-        model_type="hybrid_follow",
+        model_type=model_type,
         input_channels=1,
         image_size=(height, width),
     )
@@ -142,7 +145,7 @@ def preprocess_image_uint8(
 
     if tensor.ndim != 3 or tensor.shape[0] != 1:
         raise RuntimeError(
-            f"Expected hybrid_follow preprocessing to yield [1,H,W], got {tuple(tensor.shape)}"
+            f"Expected {model_type} preprocessing to yield [1,H,W], got {tuple(tensor.shape)}"
         )
 
     staged = torch.round(torch.clamp(tensor, 0.0, 1.0) * 255.0).to(torch.uint8)
@@ -191,6 +194,10 @@ def stage_image_artifacts(
     app_dir: Path | None = None,
     fallback_height: int = 128,
     fallback_width: int = 128,
+    model_type: str = "hybrid_follow",
+    expected_output: Sequence[int] | np.ndarray | None = None,
+    expected_output_name: str | None = None,
+    expected_source: str | None = None,
 ) -> StageArtifacts:
     image_path = image_path.expanduser().resolve()
     onnx_path = onnx_path.expanduser().resolve()
@@ -208,7 +215,7 @@ def stage_image_artifacts(
     _, _, input_shape = _get_model_input_meta(model, fallback_height, fallback_width)
     if len(input_shape) != 4 or input_shape[1] != 1:
         raise RuntimeError(
-            f"Expected hybrid_follow ONNX input shape [1,1,H,W], got {input_shape}"
+            f"Expected {model_type} ONNX input shape [1,1,H,W], got {input_shape}"
         )
     height = int(input_shape[2])
     width = int(input_shape[3])
@@ -217,13 +224,22 @@ def stage_image_artifacts(
         image_path=image_path,
         height=height,
         width=width,
+        model_type=model_type,
     )
-    output_name, input_shape, golden_output, output_shape = run_onnx_final_output(
-        onnx_path=onnx_path,
-        input_values=staged_input,
-        fallback_height=height,
-        fallback_width=width,
-    )
+    if expected_output is None:
+        output_name, input_shape, golden_output, output_shape = run_onnx_final_output(
+            onnx_path=onnx_path,
+            input_values=staged_input,
+            fallback_height=height,
+            fallback_width=width,
+        )
+        active_expected_source = expected_source or f"onnxruntime({onnx_path.name})"
+    else:
+        input_shape = list(input_shape)
+        golden_output = np.asarray(expected_output, dtype=np.int64).reshape(-1)
+        output_shape = [int(golden_output.size)]
+        output_name = str(expected_output_name or "final")
+        active_expected_source = expected_source or "external_expected_output"
 
     input_txt_path = output_dir / "input.txt"
     input_hex_path = output_dir / "inputs.hex"
@@ -264,10 +280,12 @@ def stage_image_artifacts(
         expected_tensor=golden_output.astype(np.int64).tolist(),
         preprocess=PREPROCESS_DESCRIPTION,
         app_input_hex=app_input_hex,
+        expected_source=active_expected_source,
     )
 
     metadata = artifacts.to_dict()
     metadata["onnx_path"] = str(onnx_path)
+    metadata["model_type"] = str(model_type)
     metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     return artifacts
 
@@ -294,6 +312,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--height", type=int, default=128, help="Expected input height.")
     parser.add_argument("--width", type=int, default=128, help="Expected input width.")
+    parser.add_argument(
+        "--model-type",
+        default="hybrid_follow",
+        help="Model type passed to the validation preprocessing transform.",
+    )
     return parser.parse_args()
 
 
@@ -306,6 +329,7 @@ def main() -> int:
         app_dir=Path(args.app_dir) if args.app_dir else None,
         fallback_height=args.height,
         fallback_width=args.width,
+        model_type=str(args.model_type),
     )
     print(json.dumps(artifacts.to_dict(), indent=2))
     return 0

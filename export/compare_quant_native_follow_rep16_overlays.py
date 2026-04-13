@@ -79,10 +79,18 @@ IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp"}
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Compare float checkpoint and post-quant ONNX outputs on rep16 and render side-by-side overlays."
+        description=(
+            "Compare float checkpoint outputs against post-quant deployment outputs and render "
+            "side-by-side overlays."
+        )
     )
     parser.add_argument("--ckpt", default=str(DEFAULT_CKPT), help="Pre-quant checkpoint.")
     parser.add_argument("--onnx", default=str(DEFAULT_ONNX), help="Post-quant ONNX model.")
+    parser.add_argument(
+        "--post-predictions-json",
+        default=None,
+        help="Optional JSON file containing post-quant raw outputs keyed by image. If set, this overrides --onnx inference.",
+    )
     parser.add_argument("--output-dir", required=True, help="Root output directory.")
     parser.add_argument("--images-dir", default=str(DEFAULT_REP16_DIR))
     parser.add_argument("--annotations", default=str(DEFAULT_ANN))
@@ -145,6 +153,20 @@ def write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writeheader()
         for row in rows:
             writer.writerow({key: row.get(key) for key in fieldnames})
+
+
+def read_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_post_prediction_map(path: Path) -> dict[tuple[str, str], dict[str, Any]]:
+    payload = read_json(path)
+    mapping: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in payload.get("samples") or []:
+        image_name = str(row.get("image_name") or "")
+        image_path = str(row.get("image_path") or "")
+        mapping[(image_name, image_path)] = row
+    return mapping
 
 
 def _draw_vertical_line(
@@ -393,6 +415,7 @@ def build_eval_inputs(
 def build_summary_markdown(summary: dict[str, Any]) -> str:
     dataset_label = str(summary.get("dataset_label") or "rep16")
     model_type = str(summary.get("model_type") or "follow_model")
+    post_source = str(summary.get("post_quant_source") or "onnx")
     pre = summary["metrics"]["pre_quant"]
     post = summary["metrics"]["post_quant"]
     drift = summary["metrics"]["pre_to_post"]
@@ -407,6 +430,7 @@ def build_summary_markdown(summary: dict[str, Any]) -> str:
             f"- no_person_fp_rate: `{pre.get('no_person_fp_rate')}`",
             "",
             "## Post-Quant",
+            f"- source: `{post_source}`",
             f"- follow_score: `{post.get('follow_score')}`",
             f"- x_mae: `{post.get('x_mae')}`",
             f"- size_mae: `{post.get('size_mae')}`",
@@ -431,14 +455,19 @@ def main() -> None:
     args = parse_args()
     ckpt_path = Path(args.ckpt).expanduser().resolve()
     onnx_path = Path(args.onnx).expanduser().resolve()
+    post_predictions_path = (
+        Path(args.post_predictions_json).expanduser().resolve() if args.post_predictions_json else None
+    )
     output_dir = Path(args.output_dir).expanduser().resolve()
     images_dir = Path(args.images_dir).expanduser().resolve()
     annotations_path = Path(args.annotations).expanduser().resolve()
 
     if not ckpt_path.is_file():
         raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
-    if not onnx_path.is_file():
+    if post_predictions_path is None and not onnx_path.is_file():
         raise FileNotFoundError(f"ONNX not found: {onnx_path}")
+    if post_predictions_path is not None and not post_predictions_path.is_file():
+        raise FileNotFoundError(f"Post-predictions JSON not found: {post_predictions_path}")
     if not images_dir.is_dir():
         raise FileNotFoundError(f"Images dir not found: {images_dir}")
 
@@ -453,9 +482,19 @@ def main() -> None:
     image_size = (int(payload.get("height", 128)), int(payload.get("width", 128)))
 
     model = build_follow_model_from_checkpoint(ckpt_path, device).eval()
-    session = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
-    onnx_input_name = session.get_inputs()[0].name
-    onnx_output_name = session.get_outputs()[0].name
+    session = None
+    onnx_input_name = None
+    onnx_output_name = None
+    post_prediction_map: dict[tuple[str, str], dict[str, Any]] = {}
+    post_quant_source = "onnxruntime(model_id.onnx)"
+    if post_predictions_path is not None:
+        post_prediction_map = load_post_prediction_map(post_predictions_path)
+        post_quant_source = str(read_json(post_predictions_path).get("simulation_source") or "post_predictions_json")
+    else:
+        session = ort.InferenceSession(str(onnx_path), providers=["CPUExecutionProvider"])
+        onnx_input_name = session.get_inputs()[0].name
+        onnx_output_name = session.get_outputs()[0].name
+        post_quant_source = f"onnxruntime({onnx_path.name})"
 
     annotations = AnnotationIndex(annotations_path)
     image_paths = discover_images(images_dir)
@@ -479,15 +518,23 @@ def main() -> None:
 
         with torch.no_grad():
             pre_raw = model(float_input.to(device)).detach().cpu()
-        post_raw_onnx = np.asarray(
-            session.run(
-                [onnx_output_name],
-                {onnx_input_name: staged_input.detach().cpu().numpy()},
-            )[0],
-            dtype=np.float32,
-        )
+        if post_predictions_path is not None:
+            prediction_row = post_prediction_map.get((image_path.name, str(image_path)))
+            if prediction_row is None:
+                prediction_row = post_prediction_map.get((image_path.name, image_path.as_posix()))
+            if prediction_row is None:
+                raise KeyError(f"Missing post-quant prediction for {image_path}")
+            post_raw_values = np.asarray(prediction_row.get("raw_output") or [], dtype=np.float32).reshape(1, -1)
+        else:
+            post_raw_values = np.asarray(
+                session.run(
+                    [onnx_output_name],
+                    {onnx_input_name: staged_input.detach().cpu().numpy()},
+                )[0],
+                dtype=np.float32,
+            )
         post_raw = torch.tensor(
-            np.asarray(semantic_output(post_raw_onnx, "id"), dtype=np.float32).reshape(1, -1)
+            np.asarray(semantic_output(post_raw_values, "id"), dtype=np.float32).reshape(1, -1)
         )
 
         pre_summary = follow_runtime_decode_summary(
@@ -590,7 +637,9 @@ def main() -> None:
 
     summary = {
         "checkpoint_path": str(ckpt_path),
-        "onnx_path": str(onnx_path),
+        "onnx_path": (str(onnx_path) if post_predictions_path is None else None),
+        "post_predictions_json": (str(post_predictions_path) if post_predictions_path is not None else None),
+        "post_quant_source": post_quant_source,
         "model_type": model_type,
         "follow_head_type": head_type,
         "dataset_label": str(args.dataset_label),

@@ -34,6 +34,7 @@ case "$(uname -s)" in
           HOST_FINAL_TENSOR_JSON
           HOST_TRACE_LAYER_OUTPUTS
           HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE
+          HOST_PATCH_BN_QUANT_INT64
           HOST_LAYER_MANIFEST
           HOST_STAGE_DRIFT_IMAGE
           HOST_STAGE_DRIFT_CKPT
@@ -81,6 +82,7 @@ esac
 #   HOST_VALIDATION_MAIN=/abs/path/to/validation_main.c
 #   HOST_EXPECTED_OUTPUT=/abs/path/to/output.txt
 #   HOST_RUN_LOG_COPY=/abs/path/to/output/run_gvsoc.log
+#   HOST_PATCH_BN_QUANT_INT64=1    # patch generated pulp_nn_utils.c requant helpers to use int64 intermediates
 #   COMPARE_SCRIPT=/abs/path/to/compare_gap8_final_tensor.py
 #   PLATFORM=gvsoc            # gvsoc (default) or board
 #   EXTRA_MAKE_ARGS="..."     # extra args appended to make clean all
@@ -114,6 +116,7 @@ HOST_RUN_LOG_COPY="${HOST_RUN_LOG_COPY:-}"
 HOST_FINAL_TENSOR_JSON="${HOST_FINAL_TENSOR_JSON:-}"
 HOST_TRACE_LAYER_OUTPUTS="${HOST_TRACE_LAYER_OUTPUTS:-0}"
 HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE="${HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE:-64}"
+HOST_PATCH_BN_QUANT_INT64="${HOST_PATCH_BN_QUANT_INT64:-1}"
 HOST_LAYER_MANIFEST="${HOST_LAYER_MANIFEST:-$PROJECT_DIR/export/hybrid_follow/gap8_layer_manifest.json}"
 HOST_STAGE_DRIFT_IMAGE="${HOST_STAGE_DRIFT_IMAGE:-}"
 HOST_STAGE_DRIFT_CKPT="${HOST_STAGE_DRIFT_CKPT:-$PROJECT_DIR/training/hybrid_follow/hybrid_follow_best_follow_score.pth}"
@@ -325,6 +328,8 @@ CONTAINER_VALIDATION_MAIN=""
 if [[ "$USE_VALIDATION_MAIN" == "1" ]]; then
   CONTAINER_VALIDATION_MAIN="$(container_path_from_host "$HOST_VALIDATION_MAIN")"
 fi
+CONTAINER_TRACE_PATCHER="$(container_path_from_host "$PROJECT_DIR/tools/patch_gap8_network_trace.py")"
+CONTAINER_BN_QUANT_PATCHER="$(container_path_from_host "$PROJECT_DIR/tools/patch_gap8_bn_quant_int64.py")"
 
 echo "[1/5] Ensure container '$CONTAINER_NAME' exists and is running..."
 if docker ps -a --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
@@ -351,12 +356,20 @@ docker exec "$CONTAINER_NAME" bash -lc "
     perl -0pi -e 's/unsigned int args\\[4\\];/unsigned int args[5];/' '$CONTAINER_APP_DIR/src/network.c'
   fi
   if [[ '$HOST_TRACE_LAYER_OUTPUTS' == '1' ]]; then
-    if grep -q '#define APP_TRACE_LAYER_OUTPUTS (0)' '$CONTAINER_APP_DIR/inc/app_config.h'; then
+    if [[ -f '$CONTAINER_APP_DIR/inc/app_config.h' ]] && grep -q '#define APP_TRACE_LAYER_OUTPUTS (0)' '$CONTAINER_APP_DIR/inc/app_config.h'; then
       perl -0pi -e 's/#define APP_TRACE_LAYER_OUTPUTS \\(0\\)/#define APP_TRACE_LAYER_OUTPUTS (1)/' '$CONTAINER_APP_DIR/inc/app_config.h'
     fi
-    if grep -q '#define APP_TRACE_LAYER_OUTPUT_BYTES_PER_LINE' '$CONTAINER_APP_DIR/inc/app_config.h'; then
+    if [[ -f '$CONTAINER_APP_DIR/inc/app_config.h' ]] && grep -q '#define APP_TRACE_LAYER_OUTPUT_BYTES_PER_LINE' '$CONTAINER_APP_DIR/inc/app_config.h'; then
       perl -0pi -e 's/#define APP_TRACE_LAYER_OUTPUT_BYTES_PER_LINE \\([^\\)]*\\)/#define APP_TRACE_LAYER_OUTPUT_BYTES_PER_LINE (${HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE}u)/' '$CONTAINER_APP_DIR/inc/app_config.h'
     fi
+    if [[ -f '$CONTAINER_APP_DIR/src/network.c' ]]; then
+      python3 '$CONTAINER_TRACE_PATCHER' \
+        --network-c '$CONTAINER_APP_DIR/src/network.c' \
+        --bytes-per-line '${HOST_TRACE_LAYER_OUTPUT_BYTES_PER_LINE}'
+    fi
+  fi
+  if [[ '$HOST_PATCH_BN_QUANT_INT64' == '1' ]] && [[ -f '$CONTAINER_APP_DIR/src/pulp_nn_utils.c' ]]; then
+    python3 '$CONTAINER_BN_QUANT_PATCHER' --app-dir '$CONTAINER_APP_DIR'
   fi
 "
 

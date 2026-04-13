@@ -6,6 +6,7 @@ import json
 import math
 import os
 import re
+import shutil
 import subprocess
 import sys
 from copy import deepcopy
@@ -42,6 +43,7 @@ from export_nemo_quant_core import (  # noqa: E402
     apply_activation_alpha_overrides,
     bind_safe_set_eps_in,
     build_eps_dict_from_modules,
+    clamp_dory_weight_initializers_to_int8,
     compare_arrays_rich,
     collect_calib_samples,
     collect_module_output_samples,
@@ -62,6 +64,7 @@ from export_nemo_quant_core import (  # noqa: E402
     normalize_integer_requant_tensors,
     patch_model_to_graph_compat,
     prepare_quant_native_follow_qd,
+    report_dory_weight_initializer_ranges,
     run_activation_calibration,
     semantic_output,
 )
@@ -114,13 +117,19 @@ DEFAULT_STEM_ACTIVATION_MODULE_CANDIDATES = (
     "stem.relu",
     "stem.post.relu",
 )
+DORY_SEMANTIC_PARITY_CAVEAT = (
+    "ONNXRuntime on cleaned model_id_dory.onnx is closer to deploy semantics than model_id.onnx, "
+    "but generated DORY/GVSOC artifacts can still differ because DORY integerizes requant/BN "
+    "parameters during codegen."
+)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Evaluate quant-native follow checkpoints through float, FQ, QD, ID, and ONNX "
-            "with a simplified earliest-bad-boundary workflow."
+            "with a simplified earliest-bad-boundary workflow, then emit a cleaned "
+            "DORY deployment ONNX plus cleanup audit."
         )
     )
     parser.add_argument("--ckpt", required=True, help="Checkpoint to evaluate.")
@@ -1010,7 +1019,7 @@ def export_id_onnx(model_id: torch.nn.Module, output_path: Path, opset_version: 
     )
 
 
-def run_cleanup_pipeline(src_onnx: Path, output_dir: Path) -> Path:
+def run_cleanup_pipeline(src_onnx: Path, output_dir: Path) -> tuple[Path, dict[str, Any]]:
     no_affine = output_dir / "model_id_noaffine.onnx"
     no_transpose = output_dir / "model_id_notranspose.onnx"
     no_min = output_dir / "model_id_nomin.onnx"
@@ -1023,13 +1032,83 @@ def run_cleanup_pipeline(src_onnx: Path, output_dir: Path) -> Path:
         (PROJECT_DIR / "export" / "strip_fake_quant.py", no_min, no_fake_quant),
         (PROJECT_DIR / "export" / "simplify_onnx.py", no_fake_quant, final_onnx),
     ]
+    cleanup_steps: list[dict[str, Any]] = []
+    simplify_fallback_used = False
+    simplify_fallback_source = None
     for script, src, dst in scripts:
-        subprocess.run(
-            [sys.executable, str(script), str(src), str(dst)],
-            cwd=str(PROJECT_DIR),
-            check=True,
+        try:
+            subprocess.run(
+                [sys.executable, str(script), str(src), str(dst)],
+                cwd=str(PROJECT_DIR),
+                check=True,
+            )
+            cleanup_steps.append(
+                {
+                    "script": script.name,
+                    "input_path": str(src),
+                    "output_path": str(dst),
+                    "status": "ok",
+                }
+            )
+        except subprocess.CalledProcessError:
+            if script.name != "simplify_onnx.py":
+                raise
+            # onnxsim can reject or corrupt valid quant-native follow graphs.
+            # The unsimplified nofakequant graph is already DORY-compatible, so
+            # keep semantics by falling back to it instead of forcing simplification.
+            shutil.copyfile(src, dst)
+            simplify_fallback_used = True
+            simplify_fallback_source = str(src)
+            cleanup_steps.append(
+                {
+                    "script": script.name,
+                    "input_path": str(src),
+                    "output_path": str(dst),
+                    "status": "fallback_copy",
+                }
+            )
+            print(
+                "[evaluate_quant_native_follow] WARNING: simplify_onnx failed; "
+                f"using unsimplified fallback {src} -> {dst}"
+            )
+    weight_range_audit_before = report_dory_weight_initializer_ranges(final_onnx)
+    weight_clamp = {
+        "applied": False,
+        "initializer_count": 0,
+        "total_clipped_values": 0,
+        "initializers": [],
+    }
+    if weight_range_audit_before:
+        clipped = clamp_dory_weight_initializers_to_int8(final_onnx)
+        total_values = int(sum(int(item.get("count") or 0) for item in clipped))
+        weight_clamp = {
+            "applied": True,
+            "initializer_count": int(len(clipped)),
+            "total_clipped_values": total_values,
+            "initializers": clipped,
+        }
+        print(
+            "[evaluate_quant_native_follow] Clamped {} rounded Conv/Gemm weight values "
+            "into signed int8 range for DORY compatibility.".format(total_values)
         )
-    return final_onnx
+        weight_range_audit_after = report_dory_weight_initializer_ranges(final_onnx)
+    else:
+        weight_range_audit_after = []
+
+    cleanup_report = {
+        "source_onnx": str(src_onnx),
+        "deployment_onnx": str(final_onnx),
+        "cleanup_steps": cleanup_steps,
+        "cleanup_step_count": int(len(cleanup_steps)),
+        "simplify_fallback_used": bool(simplify_fallback_used),
+        "simplify_fallback_source": simplify_fallback_source,
+        "weight_range_audit_before": weight_range_audit_before,
+        "weight_range_audit_after": weight_range_audit_after,
+        "weight_clamp": weight_clamp,
+        "runtime_validation_gate": "DORY frontend validation plus GVSOC tensor verification",
+        "semantic_parity_caveat": DORY_SEMANTIC_PARITY_CAVEAT,
+    }
+    return final_onnx, cleanup_report
 
 
 def run_compatibility_check(
@@ -1468,6 +1547,8 @@ def build_summary_markdown(summary: dict[str, Any]) -> str:
     stem_per_channel = calibration.get("stem_per_channel_support") or {}
     activation_sensitivity = summary.get("activation_sensitivity") or {}
     sensitivity_rollups = activation_sensitivity.get("boundary_rollups") or {}
+    dory_cleanup = summary.get("dory_cleanup") or {}
+    weight_clamp = dory_cleanup.get("weight_clamp") or {}
 
     lines = [
         f"# {summary['candidate_name']}",
@@ -1526,7 +1607,50 @@ def build_summary_markdown(summary: dict[str, Any]) -> str:
         f"- residual rescue needed: `{pipeline['residual_rescue_needed']}`",
         f"- onnx cleanup steps: `{pipeline['onnx_cleanup_steps']}`",
         f"- compatibility return code: `{pipeline['compatibility_returncode']}`",
+        "",
+        "## DORY Cleanup",
+        f"- deployment_onnx: `{dory_cleanup.get('deployment_onnx')}`",
+        f"- simplify fallback used: `{dory_cleanup.get('simplify_fallback_used')}`",
+        f"- weight clamp applied: `{weight_clamp.get('applied')}`",
+        f"- clipped initializer count: `{weight_clamp.get('initializer_count')}`",
+        f"- clipped value count: `{weight_clamp.get('total_clipped_values')}`",
+        f"- remaining out-of-range initializers: `{len(dory_cleanup.get('weight_range_audit_after') or [])}`",
+        f"- runtime validation gate: `{dory_cleanup.get('runtime_validation_gate')}`",
+        f"- deployment semantic caveat: `{dory_cleanup.get('semantic_parity_caveat')}`",
     ]
+    return "\n".join(lines)
+
+
+def build_dory_cleanup_markdown(report: dict[str, Any]) -> str:
+    weight_clamp = report.get("weight_clamp") or {}
+    lines = [
+        "# DORY Cleanup Report",
+        "",
+        f"- source_onnx: `{report.get('source_onnx')}`",
+        f"- deployment_onnx: `{report.get('deployment_onnx')}`",
+        f"- cleanup_step_count: `{report.get('cleanup_step_count')}`",
+        f"- simplify_fallback_used: `{report.get('simplify_fallback_used')}`",
+        f"- weight_clamp_applied: `{weight_clamp.get('applied')}`",
+        f"- clipped_initializer_count: `{weight_clamp.get('initializer_count')}`",
+        f"- clipped_value_count: `{weight_clamp.get('total_clipped_values')}`",
+        f"- runtime_validation_gate: `{report.get('runtime_validation_gate')}`",
+        f"- semantic_parity_caveat: `{report.get('semantic_parity_caveat')}`",
+        "",
+        "## Cleanup Steps",
+    ]
+    for step in report.get("cleanup_steps") or []:
+        lines.append(
+            f"- {step.get('script')}: `{step.get('status')}` `{step.get('input_path')}` -> `{step.get('output_path')}`"
+        )
+    lines.extend(
+        [
+            "",
+            "## Weight Clamp Details",
+            f"- before: `{report.get('weight_range_audit_before')}`",
+            f"- applied: `{weight_clamp.get('initializers')}`",
+            f"- after: `{report.get('weight_range_audit_after')}`",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -1629,7 +1753,7 @@ def main() -> None:
 
     id_onnx_path = output_dir / "model_id.onnx"
     export_id_onnx(model_id, id_onnx_path, int(args.opset_version))
-    dory_onnx_path = run_cleanup_pipeline(id_onnx_path, output_dir)
+    dory_onnx_path, dory_cleanup_report = run_cleanup_pipeline(id_onnx_path, output_dir)
     compat = run_compatibility_check(
         ckpt_path=ckpt_path,
         output_dir=output_dir,
@@ -1835,16 +1959,21 @@ def main() -> None:
             "graph_repair_needed": False,
             "head_collapse_needed": False,
             "residual_rescue_needed": False,
-            "onnx_cleanup_steps": 5,
+            "onnx_cleanup_steps": int(dory_cleanup_report.get("cleanup_step_count") or 0),
             "exporter_path": "generic_nemo_quantize_pact_qd_id",
             "deployment_artifacts_cleaner_than_hybrid": True,
+            "deployment_validation_artifact": "model_id_dory.onnx",
+            "dory_weight_clamp_applied": bool(((dory_cleanup_report.get("weight_clamp") or {}).get("applied"))),
             "compatibility_returncode": int(compat["returncode"]),
             "compatibility_status": ((compat.get("report") or {}).get("status")),
             "compatibility_report_path": compat.get("report_path"),
         },
+        "dory_cleanup": dory_cleanup_report,
         "artifacts": {
             "onnx": str(id_onnx_path),
             "dory_onnx": str(dory_onnx_path),
+            "dory_cleanup_report_json": str(output_dir / "dory_cleanup_report.json"),
+            "dory_cleanup_report_md": str(output_dir / "dory_cleanup_report.md"),
             "compatibility": compat,
         },
         "sample_rows": sample_rows,
@@ -1861,6 +1990,8 @@ def main() -> None:
         build_activation_sensitivity_markdown(activation_sensitivity_report),
     )
     write_json(output_dir / "calibration_summary.json", summary["calibration"])
+    write_json(output_dir / "dory_cleanup_report.json", dory_cleanup_report)
+    write_markdown(output_dir / "dory_cleanup_report.md", build_dory_cleanup_markdown(dory_cleanup_report))
 
 
 if __name__ == "__main__":

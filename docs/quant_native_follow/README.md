@@ -39,11 +39,14 @@ Supported quant-native follow heads:
 
 ## Current Snapshot
 
-As of `2026-03-31`, the repo state is:
+As of `2026-04-10`, the repo state is:
 
-- `plain_follow` currently looks like the cleaner functional baseline on the rep16 slice, and it now has checked-in quant/export study artifacts as well. See [plain_follow.md](plain_follow.md), [../../logs/plain_follow_val/summary.json](../../logs/plain_follow_val/summary.json), and [../../logs/plain_follow_quant_val/no_fusion_compare/summary.md](../../logs/plain_follow_quant_val/no_fusion_compare/summary.md).
+- `plain_follow` currently looks like the cleaner functional baseline on the rep16 slice, and it now has the main production wrapper in place. That wrapper validates deployment behavior with a DORY-graph semantic simulator built from cleaned `model_id_dory.onnx`, emits a `dory_cleanup_report`, and uses GVSOC as the final app-level gate. See [plain_follow.md](plain_follow.md), [../../logs/plain_follow_val/summary.json](../../logs/plain_follow_val/summary.json), and [../../logs/plain_follow_quant_val/no_fusion_compare/summary.md](../../logs/plain_follow_quant_val/no_fusion_compare/summary.md).
 - `dronet_lite_follow` is the cleaner deployment pipeline. The export path completed without the hybrid-style patch stack, and the main artifacts are in [../../export/dronet_lite_follow](../../export/dronet_lite_follow). See [../../logs/dronet_lite_follow_val/summary.md](../../logs/dronet_lite_follow_val/summary.md) and [../../logs/dronet_lite_follow_val/comparison_summary.md](../../logs/dronet_lite_follow_val/comparison_summary.md).
 - The important nuance is that `dronet_lite_follow` is simpler to debug than `hybrid_follow`, but the current checkpoint still shows meaningful semantic drift after quantization. Its earliest bad boundary is currently `fp_to_fq`.
+- The earlier `plain_follow` app-level drift root cause is now understood: generated GAP8 BN/requant helpers were overflowing `int32` intermediates. The pipeline now patches those generated helpers to use `int64` intermediates before GVSOC, and the known smoke repro now matches the seeded golden tensors exactly layer by layer.
+- One remaining caveat for `plain_follow`: the DORY-graph simulator is much closer to deploy semantics than ONNXRuntime on cleaned `model_id_dory.onnx`, but GVSOC is still the final gate because the deployed app is the real compiler/runtime path.
+- The GVSOC smoke path now seeds `network_generate` with image-specific `input.txt`, `output.txt`, and `out_layer*.txt` files generated from cleaned `model_id_dory.onnx`, so the app build carries meaningful per-layer checksums for the selected smoke image.
 
 ## Entry Points
 
@@ -51,6 +54,10 @@ As of `2026-03-31`, the repo state is:
 - Production wrapper: [../../run_plain_follow.sh](../../run_plain_follow.sh)
 - Plain-follow release driver: [../../export/run_plain_follow_release.py](../../export/run_plain_follow_release.py)
 - Quant/export validation: [../../export/evaluate_quant_native_follow.py](../../export/evaluate_quant_native_follow.py)
+- DORY-semantic deployment simulator: [../../export/dory_semantic_follow_inference.py](../../export/dory_semantic_follow_inference.py)
+- DORY app-seed artifact generator: [../../export/generate_dory_io_artifacts.py](../../export/generate_dory_io_artifacts.py)
+- GAP8 requant patcher: [../../tools/patch_gap8_bn_quant_int64.py](../../tools/patch_gap8_bn_quant_int64.py)
+- GAP8 layer comparer: [../../export/compare_gap8_layer_bytes.py](../../export/compare_gap8_layer_bytes.py)
 - Calibration manifest builder: [../../export/build_follow_calibration_manifest.py](../../export/build_follow_calibration_manifest.py)
 - Float rep16 overlays: [../../export/validate_follow_rep16_overlays.py](../../export/validate_follow_rep16_overlays.py)
 - Pre/post-quant rep16 overlays: [../../export/compare_quant_native_follow_rep16_overlays.py](../../export/compare_quant_native_follow_rep16_overlays.py)

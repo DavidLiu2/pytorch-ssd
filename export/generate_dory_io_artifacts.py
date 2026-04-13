@@ -5,6 +5,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import tempfile
 from importlib import import_module
 from pathlib import Path
@@ -13,6 +14,19 @@ from typing import Dict, List, Sequence, Tuple
 import numpy as np
 import onnx
 from onnx import TensorProto, helper, numpy_helper, shape_inference
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = SCRIPT_DIR.parent
+REPO_DIR = PROJECT_DIR.parent
+DORY_DIR = REPO_DIR / "dory"
+if str(PROJECT_DIR) not in sys.path:
+    sys.path.insert(0, str(PROJECT_DIR))
+if str(DORY_DIR) not in sys.path:
+    sys.path.insert(0, str(DORY_DIR))
+
+from hybrid_follow_image_artifacts import preprocess_image_uint8  # noqa: E402
+from dory_semantic_follow_inference import build_dory_graph, simulate_dory_graph_trace  # noqa: E402
 
 
 def _sanitize_filename(name: str) -> str:
@@ -190,6 +204,27 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Generate DORY/NEMO txt artifacts for deployment checks.")
     parser.add_argument("--onnx", required=True, help="Path to ONNX consumed by DORY.")
     parser.add_argument("--config", required=True, help="Path to DORY JSON config.")
+    parser.add_argument(
+        "--image",
+        default=None,
+        help="Optional image path. When provided, stage real-image uint8 input instead of random input.",
+    )
+    parser.add_argument(
+        "--model-type",
+        default="hybrid_follow",
+        help="Model type used for image preprocessing when --image is set.",
+    )
+    parser.add_argument(
+        "--io-dir",
+        default=None,
+        help="Directory where input/output/out_layer artifacts should be written. Defaults to ONNX parent.",
+    )
+    parser.add_argument(
+        "--runtime-source",
+        choices=["onnxruntime", "dory_hw_graph"],
+        default="onnxruntime",
+        help="How to generate golden layer outputs. Default: onnxruntime.",
+    )
     parser.add_argument("--frontend", default="NEMO", help="DORY frontend name (default: NEMO).")
     parser.add_argument("--target", default="PULP.GAP8", help="DORY target name (default: PULP.GAP8).")
     parser.add_argument("--prefix", default="", help="Optional generated symbol prefix.")
@@ -211,7 +246,12 @@ def main() -> None:
     with config_path.open("r", encoding="utf-8") as f:
         conf = json.load(f)
 
-    io_dir = onnx_path.parent
+    io_dir = (
+        Path(args.io_dir).expanduser().resolve()
+        if args.io_dir
+        else onnx_path.parent
+    )
+    io_dir.mkdir(parents=True, exist_ok=True)
     weights_dir = (
         Path(args.weights_dir).expanduser().resolve()
         if args.weights_dir
@@ -228,72 +268,134 @@ def main() -> None:
         model, args.fallback_height, args.fallback_width
     )
 
-    rng = np.random.default_rng(args.seed)
-    x_uint8 = rng.integers(0, 256, size=int(np.prod(input_shape)), dtype=np.uint8)
+    if args.image:
+        image_path = Path(args.image).expanduser().resolve()
+        if not image_path.is_file():
+            raise FileNotFoundError(f"Image not found: {image_path}")
+        if len(input_shape) != 4:
+            raise RuntimeError(
+                f"--image expects a 4D model input shape [N,C,H,W], got {input_shape}"
+            )
+        x_uint8 = preprocess_image_uint8(
+            image_path=image_path,
+            height=int(input_shape[2]),
+            width=int(input_shape[3]),
+            model_type=str(args.model_type),
+        )
+        input_source = "image"
+    else:
+        rng = np.random.default_rng(args.seed)
+        x_uint8 = rng.integers(0, 256, size=int(np.prod(input_shape)), dtype=np.uint8)
+        image_path = None
+        input_source = "random"
     input_path = io_dir / "input.txt"
     _write_values_txt(input_path, x_uint8, f"input (shape {list(input_shape)})", as_int=True)
     x_feed = _convert_input_for_model(x_uint8, input_shape, input_elem_type)
     print(f"[artifact_gen] input.txt prepared: {input_path}")
-    print(f"[artifact_gen] collecting DORY layer outputs from frontend={args.frontend}, target={args.target}")
-
-    layer_tensors = _collect_layer_output_tensors(
-        onnx_path=str(onnx_path),
-        conf=conf,
-        conf_dir=str(config_path.parent),
-        frontend=args.frontend,
-        target=args.target,
-        prefix=args.prefix,
+    print(
+        f"[artifact_gen] collecting DORY layer outputs from frontend={args.frontend}, "
+        f"target={args.target}, runtime_source={args.runtime_source}"
     )
-    print(f"[artifact_gen] DORY layer outputs discovered: {len(layer_tensors)}")
-
-    primary_output_name = model.graph.output[0].name if model.graph.output else layer_tensors[-1]
-    request_names = []
-    seen = set()
-    for name in list(layer_tensors) + [primary_output_name]:
-        if name not in seen:
-            request_names.append(name)
-            seen.add(name)
-
-    runtime_model = onnx.load(str(onnx_path))
-    _add_intermediate_outputs(runtime_model, request_names)
-    print(f"[artifact_gen] runtime outputs requested: {len(request_names)}")
-
-    try:
-        import onnxruntime as ort
-    except ImportError as exc:
-        raise RuntimeError(
-            "onnxruntime is required to generate DORY golden activations. "
-            "Install it in doryenv and re-run."
-        ) from exc
-
-    temp_fd, temp_model_path = tempfile.mkstemp(
-        prefix="dory_intermediate_", suffix=".onnx", dir=str(io_dir)
-    )
-    os.close(temp_fd)
-    onnx.save(runtime_model, temp_model_path)
 
     output_map: Dict[str, np.ndarray] = {}
-    try:
-        sess_opts = ort.SessionOptions()
-        sess_opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
-        sess = ort.InferenceSession(
-            temp_model_path,
-            sess_options=sess_opts,
-            providers=["CPUExecutionProvider"],
+    layer_records: list[dict[str, object]] = []
+    primary_output_name = model.graph.output[0].name if model.graph.output else ""
+
+    if args.runtime_source == "dory_hw_graph":
+        conf["__config_dir__"] = str(config_path.parent)
+        dory_graph = build_dory_graph(
+            onnx_path,
+            conf,
+            frontend=str(args.frontend),
+            target=str(args.target),
+            prefix=str(args.prefix),
         )
-        session_input_name = sess.get_inputs()[0].name
-        results = sess.run(request_names, {session_input_name: x_feed})
-        output_map = dict(zip(request_names, results))
-        print("[artifact_gen] onnxruntime inference completed")
-    finally:
+        traces = simulate_dory_graph_trace(dory_graph, x_uint8.tolist())
+        if len(traces) != len(dory_graph):
+            raise RuntimeError(
+                f"DORY HW graph trace count mismatch: graph={len(dory_graph)} trace={len(traces)}"
+            )
+        for idx, (node, trace) in enumerate(zip(dory_graph, traces)):
+            tensor_name = str(getattr(node, "output_index", "")).strip() or f"layer_{idx}"
+            output_map[tensor_name] = np.asarray(trace)
+            layer_records.append(
+                {
+                    "index": idx,
+                    "tensor_name": tensor_name,
+                    "shape": list(np.asarray(trace).shape),
+                    "element_count": int(np.asarray(trace).size),
+                    "original_dtype": str(np.asarray(trace).dtype),
+                    "original_itemsize_bytes": int(np.asarray(trace).dtype.itemsize),
+                }
+            )
+        primary_output_name = str(layer_records[-1]["tensor_name"])
+        print(f"[artifact_gen] DORY HW graph outputs discovered: {len(layer_records)}")
+    else:
+        layer_tensors = _collect_layer_output_tensors(
+            onnx_path=str(onnx_path),
+            conf=conf,
+            conf_dir=str(config_path.parent),
+            frontend=args.frontend,
+            target=args.target,
+            prefix=args.prefix,
+        )
+        print(f"[artifact_gen] DORY layer outputs discovered: {len(layer_tensors)}")
+
+        if not primary_output_name:
+            primary_output_name = layer_tensors[-1]
+        request_names = []
+        seen = set()
+        for name in list(layer_tensors) + [primary_output_name]:
+            if name not in seen:
+                request_names.append(name)
+                seen.add(name)
+
+        runtime_model = onnx.load(str(onnx_path))
+        _add_intermediate_outputs(runtime_model, request_names)
+        print(f"[artifact_gen] runtime outputs requested: {len(request_names)}")
+
         try:
-            os.remove(temp_model_path)
-        except OSError:
-            pass
+            import onnxruntime as ort
+        except ImportError as exc:
+            raise RuntimeError(
+                "onnxruntime is required to generate DORY golden activations. "
+                "Install it in doryenv and re-run."
+            ) from exc
+
+        temp_fd, temp_model_path = tempfile.mkstemp(
+            prefix="dory_intermediate_", suffix=".onnx", dir=str(io_dir)
+        )
+        os.close(temp_fd)
+        onnx.save(runtime_model, temp_model_path)
+
+        try:
+            sess_opts = ort.SessionOptions()
+            sess_opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
+            sess = ort.InferenceSession(
+                temp_model_path,
+                sess_options=sess_opts,
+                providers=["CPUExecutionProvider"],
+            )
+            session_input_name = sess.get_inputs()[0].name
+            results = sess.run(request_names, {session_input_name: x_feed})
+            output_map = dict(zip(request_names, results))
+            print("[artifact_gen] onnxruntime inference completed")
+        finally:
+            try:
+                os.remove(temp_model_path)
+            except OSError:
+                pass
 
     golden_files = []
-    layer_records = []
-    for idx, tensor_name in enumerate(layer_tensors):
+    if args.runtime_source == "onnxruntime":
+        write_layers = []
+        for idx, tensor_name in enumerate(layer_tensors):
+            write_layers.append((idx, tensor_name))
+    else:
+        write_layers = [(int(record["index"]), str(record["tensor_name"])) for record in layer_records]
+
+    written_layer_records: list[dict[str, object]] = []
+    for idx, tensor_name in write_layers:
         if tensor_name not in output_map:
             raise RuntimeError(f"Missing runtime tensor '{tensor_name}' while writing out_layer files.")
         arr = np.asarray(output_map[tensor_name])
@@ -312,7 +414,7 @@ def main() -> None:
             as_int=True,
         )
         golden_files.append(str(out_path.resolve()))
-        layer_records.append(
+        written_layer_records.append(
             {
                 "index": idx,
                 "tensor_name": tensor_name,
@@ -324,6 +426,8 @@ def main() -> None:
             }
         )
 
+    if primary_output_name not in output_map:
+        raise RuntimeError(f"Missing primary output tensor '{primary_output_name}' while writing output.txt.")
     primary_arr = np.asarray(output_map[primary_output_name]).reshape(-1)
     if np.issubdtype(primary_arr.dtype, np.floating):
         primary_arr = np.rint(primary_arr).astype(np.int64)
@@ -341,10 +445,14 @@ def main() -> None:
 
     manifest = {
         "quantized_model": str(onnx_path),
+        "runtime_source": str(args.runtime_source),
+        "input_source": input_source,
+        "input_image": (str(image_path) if image_path is not None else None),
+        "model_type": str(args.model_type),
         "input_file": str(input_path.resolve()),
         "output_file": str(output_path.resolve()),
         "golden_activations": golden_files,
-        "layers": layer_records,
+        "layers": written_layer_records,
         "weight_files": weight_files,
         "num_layers": len(golden_files),
     }

@@ -164,6 +164,7 @@ Interpretation:
 - production wrapper: [../../run_plain_follow.sh](../../run_plain_follow.sh)
 - release driver: [../../export/run_plain_follow_release.py](../../export/run_plain_follow_release.py)
 - evaluator: [../../export/evaluate_quant_native_follow.py](../../export/evaluate_quant_native_follow.py)
+- DORY app-seed artifact generator: [../../export/generate_dory_io_artifacts.py](../../export/generate_dory_io_artifacts.py)
 - float overlays: [../../export/validate_follow_rep16_overlays.py](../../export/validate_follow_rep16_overlays.py)
 - pre/post overlays: [../../export/compare_quant_native_follow_rep16_overlays.py](../../export/compare_quant_native_follow_rep16_overlays.py)
 
@@ -172,15 +173,85 @@ The current production path is:
 1. Build a deployment-matched calibration manifest from COCO val.
 2. Materialize a local validation bundle containing `rep16`, `hard_case`, and extra ranked COCO val images.
 3. Run float overlays on `rep16`, `hard_case`, and the expanded pack.
-4. Run the canonical ONNX export/eval on the expanded pack plus hard-case subset.
-5. Run pre/post overlay comparisons on `rep16` and `hard_case`.
-6. Read the consolidated release summary under `logs/plain_follow_prod`.
+4. Run the canonical ONNX export/eval to produce `model_id.onnx`, clean `model_id_dory.onnx`, and emit a `dory_cleanup_report`.
+5. Run the DORY-graph semantic simulator on `rep16`, `hard_case`, and the expanded pack using cleaned `model_id_dory.onnx` as the parsed source graph.
+6. Select the deployment visibility threshold on those DORY-semantic predictions.
+7. Run pre/post overlay comparisons on `rep16`, `hard_case`, and the expanded pack against those DORY-semantic predictions.
+8. Generate image-specific `input.txt`, `output.txt`, and `out_layer*.txt` artifacts from cleaned `model_id_dory.onnx` for the selected GVSOC image, copy them beside the DORY ONNX, and then run `network_generate`.
+9. Run the GAP8 app smoke in GVSOC against that seeded app build and record the final tensor plus the generated layer-checksum metadata.
+10. Read the consolidated release summary under `logs/plain_follow_prod`.
 
 So the safe summary today is:
 
 - the model architecture is export-oriented,
 - the float checkpoint is already strong enough to promote into a production-style validation flow,
-- the supported path is now the dedicated plain_follow wrapper rather than the older one-off study scripts.
+- the supported path is now the dedicated plain_follow wrapper rather than the older one-off study scripts,
+- the wrapper now clamps rounded out-of-range Conv/Gemm weights into signed int8 before DORY app generation, which fixes the earlier weight-wrap bug,
+- the wrapper now validates deployment metrics with a DORY-graph semantic simulator rather than ONNXRuntime on cleaned `model_id_dory.onnx`,
+- the GVSOC smoke now seeds DORY app generation with image-specific `input.txt`, `output.txt`, and `out_layer*.txt` files from cleaned `model_id_dory.onnx`, so generated apps carry nonzero layer checksums for the smoke image,
+- the generated GAP8 app now also gets an automatic `int64` requant patch before GVSOC, which fixes the known app-side BN/requant overflow drift in the generated `pulp_nn_utils.c` helpers,
+- GVSOC is still the final deployment gate because the generated app/runtime remains the true end target.
+
+## App Drift Fix
+
+The remaining app-level drift that showed up after the DORY-semantic validation fix turned out to be a generated GAP8 runtime issue, not a model-weight mismatch:
+
+- generated weights and BN constants already matched the parsed DORY graph,
+- the first bad layer was `BNReluConvolution1`,
+- the bad outputs were explained exactly by `int32` overflow in the generated BN/requant helpers,
+- patching those helpers to use `int64` intermediates before the requant right shift removed the reproduced smoke-case drift completely.
+
+Relevant tooling:
+
+- generated-app patcher: [../../tools/patch_gap8_bn_quant_int64.py](../../tools/patch_gap8_bn_quant_int64.py)
+- GVSOC runner that auto-applies the patch: [../../tools/run_aideck_val_impl.sh](../../tools/run_aideck_val_impl.sh)
+- layer-by-layer runtime comparer: [../../export/compare_gap8_layer_bytes.py](../../export/compare_gap8_layer_bytes.py)
+- deployment semantic helper: [../../export/dory_semantic_follow_inference.py](../../export/dory_semantic_follow_inference.py)
+- passing repro artifact: [../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/runtime_layer_compare/runtime_layer_compare.json](../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/runtime_layer_compare/runtime_layer_compare.json)
+
+The DORY semantic helper now prefers image-path restaging over caller-provided staged tensors when the input bundle requests `runtime_preprocess_uint8`. That keeps deployment threshold sweeps and compare overlays aligned with the seeded app/runtime input contract instead of a slightly different evaluation-only staging path.
+
+## Reproduce The Fix
+
+From the repo root, the main production wrapper already applies the generated-app patch automatically:
+
+```bash
+./pytorch_ssd/run_plain_follow.sh \
+  --output-dir pytorch_ssd/logs/plain_follow_prod \
+  --overwrite
+```
+
+If you want a faster smoke run while keeping the same patched GVSOC path:
+
+```bash
+./pytorch_ssd/run_plain_follow.sh \
+  --output-dir pytorch_ssd/logs/plain_follow_prod_smoke \
+  --calib-target-count 4 \
+  --calib-max-images 32 \
+  --expanded-pack-extra-count 1 \
+  --expanded-pack-max-images 32 \
+  --overwrite
+```
+
+If you want to inspect a generated app directly, patch it manually and compare its runtime layers:
+
+```bash
+./nemoenv/bin/python pytorch_ssd/tools/patch_gap8_bn_quant_int64.py \
+  --app-dir /abs/path/to/generated/app
+```
+
+```bash
+./nemoenv/bin/python pytorch_ssd/export/compare_gap8_layer_bytes.py \
+  --gvsoc-log /abs/path/to/gvsoc_run.log \
+  --layer-manifest /abs/path/to/gap8_layer_manifest.json \
+  --output-dir /abs/path/to/runtime_layer_compare
+```
+
+The current known-good smoke repro is:
+
+- GVSOC run log: [../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/gvsoc_run.log](../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/gvsoc_run.log)
+- runtime layer compare: [../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/runtime_layer_compare/runtime_layer_compare.json](../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/runtime_layer_compare/runtime_layer_compare.json)
+- final tensor: [../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/gvsoc_final_tensor.json](../../logs/plain_follow_prod_smoke_appseed/runtime_trace_rerun_int64_patch_regen/gvsoc_final_tensor.json)
 
 ## When To Reach For It
 
